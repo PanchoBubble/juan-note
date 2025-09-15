@@ -65,9 +65,9 @@ export function KanbanColumn({
             </div>
             <p className="text-sm">No {title.toLowerCase()} notes</p>
             <p className="text-xs text-gray-400 mt-1">
-              {status === 'todo' && 'Notes without "done" or "in-progress" labels'}
+              {status === 'todo' && 'Notes that are not done and without "in-progress" labels'}
               {status === 'in-progress' && 'Notes with "in-progress" or "progress" labels'}
-              {status === 'done' && 'Notes with "done" label'}
+              {status === 'done' && 'Notes marked as done'}
             </p>
           </div>
         ) : (

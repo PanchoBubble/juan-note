@@ -27,7 +27,7 @@ export function useKanbanView(notes: Note[]) {
   useEffect(() => {
     const converted = notes.map(note => ({
       ...note,
-      status: (note.labels?.includes('done') ? 'done' :
+      status: (note.done ? 'done' :
                note.labels?.includes('in-progress') || note.labels?.includes('progress') ? 'in-progress' :
                'todo') as KanbanStatus
     }));
