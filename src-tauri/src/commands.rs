@@ -36,8 +36,8 @@ pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
     let now = Utc::now().timestamp();
 
     conn.execute(
-        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         rusqlite::params![
             request.title,
             request.content,
@@ -46,7 +46,8 @@ pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
             request.priority.unwrap_or(0),
             labels_json,
             request.deadline.map(|dt| dt.timestamp()),
-            request.reminder_minutes.unwrap_or(0)
+            request.reminder_minutes.unwrap_or(0),
+            request.done.unwrap_or(false) as i32
         ],
     ).map_err(|e| format!("Failed to create note: {}", e))?;
 
@@ -70,7 +71,7 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
     let conn = conn.lock().unwrap();
 
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done
          FROM notes ORDER BY updated_at DESC"
     ).map_err(|e| format!("Failed to prepare query: {}", e))?;
 
@@ -148,6 +149,11 @@ pub fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
         params.push(Box::new(reminder_minutes));
     }
 
+    if let Some(done) = request.done {
+        set_parts.push("done = ?".to_string());
+        params.push(Box::new(done as i32));
+    }
+
     if set_parts.is_empty() {
         return Err("No fields to update".to_string());
     }
@@ -181,7 +187,7 @@ pub fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
 
 fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, String> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done
          FROM notes WHERE id = ?"
     ).map_err(|e| format!("Failed to prepare query: {}", e))?;
 
@@ -200,6 +206,7 @@ fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, S
             labels,
             deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
             reminder_minutes: row.get(8)?,
+            done: row.get::<_, i32>(9)? != 0,
         })
     });
 
@@ -259,7 +266,7 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
     let offset = request.offset.unwrap_or(0);
 
     let mut stmt = conn.prepare(
-        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes
+        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes, n.done
          FROM notes_fts fts
          JOIN notes n ON fts.rowid = n.id
          WHERE notes_fts MATCH ?
@@ -274,17 +281,18 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
             let labels: Vec<String> = serde_json::from_str(&labels_str)
                 .unwrap_or_default();
 
-            Ok(Note {
-                id: Some(row.get(0)?),
-                title: row.get(1)?,
-                content: row.get(2)?,
-                created_at: Some(DateTime::from_timestamp(row.get(3)?, 0).unwrap_or_default()),
-                updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
-                priority: row.get(5)?,
-                labels,
-                deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
-                reminder_minutes: row.get(8)?,
-            })
+        Ok(Note {
+            id: Some(row.get(0)?),
+            title: row.get(1)?,
+            content: row.get(2)?,
+            created_at: Some(DateTime::from_timestamp(row.get(3)?, 0).unwrap_or_default()),
+            updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
+            priority: row.get(5)?,
+            labels,
+            deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+            reminder_minutes: row.get(8)?,
+            done: row.get::<_, i32>(9)? != 0,
+        })
         }
     ).map_err(|e| format!("Failed to execute search: {}", e))?;
 
@@ -301,4 +309,28 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
         data: notes,
         error: None,
     })
+}
+
+#[tauri::command]
+pub fn update_note_done(request: UpdateNoteDoneRequest) -> Result<NoteResponse, String> {
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+
+    let now = Utc::now().timestamp();
+
+    let rows_affected = conn.execute(
+        "UPDATE notes SET done = ?, updated_at = ? WHERE id = ?",
+        rusqlite::params![request.done as i32, now, request.id],
+    ).map_err(|e| format!("Failed to update note done status: {}", e))?;
+
+    if rows_affected == 0 {
+        return Ok(NoteResponse {
+            success: false,
+            data: None,
+            error: Some("Note not found".to_string()),
+        });
+    }
+
+    // Return the updated note
+    get_note_sync(request.id, &conn)
 }

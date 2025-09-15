@@ -22,7 +22,8 @@ pub fn run() {
             get_all_notes,
             update_note,
             delete_note,
-            search_notes
+            search_notes,
+            update_note_done
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
