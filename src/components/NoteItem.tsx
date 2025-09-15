@@ -4,7 +4,7 @@ import type { Note } from '../types/note';
 interface NoteItemProps {
   note: Note;
   onEdit: (note: Note) => void;
-  onDelete: (id: number) => void;
+  onDelete: (note: Note) => void;
 }
 
 export function NoteItem({ note, onEdit, onDelete }: NoteItemProps) {
@@ -58,13 +58,13 @@ export function NoteItem({ note, onEdit, onDelete }: NoteItemProps) {
           >
             ✏️
           </button>
-          <button
-            onClick={() => onDelete(note.id!)}
-            className="text-red-600 hover:text-red-800 p-1"
-            title="Delete note"
-          >
-            🗑️
-          </button>
+           <button
+             onClick={() => onDelete(note)}
+             className="text-red-600 hover:text-red-800 p-1"
+             title="Delete note"
+           >
+             🗑️
+           </button>
         </div>
       </div>
 

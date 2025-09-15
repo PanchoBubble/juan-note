@@ -5,7 +5,7 @@ import type { Note } from '../types/note';
 interface NoteListProps {
   notes: Note[];
   onEdit: (note: Note) => void;
-  onDelete: (id: number) => void;
+  onDelete: (note: Note) => void;
   loading: boolean;
 }
 

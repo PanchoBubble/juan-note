@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { NoteList } from './components/NoteList';
 import { NoteEditor } from './components/NoteEditor';
 import { SearchBar } from './components/SearchBar';
+import { Modal } from './components/Modal';
+import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { useNotes } from './hooks/useNotes';
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
 import './App.css';
@@ -10,6 +12,7 @@ function App() {
   const { notes, loading, error, createNote, updateNote, deleteNote, searchNotes, clearError } = useNotes();
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
 
   const handleCreateNote = () => {
     setEditingNote(null);
@@ -40,10 +43,19 @@ function App() {
     setEditingNote(null);
   };
 
-  const handleDeleteNote = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      await deleteNote(id);
+  const handleDeleteNote = (note: Note) => {
+    setDeleteNoteData(note);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteNoteData) {
+      await deleteNote(deleteNoteData.id!);
+      setDeleteNoteData(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteNoteData(null);
   };
 
   return (
@@ -84,23 +96,34 @@ function App() {
           placeholder="Search notes by title or content..."
         />
 
-        {showEditor ? (
-          <div className="mb-6">
-            <NoteEditor
-              note={editingNote}
-              onSave={handleSaveNote}
-              onCancel={handleCancelEdit}
-              loading={loading}
-            />
-          </div>
-        ) : (
-          <NoteList
-            notes={notes}
-            onEdit={handleEditNote}
-            onDelete={handleDeleteNote}
+        <NoteList
+          notes={notes}
+          onEdit={handleEditNote}
+          onDelete={handleDeleteNote}
+          loading={loading}
+        />
+
+        <Modal
+          isOpen={showEditor}
+          onClose={handleCancelEdit}
+          title={editingNote ? 'Edit Note' : 'Create New Note'}
+          size="lg"
+        >
+          <NoteEditor
+            note={editingNote}
+            onSave={handleSaveNote}
+            onCancel={handleCancelEdit}
             loading={loading}
           />
-        )}
+        </Modal>
+
+        <DeleteConfirmModal
+          isOpen={!!deleteNoteData}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          note={deleteNoteData}
+          loading={loading}
+        />
       </main>
     </div>
   );
