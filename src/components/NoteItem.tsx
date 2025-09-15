@@ -69,6 +69,14 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
           {note.title || 'Untitled Note'}
         </h3>
         <div className="flex items-center space-x-2">
+          {note.done && (
+            <span className="px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm text-monokai-green bg-monokai-bg bg-opacity-80 border-monokai-comment">
+              <span className="flex items-center space-x-1">
+                <span className="w-2 h-2 rounded-full bg-monokai-green"></span>
+                <span>Done</span>
+              </span>
+            </span>
+          )}
           {note.priority > 0 && (
             <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm ${getPriorityColor(note.priority)}`}>
               <span className="flex items-center space-x-1">

@@ -15,6 +15,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
   const [priority, setPriority] = useState(0);
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState('');
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     if (note) {
@@ -22,11 +23,13 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
       setContent(note.content);
       setPriority(note.priority);
       setLabels(note.labels || []);
+      setDone(note.done || false);
     } else {
       setTitle('');
       setContent('');
       setPriority(0);
       setLabels([]);
+      setDone(false);
     }
   }, [note]);
 
@@ -44,12 +47,14 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
           content: content.trim(),
           priority,
           labels,
+          done,
         } as UpdateNoteRequest
       : {
           title: title.trim(),
           content: content.trim(),
           priority,
           labels,
+          done,
         } as CreateNoteRequest;
 
     await onSave(request);
@@ -125,6 +130,20 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
                 <option value={2}>Medium</option>
                 <option value={3}>High</option>
               </select>
+             </div>
+
+            <div>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="done"
+                  checked={done}
+                  onChange={(e) => setDone(e.target.checked)}
+                  className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                  disabled={loading}
+                />
+                <span className="text-sm font-medium text-gray-700">Mark as Done</span>
+              </label>
             </div>
 
             <div>
