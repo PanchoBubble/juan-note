@@ -22,6 +22,7 @@ function App() {
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'title'>('updated');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const handleCreateNote = () => {
     setEditingNote(null);
@@ -159,6 +160,8 @@ function App() {
           onPriorityChange={setSelectedPriority}
           sortBy={sortBy}
           onSortChange={setSortBy}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
           showInlineCreate={showInlineCreate}
           onInlineCreate={handleInlineCreate}
           onCancelInlineCreate={handleCancelInlineCreate}

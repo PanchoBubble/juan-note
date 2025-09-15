@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { NoteItem } from './NoteItem';
 import { LabelFilter } from './LabelFilter';
 import { PriorityFilter } from './PriorityFilter';
+import { SortControls } from './SortControls';
 import { InlineCreate } from './InlineCreate';
 import type { Note, CreateNoteRequest } from '../types/note';
 
@@ -17,6 +18,8 @@ interface NoteListProps {
   onPriorityChange: (priority: number | null) => void;
   sortBy: 'created' | 'updated' | 'priority' | 'title';
   onSortChange: (sort: 'created' | 'updated' | 'priority' | 'title') => void;
+  sortOrder: 'asc' | 'desc';
+  onSortOrderChange: (order: 'asc' | 'desc') => void;
   showInlineCreate?: boolean;
   onInlineCreate?: () => void;
   onCancelInlineCreate?: () => void;
@@ -34,6 +37,8 @@ export function NoteList({
   onPriorityChange,
   sortBy,
   onSortChange,
+  sortOrder,
+  onSortOrderChange,
   showInlineCreate = false,
   onInlineCreate,
   onCancelInlineCreate,
@@ -66,22 +71,28 @@ export function NoteList({
 
     // Sort notes
     const sorted = [...filtered].sort((a, b) => {
+      let comparison = 0;
       switch (sortBy) {
         case 'created':
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+          comparison = new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+          break;
         case 'updated':
-          return new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
+          comparison = new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
+          break;
         case 'priority':
-          return b.priority - a.priority;
+          comparison = b.priority - a.priority;
+          break;
         case 'title':
-          return (a.title || '').localeCompare(b.title || '');
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
         default:
-          return 0;
+          comparison = 0;
       }
+      return sortOrder === 'asc' ? -comparison : comparison;
     });
 
     return sorted;
-  }, [notes, selectedLabels, selectedPriority, sortBy]);
+  }, [notes, selectedLabels, selectedPriority, sortBy, sortOrder]);
 
   if (loading && notes.length === 0) {
     return (
@@ -108,19 +119,12 @@ export function NoteList({
             onPriorityChange={onPriorityChange}
           />
 
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 font-medium">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => onSortChange(e.target.value as any)}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white"
-            >
-              <option value="updated">Last Updated</option>
-              <option value="created">Date Created</option>
-              <option value="priority">Priority</option>
-              <option value="title">Title</option>
-            </select>
-          </div>
+          <SortControls
+            sortBy={sortBy}
+            onSortChange={onSortChange}
+            sortOrder={sortOrder}
+            onSortOrderChange={onSortOrderChange}
+          />
 
           <button
             onClick={onInlineCreate}
