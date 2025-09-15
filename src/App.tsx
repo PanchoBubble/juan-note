@@ -6,7 +6,6 @@ import { SearchBar } from './components/SearchBar';
 import { Modal } from './components/Modal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { QuickCreateModal } from './components/QuickCreateModal';
-import { DoneFilter } from './components/DoneFilter';
 import { useNotes } from './hooks/useNotes';
 
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';

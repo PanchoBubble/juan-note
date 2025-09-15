@@ -90,6 +90,7 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
             labels,
             deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
             reminder_minutes: row.get(8)?,
+            done: row.get::<_, i32>(9)? != 0,
         })
     }).map_err(|e| format!("Failed to query notes: {}", e))?;
 
