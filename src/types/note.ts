@@ -6,6 +6,8 @@ export interface Note {
   updated_at?: string;
   priority: number;
   labels: string[];
+  deadline?: string;
+  reminder_minutes: number;
 }
 
 export interface CreateNoteRequest {
@@ -13,6 +15,8 @@ export interface CreateNoteRequest {
   content: string;
   priority?: number;
   labels?: string[];
+  deadline?: string;
+  reminder_minutes?: number;
 }
 
 export interface UpdateNoteRequest {
@@ -21,6 +25,8 @@ export interface UpdateNoteRequest {
   content?: string;
   priority?: number;
   labels?: string[];
+  deadline?: string;
+  reminder_minutes?: number;
 }
 
 export interface NoteResponse {

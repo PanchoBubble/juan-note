@@ -1,4 +1,4 @@
-use crate::database::{establish_connection, initialize_database, DbConnection};
+use crate::database::{establish_connection, run_migrations, DbConnection};
 use crate::models::*;
 use rusqlite::Result;
 use std::sync::OnceLock;
@@ -15,7 +15,7 @@ fn get_db_connection() -> &'static DbConnection {
 #[tauri::command]
 pub fn initialize_db() -> Result<NotesListResponse, String> {
     let conn = get_db_connection();
-    initialize_database(conn).map_err(|e| e.to_string())?;
+    run_migrations(conn).map_err(|e| e.to_string())?;
 
     // Return empty list on successful initialization
     Ok(NotesListResponse {
@@ -36,15 +36,17 @@ pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
     let now = Utc::now().timestamp();
 
     conn.execute(
-        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels)
-         VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         rusqlite::params![
             request.title,
             request.content,
             now,
             now,
             request.priority.unwrap_or(0),
-            labels_json
+            labels_json,
+            request.deadline.map(|dt| dt.timestamp()),
+            request.reminder_minutes.unwrap_or(0)
         ],
     ).map_err(|e| format!("Failed to create note: {}", e))?;
 
@@ -68,7 +70,7 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
     let conn = conn.lock().unwrap();
 
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes
          FROM notes ORDER BY updated_at DESC"
     ).map_err(|e| format!("Failed to prepare query: {}", e))?;
 
@@ -85,6 +87,8 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
             updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
             priority: row.get(5)?,
             labels,
+            deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+            reminder_minutes: row.get(8)?,
         })
     }).map_err(|e| format!("Failed to query notes: {}", e))?;
 
@@ -134,6 +138,16 @@ pub fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
         params.push(Box::new(labels_json));
     }
 
+    if let Some(deadline) = request.deadline {
+        set_parts.push("deadline = ?".to_string());
+        params.push(Box::new(deadline.timestamp()));
+    }
+
+    if let Some(reminder_minutes) = request.reminder_minutes {
+        set_parts.push("reminder_minutes = ?".to_string());
+        params.push(Box::new(reminder_minutes));
+    }
+
     if set_parts.is_empty() {
         return Err("No fields to update".to_string());
     }
@@ -167,7 +181,7 @@ pub fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
 
 fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, String> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes
          FROM notes WHERE id = ?"
     ).map_err(|e| format!("Failed to prepare query: {}", e))?;
 
@@ -184,6 +198,8 @@ fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, S
             updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
             priority: row.get(5)?,
             labels,
+            deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+            reminder_minutes: row.get(8)?,
         })
     });
 
@@ -243,7 +259,7 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
     let offset = request.offset.unwrap_or(0);
 
     let mut stmt = conn.prepare(
-        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels
+        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes
          FROM notes_fts fts
          JOIN notes n ON fts.rowid = n.id
          WHERE notes_fts MATCH ?
@@ -266,6 +282,8 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
                 updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
                 priority: row.get(5)?,
                 labels,
+                deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+                reminder_minutes: row.get(8)?,
             })
         }
     ).map_err(|e| format!("Failed to execute search: {}", e))?;
