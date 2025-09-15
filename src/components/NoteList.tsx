@@ -3,7 +3,8 @@ import { useMemo } from 'react';
 import { NoteItem } from './NoteItem';
 import { LabelFilter } from './LabelFilter';
 import { PriorityFilter } from './PriorityFilter';
-import type { Note } from '../types/note';
+import { InlineCreate } from './InlineCreate';
+import type { Note, CreateNoteRequest } from '../types/note';
 
 interface NoteListProps {
   notes: Note[];
@@ -16,6 +17,10 @@ interface NoteListProps {
   onPriorityChange: (priority: number | null) => void;
   sortBy: 'created' | 'updated' | 'priority' | 'title';
   onSortChange: (sort: 'created' | 'updated' | 'priority' | 'title') => void;
+  showInlineCreate?: boolean;
+  onInlineCreate?: () => void;
+  onCancelInlineCreate?: () => void;
+  onSaveNote?: (request: CreateNoteRequest) => Promise<void>;
 }
 
 export function NoteList({
@@ -28,7 +33,11 @@ export function NoteList({
   selectedPriority,
   onPriorityChange,
   sortBy,
-  onSortChange
+  onSortChange,
+  showInlineCreate = false,
+  onInlineCreate,
+  onCancelInlineCreate,
+  onSaveNote
 }: NoteListProps) {
   // Get all available labels from notes
   const availableLabels = useMemo(() => {
@@ -113,6 +122,14 @@ export function NoteList({
             </select>
           </div>
 
+          <button
+            onClick={onInlineCreate}
+            className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md"
+            disabled={loading}
+          >
+            + Add Note
+          </button>
+
           {(selectedLabels.length > 0 || selectedPriority !== null) && (
             <button
               onClick={() => {
@@ -128,7 +145,7 @@ export function NoteList({
       </div>
 
       {/* Notes List */}
-      {filteredAndSortedNotes.length === 0 ? (
+      {filteredAndSortedNotes.length === 0 && !showInlineCreate ? (
         <div className="text-center py-16">
           <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">🔍</span>
@@ -149,6 +166,15 @@ export function NoteList({
         </div>
       ) : (
         <div className="space-y-6">
+          {showInlineCreate && onSaveNote && (
+            <InlineCreate
+              onSave={onSaveNote}
+              onCancel={onCancelInlineCreate || (() => {})}
+              loading={loading}
+              defaultLabels={selectedLabels}
+              defaultPriority={selectedPriority || 0}
+            />
+          )}
           {filteredAndSortedNotes.map((note) => (
             <NoteItem
               key={note.id}

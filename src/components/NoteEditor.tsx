@@ -6,9 +6,10 @@ interface NoteEditorProps {
   onSave: (request: CreateNoteRequest | UpdateNoteRequest) => Promise<void>;
   onCancel: () => void;
   loading: boolean;
+  quick?: boolean; // Simplified mode with fewer fields
 }
 
-export function NoteEditor({ note, onSave, onCancel, loading }: NoteEditorProps) {
+export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: NoteEditorProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [priority, setPriority] = useState(0);
@@ -74,7 +75,7 @@ export function NoteEditor({ note, onSave, onCancel, loading }: NoteEditorProps)
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <form onSubmit={handleSubmit} className={`p-6 ${quick ? 'space-y-4' : 'space-y-6'}`}>
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
             Title
@@ -87,6 +88,7 @@ export function NoteEditor({ note, onSave, onCancel, loading }: NoteEditorProps)
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Enter note title..."
             disabled={loading}
+            autoFocus
           />
         </div>
 
@@ -98,76 +100,80 @@ export function NoteEditor({ note, onSave, onCancel, loading }: NoteEditorProps)
             id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            rows={8}
+            rows={quick ? 4 : 8}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
             placeholder="Enter note content..."
             disabled={loading}
           />
         </div>
 
-        <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
-            Priority
-          </label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) => setPriority(Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
-          >
-            <option value={0}>Normal</option>
-            <option value={1}>Low</option>
-            <option value={2}>Medium</option>
-            <option value={3}>High</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="labels" className="block text-sm font-medium text-gray-700 mb-1">
-            Labels
-          </label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              id="labels"
-              value={labelInput}
-              onChange={(e) => setLabelInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Add a label..."
-              disabled={loading}
-            />
-            <button
-              type="button"
-              onClick={addLabel}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              disabled={loading || !labelInput.trim()}
-            >
-              Add
-            </button>
-          </div>
-          {labels.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {labels.map((label, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                >
-                  {label}
-                  <button
-                    type="button"
-                    onClick={() => removeLabel(label)}
-                    className="ml-1 text-blue-600 hover:text-blue-800"
-                    disabled={loading}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
+        {!quick && (
+          <>
+            <div>
+              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+                Priority
+              </label>
+              <select
+                id="priority"
+                value={priority}
+                onChange={(e) => setPriority(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+              >
+                <option value={0}>Normal</option>
+                <option value={1}>Low</option>
+                <option value={2}>Medium</option>
+                <option value={3}>High</option>
+              </select>
             </div>
-          )}
-        </div>
+
+            <div>
+              <label htmlFor="labels" className="block text-sm font-medium text-gray-700 mb-1">
+                Labels
+              </label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  id="labels"
+                  value={labelInput}
+                  onChange={(e) => setLabelInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Add a label..."
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={addLabel}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  disabled={loading || !labelInput.trim()}
+                >
+                  Add
+                </button>
+              </div>
+              {labels.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {labels.map((label, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                    >
+                      {label}
+                      <button
+                        type="button"
+                        onClick={() => removeLabel(label)}
+                        className="ml-1 text-blue-600 hover:text-blue-800"
+                        disabled={loading}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="flex justify-end space-x-3 pt-4">
           <button

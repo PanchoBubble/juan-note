@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NoteList } from './components/NoteList';
 import { NoteEditor } from './components/NoteEditor';
 import { SearchBar } from './components/SearchBar';
 import { Modal } from './components/Modal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
+import { QuickCreateModal } from './components/QuickCreateModal';
+import { InlineCreate } from './components/InlineCreate';
 import { useNotes } from './hooks/useNotes';
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
 import './App.css';
@@ -13,6 +15,8 @@ function App() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [showInlineCreate, setShowInlineCreate] = useState(false);
 
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
@@ -62,6 +66,38 @@ function App() {
   const handleCancelDelete = () => {
     setDeleteNoteData(null);
   };
+
+  const handleQuickCreate = () => {
+    setShowQuickCreate(true);
+  };
+
+  const handleInlineCreate = () => {
+    setShowInlineCreate(true);
+  };
+
+  const handleCancelInlineCreate = () => {
+    setShowInlineCreate(false);
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + N for quick create
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        handleQuickCreate();
+      }
+      // Escape to close modals
+      if (e.key === 'Escape') {
+        if (showQuickCreate) setShowQuickCreate(false);
+        if (showEditor) handleCancelEdit();
+        if (deleteNoteData) handleCancelDelete();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showQuickCreate, showEditor, deleteNoteData]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,6 +159,10 @@ function App() {
           onPriorityChange={setSelectedPriority}
           sortBy={sortBy}
           onSortChange={setSortBy}
+          showInlineCreate={showInlineCreate}
+          onInlineCreate={handleInlineCreate}
+          onCancelInlineCreate={handleCancelInlineCreate}
+          onSaveNote={handleSaveNote}
         />
 
         <Modal
@@ -145,6 +185,15 @@ function App() {
           onConfirm={handleConfirmDelete}
           note={deleteNoteData}
           loading={loading}
+        />
+
+        <QuickCreateModal
+          isOpen={showQuickCreate}
+          onClose={() => setShowQuickCreate(false)}
+          onSave={handleSaveNote}
+          loading={loading}
+          defaultLabels={selectedLabels}
+          defaultPriority={selectedPriority || 0}
         />
 
         {/* Floating Action Button for Mobile */}
