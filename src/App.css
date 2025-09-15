@@ -1,84 +1,72 @@
 @import "tailwindcss";
 
-/* Design Token System for Professional Color Palette */
+/* Monokai Color Theme - Single Dark Mode */
 :root {
-  /* Light mode colors */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-bg-tertiary: #f1f5f9;
-  --color-bg-surface: #ffffff;
+  /* Monokai base colors */
+  --monokai-bg: #272822;
+  --monokai-fg: #F8F8F2;
+  --monokai-comment: #75715E;
+  --monokai-yellow: #E6DB74;
+  --monokai-green: #A6E22E;
+  --monokai-orange: #FD971F;
+  --monokai-purple: #AE81FF;
+  --monokai-pink: #F92672;
+  --monokai-blue: #66D9EF;
   
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #334155;
-  --color-text-muted: #64748b;
-  --color-text-inverse: #ffffff;
+  /* Semantic color mapping using Monokai palette */
+  --color-bg-primary: var(--monokai-bg);
+  --color-bg-secondary: #2f2f2a;
+  --color-bg-tertiary: #38382f;
+  --color-bg-surface: var(--monokai-bg);
   
-  --color-border-default: #e2e8f0;
-  --color-border-secondary: #cbd5e1;
-  --color-border-focus: #3b82f6;
+  --color-text-primary: var(--monokai-fg);
+  --color-text-secondary: #e8e8e3;
+  --color-text-muted: var(--monokai-comment);
+  --color-text-inverse: var(--monokai-bg);
   
-  --color-accent: #2563eb;
-  --color-accent-hover: #1d4ed8;
-  --color-accent-light: #eff6ff;
+  --color-border-default: var(--monokai-comment);
+  --color-border-secondary: #5e5a47;
+  --color-border-focus: var(--monokai-blue);
   
-  --color-success: #059669;
-  --color-success-light: #ecfdf5;
-  --color-warning: #d97706;
-  --color-warning-light: #fffbeb;
-  --color-danger: #dc2626;
-  --color-danger-light: #fef2f2;
+  --color-accent: var(--monokai-blue);
+  --color-accent-hover: #7de9ff;
+  --color-accent-light: #0a3749;
   
-  /* Typography */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
+  --color-success: var(--monokai-green);
+  --color-success-light: #182c02;
+  --color-warning: var(--monokai-yellow);
+  --color-warning-light: #422006;
+  --color-danger: var(--monokai-pink);
+  --color-danger-light: #500724;
+  
+  /* Typography optimized for Monokai theme */
+  font-family: 'Inter', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   line-height: 1.6;
   font-weight: 400;
   
-  /* Text rendering optimization */
+  /* Text rendering optimization for dark theme */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   
-  /* Base colors using design tokens */
+  /* Force dark theme colors */
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);
 }
 
-/* Dark mode color overrides */
-.dark {
-  --color-bg-primary: #020617;
-  --color-bg-secondary: #0f172a;
-  --color-bg-tertiary: #1e293b;
-  --color-bg-surface: #0f172a;
-  
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #e2e8f0;
-  --color-text-muted: #94a3b8;
-  --color-text-inverse: #0f172a;
-  
-  --color-border-default: #334155;
-  --color-border-secondary: #475569;
-  --color-border-focus: #60a5fa;
-  
-  --color-accent: #3b82f6;
-  --color-accent-hover: #60a5fa;
-  --color-accent-light: #172554;
-  
-  --color-success: #10b981;
-  --color-success-light: #022c22;
-  --color-warning: #f59e0b;
-  --color-warning-light: #451a03;
-  --color-danger: #ef4444;
-  --color-danger-light: #450a0a;
-}
-
-/* Global base styles using semantic tokens */
+/* Global base styles - force Monokai dark theme */
 body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  /* Remove transitions since we're always in dark mode */
+}
+
+/* Ensure HTML element always has dark class */
+html {
+  background-color: var(--color-bg-primary);
 }
 
 /* Semantic utility classes */
@@ -175,15 +163,15 @@ body {
 }
 
 .logo.vite:hover {
-  filter: drop-shadow(0 0 2em var(--color-accent));
+  filter: drop-shadow(0 0 2em var(--monokai-purple));
 }
 
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafb);
+  filter: drop-shadow(0 0 2em var(--monokai-blue));
 }
 
 .logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
+  filter: drop-shadow(0 0 2em var(--monokai-green));
 }
 
 .row {

@@ -1,0 +1,18 @@
+{
+  "projectRoot": "/Users/juanfranciscodeluca/workdir/personal/juan-note",
+  "watchPaths": [
+    "src/services",
+    "src-tauri/src", 
+    "src/types"
+  ],
+  "outputPath": "api-validation-report.md",
+  "validateOnChange": true,
+  "generateDocs": true,
+  "ignored": [
+    "**/node_modules/**",
+    "**/target/**",
+    "**/dist/**",
+    "**/.git/**",
+    "**/notes.db*"
+  ]
+}
