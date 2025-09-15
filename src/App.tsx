@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NoteList } from './components/NoteList';
+import { KanbanBoard } from './components/KanbanBoard';
 import { NoteEditor } from './components/NoteEditor';
 import { SearchBar } from './components/SearchBar';
 import { Modal } from './components/Modal';
@@ -23,6 +24,7 @@ function App() {
   const [selectedPriority, setSelectedPriority] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'title'>('updated');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
 
   const handleCreateNote = () => {
     setEditingNote(null);
@@ -114,16 +116,40 @@ function App() {
                 <p className="text-blue-100 text-sm">Organize your thoughts</p>
               </div>
             </div>
-            <button
-              onClick={handleCreateNote}
-              className="hidden md:flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm"
-              disabled={loading}
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              New Note
-            </button>
+            <div className="flex items-center space-x-2">
+              <div className="hidden md:flex bg-white rounded-lg p-1 shadow-sm">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  📋 List
+                </button>
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'kanban'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  📊 Kanban
+                </button>
+              </div>
+              <button
+                onClick={handleCreateNote}
+                className="hidden md:flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm"
+                disabled={loading}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                New Note
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -149,24 +175,37 @@ function App() {
           placeholder="Search notes by title or content..."
         />
 
-        <NoteList
-          notes={notes}
-          onEdit={handleEditNote}
-          onDelete={handleDeleteNote}
-          loading={loading}
-          selectedLabels={selectedLabels}
-          onLabelsChange={setSelectedLabels}
-          selectedPriority={selectedPriority}
-          onPriorityChange={setSelectedPriority}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
-          showInlineCreate={showInlineCreate}
-          onInlineCreate={handleInlineCreate}
-          onCancelInlineCreate={handleCancelInlineCreate}
-          onSaveNote={handleSaveNote}
-        />
+        {viewMode === 'list' ? (
+          <NoteList
+            notes={notes}
+            onEdit={handleEditNote}
+            onDelete={handleDeleteNote}
+            loading={loading}
+            selectedLabels={selectedLabels}
+            onLabelsChange={setSelectedLabels}
+            selectedPriority={selectedPriority}
+            onPriorityChange={setSelectedPriority}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+            showInlineCreate={showInlineCreate}
+            onInlineCreate={handleInlineCreate}
+            onCancelInlineCreate={handleCancelInlineCreate}
+            onSaveNote={handleSaveNote}
+          />
+        ) : (
+          <KanbanBoard
+            notes={notes}
+            onEdit={handleEditNote}
+            onDelete={handleDeleteNote}
+            onLabelClick={(label) => {
+              if (!selectedLabels.includes(label)) {
+                setSelectedLabels([...selectedLabels, label]);
+              }
+            }}
+          />
+        )}
 
         <Modal
           isOpen={showEditor}
