@@ -6,6 +6,7 @@ import { SearchBar } from './components/SearchBar';
 import { Modal } from './components/Modal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { QuickCreateModal } from './components/QuickCreateModal';
+import { DoneFilter } from './components/DoneFilter';
 import { useNotes } from './hooks/useNotes';
 
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
@@ -23,6 +24,7 @@ function App() {
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<number | null>(null);
+  const [selectedDone, setSelectedDone] = useState<boolean | null>(null);
   const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'title'>('updated');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
@@ -199,6 +201,8 @@ function App() {
             onLabelsChange={setSelectedLabels}
             selectedPriority={selectedPriority}
             onPriorityChange={setSelectedPriority}
+            selectedDone={selectedDone}
+            onDoneChange={setSelectedDone}
             sortBy={sortBy}
             onSortChange={setSortBy}
             sortOrder={sortOrder}

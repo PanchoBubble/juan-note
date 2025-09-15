@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { NoteItem } from './NoteItem';
 import { LabelFilter } from './LabelFilter';
 import { PriorityFilter } from './PriorityFilter';
+import { DoneFilter } from './DoneFilter';
 import { SortControls } from './SortControls';
 import { InlineCreate } from './InlineCreate';
 import type { Note, CreateNoteRequest } from '../types/note';
@@ -16,6 +17,8 @@ interface NoteListProps {
   onLabelsChange: (labels: string[]) => void;
   selectedPriority: number | null;
   onPriorityChange: (priority: number | null) => void;
+  selectedDone: boolean | null;
+  onDoneChange: (done: boolean | null) => void;
   sortBy: 'created' | 'updated' | 'priority' | 'title';
   onSortChange: (sort: 'created' | 'updated' | 'priority' | 'title') => void;
   sortOrder: 'asc' | 'desc';
@@ -35,6 +38,8 @@ export const NoteList = React.memo(function NoteList({
   onLabelsChange,
   selectedPriority,
   onPriorityChange,
+  selectedDone,
+  onDoneChange,
   sortBy,
   onSortChange,
   sortOrder,
@@ -69,6 +74,11 @@ export const NoteList = React.memo(function NoteList({
       filtered = filtered.filter(note => note.priority === selectedPriority);
     }
 
+    // Apply done filter
+    if (selectedDone !== null) {
+      filtered = filtered.filter(note => note.done === selectedDone);
+    }
+
     // Sort notes
     const sorted = [...filtered].sort((a, b) => {
       let comparison = 0;
@@ -92,7 +102,7 @@ export const NoteList = React.memo(function NoteList({
     });
 
     return sorted;
-  }, [notes, selectedLabels, selectedPriority, sortBy, sortOrder]);
+  }, [notes, selectedLabels, selectedPriority, selectedDone, sortBy, sortOrder]);
 
   if (loading && notes.length === 0) {
     return (
@@ -119,6 +129,11 @@ export const NoteList = React.memo(function NoteList({
             onPriorityChange={onPriorityChange}
           />
 
+          <DoneFilter
+            selectedDone={selectedDone}
+            onDoneChange={onDoneChange}
+          />
+
           <SortControls
             sortBy={sortBy}
             onSortChange={onSortChange}
@@ -134,11 +149,12 @@ export const NoteList = React.memo(function NoteList({
             + Add Note
           </button>
 
-          {(selectedLabels.length > 0 || selectedPriority !== null) && (
+          {(selectedLabels.length > 0 || selectedPriority !== null || selectedDone !== null) && (
             <button
               onClick={() => {
                 onLabelsChange([]);
                 onPriorityChange(null);
+                onDoneChange(null);
               }}
               className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md border border-red-200"
             >
