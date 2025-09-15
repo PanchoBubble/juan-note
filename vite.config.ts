@@ -9,7 +9,11 @@ export default defineConfig(async () => ({
   plugins: [react()],
   // Workaround for Node.js 21 crypto.hash issue
   optimizeDeps: {
-    exclude: ['vite']
+    exclude: ['vite'],
+    force: true
+  },
+  define: {
+    global: 'globalThis',
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

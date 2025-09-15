@@ -6,7 +6,6 @@ import { SearchBar } from './components/SearchBar';
 import { Modal } from './components/Modal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { QuickCreateModal } from './components/QuickCreateModal';
-import { InlineCreate } from './components/InlineCreate';
 import { useNotes } from './hooks/useNotes';
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
 import './App.css';

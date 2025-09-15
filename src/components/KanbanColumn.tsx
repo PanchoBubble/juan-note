@@ -1,4 +1,5 @@
 import { NoteItem } from './NoteItem';
+import { useKanbanView } from '../hooks/useKanbanView';
 import type { KanbanNote, KanbanStatus } from '../hooks/useKanbanView';
 import type { Note } from '../types/note';
 
@@ -10,7 +11,7 @@ interface KanbanColumnProps {
   onEdit: (note: Note) => void;
   onDelete: (note: Note) => void;
   onLabelClick?: (label: string) => void;
-  onDrop: (status: KanbanStatus) => void;
+  onDrop: (status: string) => void;
   onDragOver: (e: React.DragEvent) => void;
   isDragOver: boolean;
 }
@@ -27,6 +28,8 @@ export function KanbanColumn({
   onDragOver,
   isDragOver
 }: KanbanColumnProps) {
+  const { handleDragStart } = useKanbanView([]);
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     onDrop(status);
@@ -61,13 +64,18 @@ export function KanbanColumn({
               <span className="text-2xl">📝</span>
             </div>
             <p className="text-sm">No {title.toLowerCase()} notes</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {status === 'todo' && 'Notes without "done" or "in-progress" labels'}
+              {status === 'in-progress' && 'Notes with "in-progress" or "progress" labels'}
+              {status === 'done' && 'Notes with "done" label'}
+            </p>
           </div>
         ) : (
           notes.map((note) => (
             <div
               key={note.id}
               draggable
-              onDragStart={() => {/* Will be handled by parent */}}
+              onDragStart={() => handleDragStart(note)}
               className="cursor-move"
             >
               <NoteItem
