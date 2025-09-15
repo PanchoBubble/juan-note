@@ -1,11 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
-  CreateNoteRequest,
-  UpdateNoteRequest,
-  NoteResponse,
-  NotesListResponse,
-  SearchRequest,
-  DeleteNoteRequest
+   CreateNoteRequest,
+   UpdateNoteRequest,
+   NoteResponse,
+   NotesListResponse,
+   SearchRequest,
+   DeleteNoteRequest,
+   UpdateNoteDoneRequest
 } from '../types/note';
 
 export class NoteService {
@@ -91,6 +92,18 @@ export class NoteService {
       return {
         success: false,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  static async updateNoteDone(request: UpdateNoteDoneRequest): Promise<NoteResponse> {
+    try {
+      return await invoke('update_note_done', { request });
+    } catch (error) {
+      console.error('Failed to update note done status:', error);
+      return {
+        success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
