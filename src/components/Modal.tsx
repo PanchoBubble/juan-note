@@ -69,11 +69,11 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className={`w-full ${sizeClasses[size]} bg-surface dark:bg-primary-900 rounded-xl shadow-2xl max-h-[90vh] overflow-hidden border border-default dark:border-primary-700`}
+        className={`w-full ${sizeClasses[size]} bg-white dark:bg-primary-900 rounded-xl shadow-2xl max-h-[90vh] overflow-hidden border border-primary-200 dark:border-primary-700`}
         tabIndex={-1}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-default dark:border-primary-700">
+          <div className="flex items-center justify-between p-6 border-b border-primary-200 dark:border-primary-700">
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold text-primary dark:text-primary">
                 {title}
@@ -82,7 +82,7 @@ export function Modal({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 text-muted hover:text-primary hover:bg-surface-secondary dark:hover:bg-primary-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-light"
+                className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-50 dark:hover:bg-primary-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-200 dark:focus:ring-accent-800"
                 aria-label="Close modal"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

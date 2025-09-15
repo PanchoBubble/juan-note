@@ -110,9 +110,9 @@ function App() {
   }, [showQuickCreate, showEditor, deleteNoteData, showInlineCreate, viewMode]);
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-white dark:bg-primary-950">
       <header
-        className="bg-gradient-to-r from-accent-600 to-accent-700 dark:from-accent-700 dark:to-accent-800 shadow-lg border-b border-default"
+        className="bg-gradient-to-r from-accent-600 to-accent-700 dark:from-accent-700 dark:to-accent-800 shadow-lg border-b border-primary-200 dark:border-primary-700"
         role="banner"
       >
         <div className="max-w-4xl mx-auto px-4 py-6">
@@ -149,7 +149,7 @@ function App() {
                   className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                     viewMode === 'list'
                       ? 'bg-accent-600 text-white'
-                      : 'text-primary-600 dark:text-primary-300 hover:bg-surface-secondary dark:hover:bg-primary-700'
+                      : 'text-primary-600 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-700'
                   }`}
                 >
                   📋 List
@@ -159,7 +159,7 @@ function App() {
                   className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                     viewMode === 'kanban'
                       ? 'bg-accent-600 text-white'
-                      : 'text-primary-600 dark:text-primary-300 hover:bg-surface-secondary dark:hover:bg-primary-700'
+                      : 'text-primary-600 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-700'
                   }`}
                 >
                   📊 Kanban
@@ -167,7 +167,7 @@ function App() {
               </div>
               <button
                 onClick={handleCreateNote}
-                className="hidden md:flex items-center px-4 py-2 bg-white dark:bg-primary-800 text-accent-600 dark:text-accent-400 rounded-lg hover:bg-surface-secondary dark:hover:bg-primary-700 transition-colors font-medium shadow-sm"
+                className="hidden md:flex items-center px-4 py-2 bg-white dark:bg-primary-800 text-accent-600 dark:text-accent-400 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-700 transition-colors font-medium shadow-sm"
                 disabled={loading}
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

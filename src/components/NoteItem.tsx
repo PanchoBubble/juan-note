@@ -27,7 +27,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
       case 1: return 'text-warning-700 dark:text-warning-400 bg-warning-light dark:bg-warning-950 border-warning-200 dark:border-warning-700';
       case 2: return 'text-warning-800 dark:text-warning-300 bg-warning-light dark:bg-warning-950 border-warning-300 dark:border-warning-600';
       case 3: return 'text-danger-700 dark:text-danger-400 bg-danger-light dark:bg-danger-950 border-danger-200 dark:border-danger-700';
-      default: return 'text-muted bg-surface-secondary dark:bg-primary-800 border-secondary dark:border-primary-600';
+      default: return 'text-primary-500 dark:text-primary-400 bg-primary-50 dark:bg-primary-800 border-primary-300 dark:border-primary-600';
     }
   };
 
@@ -58,7 +58,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
 
   return (
     <article
-      className="bg-surface dark:bg-primary-900 rounded-xl shadow-sm border border-default dark:border-primary-700 p-6 hover:shadow-lg hover:border-secondary dark:hover:border-primary-600 transition-all duration-200 hover:-translate-y-0.5 group"
+      className="bg-white dark:bg-primary-900 rounded-xl shadow-sm border border-primary-200 dark:border-primary-700 p-6 hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-200 hover:-translate-y-0.5 group"
       role="article"
       aria-labelledby={`note-title-${note.id}`}
       aria-describedby={`note-content-${note.id}`}
@@ -66,7 +66,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
       <div className="flex items-start justify-between mb-2">
         <h3
           id={`note-title-${note.id}`}
-          className="text-lg font-semibold text-primary dark:text-primary flex-1 mr-4"
+          className="text-lg font-semibold text-primary-900 dark:text-primary-50 flex-1 mr-4"
         >
           {note.title || 'Untitled Note'}
         </h3>
@@ -85,7 +85,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(note)}
-              className="p-2 text-muted hover:text-accent-600 dark:hover:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-light"
+              className="p-2 text-primary-500 dark:text-primary-400 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-200 dark:focus:ring-accent-800"
               title="Edit note"
               aria-label={`Edit note: ${note.title || 'Untitled'}`}
             >
@@ -95,7 +95,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
             </button>
             <button
               onClick={() => onDelete(note)}
-              className="p-2 text-muted hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-danger-light"
+              className="p-2 text-primary-500 dark:text-primary-400 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-danger-200 dark:focus:ring-danger-800"
               title="Delete note"
               aria-label={`Delete note: ${note.title || 'Untitled'}`}
             >
@@ -107,11 +107,11 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
         </div>
       </div>
 
-      <div className="text-secondary dark:text-secondary text-sm leading-relaxed mb-3">
+      <div className="text-primary-700 dark:text-primary-200 text-sm leading-relaxed mb-3">
         {note.content ? (
           <div
             id={`note-content-${note.id}`}
-            className="bg-surface-secondary dark:bg-primary-800 rounded-lg p-3 border-l-4 border-default dark:border-primary-600"
+            className="bg-primary-50 dark:bg-primary-800 rounded-lg p-3 border-l-4 border-primary-200 dark:border-primary-600"
           >
             <p
               className={`${!isExpanded && note.content.length > 200 ? 'line-clamp-4' : ''}`}
@@ -136,7 +136,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
         ) : (
           <div
             id={`note-content-${note.id}`}
-            className="text-muted italic bg-surface-secondary dark:bg-primary-800 rounded-lg p-3 border-l-4 border-default dark:border-primary-600"
+            className="text-primary-500 dark:text-primary-400 italic bg-primary-50 dark:bg-primary-800 rounded-lg p-3 border-l-4 border-primary-200 dark:border-primary-600"
           >
             No content
           </div>
@@ -161,7 +161,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs text-muted border-t border-default dark:border-primary-700 pt-3">
+      <div className="flex items-center justify-between text-xs text-primary-500 dark:text-primary-400 border-t border-primary-200 dark:border-primary-700 pt-3">
         <div className="flex items-center space-x-4">
           {note.updated_at && (
             <span className="flex items-center space-x-1">
@@ -181,7 +181,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
           )}
         </div>
         <div className="flex items-center space-x-1">
-          <span className="text-muted">ID: {note.id}</span>
+          <span className="text-primary-500 dark:text-primary-400">ID: {note.id}</span>
         </div>
       </div>
     </article>

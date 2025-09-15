@@ -3,30 +3,30 @@
 /* Design Token System for Professional Color Palette */
 :root {
   /* Light mode colors */
-  --color-bg-primary: theme('colors.white');
-  --color-bg-secondary: theme('colors.surface.secondary');
-  --color-bg-tertiary: theme('colors.surface.tertiary');
-  --color-bg-surface: theme('colors.surface.DEFAULT');
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+  --color-bg-surface: #ffffff;
   
-  --color-text-primary: theme('colors.primary.900');
-  --color-text-secondary: theme('colors.primary.700');
-  --color-text-muted: theme('colors.primary.500');
-  --color-text-inverse: theme('colors.white');
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #ffffff;
   
-  --color-border-default: theme('colors.border.DEFAULT');
-  --color-border-secondary: theme('colors.border.secondary');
-  --color-border-focus: theme('colors.accent.500');
+  --color-border-default: #e2e8f0;
+  --color-border-secondary: #cbd5e1;
+  --color-border-focus: #3b82f6;
   
-  --color-accent: theme('colors.accent.600');
-  --color-accent-hover: theme('colors.accent.700');
-  --color-accent-light: theme('colors.accent.50');
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-light: #eff6ff;
   
-  --color-success: theme('colors.success.600');
-  --color-success-light: theme('colors.success.50');
-  --color-warning: theme('colors.warning.600');
-  --color-warning-light: theme('colors.warning.50');
-  --color-danger: theme('colors.danger.600');
-  --color-danger-light: theme('colors.danger.50');
+  --color-success: #059669;
+  --color-success-light: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-light: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-light: #fef2f2;
   
   /* Typography */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -48,30 +48,30 @@
 
 /* Dark mode color overrides */
 .dark {
-  --color-bg-primary: theme('colors.primary.950');
-  --color-bg-secondary: theme('colors.primary.900');
-  --color-bg-tertiary: theme('colors.primary.800');
-  --color-bg-surface: theme('colors.primary.900');
+  --color-bg-primary: #020617;
+  --color-bg-secondary: #0f172a;
+  --color-bg-tertiary: #1e293b;
+  --color-bg-surface: #0f172a;
   
-  --color-text-primary: theme('colors.primary.50');
-  --color-text-secondary: theme('colors.primary.200');
-  --color-text-muted: theme('colors.primary.400');
-  --color-text-inverse: theme('colors.primary.900');
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #0f172a;
   
-  --color-border-default: theme('colors.primary.700');
-  --color-border-secondary: theme('colors.primary.600');
-  --color-border-focus: theme('colors.accent.400');
+  --color-border-default: #334155;
+  --color-border-secondary: #475569;
+  --color-border-focus: #60a5fa;
   
-  --color-accent: theme('colors.accent.500');
-  --color-accent-hover: theme('colors.accent.400');
-  --color-accent-light: theme('colors.accent.950');
+  --color-accent: #3b82f6;
+  --color-accent-hover: #60a5fa;
+  --color-accent-light: #172554;
   
-  --color-success: theme('colors.success.500');
-  --color-success-light: theme('colors.success.950');
-  --color-warning: theme('colors.warning.500');
-  --color-warning-light: theme('colors.warning.950');
-  --color-danger: theme('colors.danger.500');
-  --color-danger-light: theme('colors.danger.950');
+  --color-success: #10b981;
+  --color-success-light: #022c22;
+  --color-warning: #f59e0b;
+  --color-warning-light: #451a03;
+  --color-danger: #ef4444;
+  --color-danger-light: #450a0a;
 }
 
 /* Global base styles using semantic tokens */
