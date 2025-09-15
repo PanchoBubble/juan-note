@@ -7,11 +7,13 @@ import { Modal } from './components/Modal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { QuickCreateModal } from './components/QuickCreateModal';
 import { useNotes } from './hooks/useNotes';
+import { useDarkMode } from './hooks/useDarkMode';
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
 import './App.css';
 
 function App() {
   const { notes, loading, error, createNote, updateNote, deleteNote, searchNotes, clearError } = useNotes();
+  const { isDark, toggleDarkMode } = useDarkMode();
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
@@ -108,9 +110,9 @@ function App() {
   }, [showQuickCreate, showEditor, deleteNoteData, showInlineCreate, viewMode]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface">
       <header
-        className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg border-b border-gray-200"
+        className="bg-gradient-to-r from-accent-600 to-accent-700 dark:from-accent-700 dark:to-accent-800 shadow-lg border-b border-default"
         role="banner"
       >
         <div className="max-w-4xl mx-auto px-4 py-6">
@@ -121,17 +123,33 @@ function App() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">Juan Notes</h1>
-                <p className="text-blue-100 text-sm">Organize your thoughts</p>
+                <p className="text-accent-100 dark:text-accent-200 text-sm">Organize your thoughts</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="hidden md:flex bg-white rounded-lg p-1 shadow-sm">
+              {/* Dark mode toggle */}
+              <button
+                onClick={toggleDarkMode}
+                className="hidden sm:flex items-center p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? (
+                  <svg className="w-5 h-5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-slate-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                  </svg>
+                )}
+              </button>
+              <div className="hidden md:flex bg-white dark:bg-primary-800 rounded-lg p-1 shadow-sm">
                 <button
                   onClick={() => setViewMode('list')}
                   className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                     viewMode === 'list'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-accent-600 text-white'
+                      : 'text-primary-600 dark:text-primary-300 hover:bg-surface-secondary dark:hover:bg-primary-700'
                   }`}
                 >
                   📋 List
@@ -140,8 +158,8 @@ function App() {
                   onClick={() => setViewMode('kanban')}
                   className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                     viewMode === 'kanban'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-accent-600 text-white'
+                      : 'text-primary-600 dark:text-primary-300 hover:bg-surface-secondary dark:hover:bg-primary-700'
                   }`}
                 >
                   📊 Kanban
@@ -149,7 +167,7 @@ function App() {
               </div>
               <button
                 onClick={handleCreateNote}
-                className="hidden md:flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm"
+                className="hidden md:flex items-center px-4 py-2 bg-white dark:bg-primary-800 text-accent-600 dark:text-accent-400 rounded-lg hover:bg-surface-secondary dark:hover:bg-primary-700 transition-colors font-medium shadow-sm"
                 disabled={loading}
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,12 +186,12 @@ function App() {
         aria-label="Notes management"
       >
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-4 p-4 bg-danger-light border border-danger-200 dark:border-danger-700 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-red-800">{error}</span>
+              <span className="text-danger-800 dark:text-danger-200">{error}</span>
               <button
                 onClick={clearError}
-                className="text-red-600 hover:text-red-800"
+                className="text-danger-600 dark:text-danger-400 hover:text-danger-800 dark:hover:text-danger-200"
               >
                 ✕
               </button>
@@ -253,7 +271,7 @@ function App() {
         {/* Floating Action Button for Mobile */}
         <button
           onClick={handleCreateNote}
-          className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center z-40"
+          className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-accent-600 text-white rounded-full shadow-lg hover:bg-accent-700 transition-colors flex items-center justify-center z-40 focus:outline-none focus:ring-4 focus:ring-accent-light"
           disabled={loading}
           aria-label="Create new note"
         >
