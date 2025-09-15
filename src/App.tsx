@@ -82,29 +82,38 @@ function App() {
     setShowInlineCreate(false);
   };
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts and accessibility
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd/Ctrl + N for quick create
-      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n' && !e.shiftKey) {
         e.preventDefault();
         handleQuickCreate();
+      }
+      // Cmd/Ctrl + Shift + N for inline create (in list view)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'n' && viewMode === 'list') {
+        e.preventDefault();
+        handleInlineCreate();
       }
       // Escape to close modals
       if (e.key === 'Escape') {
         if (showQuickCreate) setShowQuickCreate(false);
         if (showEditor) handleCancelEdit();
         if (deleteNoteData) handleCancelDelete();
+        if (showInlineCreate) handleCancelInlineCreate();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showQuickCreate, showEditor, deleteNoteData]);
+  }, [showQuickCreate, showEditor, deleteNoteData, showInlineCreate, viewMode]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg border-b border-gray-200">
+      <header
+        className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg border-b border-gray-200"
+        role="banner"
+      >
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -154,7 +163,11 @@ function App() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main
+        className="max-w-4xl mx-auto px-4 py-8"
+        role="main"
+        aria-label="Notes management"
+      >
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center justify-between">

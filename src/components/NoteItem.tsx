@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { Note } from '../types/note';
 
 interface NoteItemProps {
@@ -8,7 +8,7 @@ interface NoteItemProps {
   onLabelClick?: (label: string) => void;
 }
 
-export function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps) {
+export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const formatDate = (dateString?: string) => {
@@ -57,9 +57,17 @@ export function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:border-gray-200 transition-all duration-200 hover:-translate-y-0.5 group">
+    <article
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:border-gray-200 transition-all duration-200 hover:-translate-y-0.5 group"
+      role="article"
+      aria-labelledby={`note-title-${note.id}`}
+      aria-describedby={`note-content-${note.id}`}
+    >
       <div className="flex items-start justify-between mb-2">
-        <h3 className="text-lg font-semibold text-gray-900 flex-1 mr-4">
+        <h3
+          id={`note-title-${note.id}`}
+          className="text-lg font-semibold text-gray-900 flex-1 mr-4"
+        >
           {note.title || 'Untitled Note'}
         </h3>
         <div className="flex items-center space-x-2">
@@ -77,19 +85,21 @@ export function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(note)}
-              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Edit note"
+              aria-label={`Edit note: ${note.title || 'Untitled'}`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
             <button
               onClick={() => onDelete(note)}
-              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
               title="Delete note"
+              aria-label={`Delete note: ${note.title || 'Untitled'}`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
@@ -99,8 +109,14 @@ export function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps
 
       <div className="text-gray-700 text-sm leading-relaxed mb-3">
         {note.content ? (
-          <div className="bg-gray-50 rounded-lg p-3 border-l-4 border-gray-200">
-            <p className={`${!isExpanded && note.content.length > 200 ? 'line-clamp-4' : ''}`}>
+          <div
+            id={`note-content-${note.id}`}
+            className="bg-gray-50 rounded-lg p-3 border-l-4 border-gray-200"
+          >
+            <p
+              className={`${!isExpanded && note.content.length > 200 ? 'line-clamp-4' : ''}`}
+              aria-expanded={isExpanded}
+            >
               {isExpanded || note.content.length <= 200
                 ? note.content
                 : `${note.content.substring(0, 200)}...`
@@ -109,14 +125,19 @@ export function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps
             {note.content.length > 200 && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-2 text-blue-600 hover:text-blue-800 text-xs font-medium hover:underline transition-colors"
+                className="mt-2 text-blue-600 hover:text-blue-800 text-xs font-medium hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                aria-expanded={isExpanded}
+                aria-controls={`note-content-${note.id}`}
               >
                 {isExpanded ? 'Show less' : 'Read more'}
               </button>
             )}
           </div>
         ) : (
-          <div className="text-gray-400 italic bg-gray-50 rounded-lg p-3 border-l-4 border-gray-200">
+          <div
+            id={`note-content-${note.id}`}
+            className="text-gray-400 italic bg-gray-50 rounded-lg p-3 border-l-4 border-gray-200"
+          >
             No content
           </div>
         )}
@@ -163,6 +184,6 @@ export function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps
           <span className="text-gray-400">ID: {note.id}</span>
         </div>
       </div>
-    </div>
+    </article>
   );
-}
+});

@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { NoteItem } from './NoteItem';
 import { LabelFilter } from './LabelFilter';
 import { PriorityFilter } from './PriorityFilter';
@@ -26,7 +26,7 @@ interface NoteListProps {
   onSaveNote?: (request: CreateNoteRequest) => Promise<void>;
 }
 
-export function NoteList({
+export const NoteList = React.memo(function NoteList({
   notes,
   onEdit,
   onDelete,
@@ -196,4 +196,4 @@ export function NoteList({
       )}
     </div>
   );
-}
+});
