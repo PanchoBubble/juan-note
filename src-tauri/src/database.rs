@@ -46,6 +46,7 @@ pub fn run_migrations(conn: &DbConnection) -> Result<()> {
     let migrations: Vec<(i32, fn(&Connection) -> Result<()>)> = vec![
         (1, migrations::migration_001::up),
         (2, migrations::migration_002::up),
+        (3, migrations::migration_003::up),
     ];
 
     // Run pending migrations

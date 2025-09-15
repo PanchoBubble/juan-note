@@ -1,32 +1,35 @@
 export interface Note {
-  id?: number;
-  title: string;
-  content: string;
-  created_at?: string;
-  updated_at?: string;
-  priority: number;
-  labels: string[];
-  deadline?: string;
-  reminder_minutes: number;
+   id?: number;
+   title: string;
+   content: string;
+   created_at?: string;
+   updated_at?: string;
+   priority: number;
+   labels: string[];
+   deadline?: string;
+   reminder_minutes: number;
+   done: boolean;
 }
 
 export interface CreateNoteRequest {
-  title: string;
-  content: string;
-  priority?: number;
-  labels?: string[];
-  deadline?: string;
-  reminder_minutes?: number;
+   title: string;
+   content: string;
+   priority?: number;
+   labels?: string[];
+   deadline?: string;
+   reminder_minutes?: number;
+   done?: boolean;
 }
 
 export interface UpdateNoteRequest {
-  id: number;
-  title?: string;
-  content?: string;
-  priority?: number;
-  labels?: string[];
-  deadline?: string;
-  reminder_minutes?: number;
+   id: number;
+   title?: string;
+   content?: string;
+   priority?: number;
+   labels?: string[];
+   deadline?: string;
+   reminder_minutes?: number;
+   done?: boolean;
 }
 
 export interface NoteResponse {
@@ -48,5 +51,10 @@ export interface SearchRequest {
 }
 
 export interface DeleteNoteRequest {
-  id: number;
+   id: number;
+}
+
+export interface UpdateNoteDoneRequest {
+   id: number;
+   done: boolean;
 }

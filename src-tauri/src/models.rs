@@ -12,6 +12,7 @@ pub struct Note {
     pub labels: Vec<String>,
     pub deadline: Option<DateTime<Utc>>,
     pub reminder_minutes: i32,
+    pub done: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -22,6 +23,7 @@ pub struct CreateNoteRequest {
     pub labels: Option<Vec<String>>,
     pub deadline: Option<DateTime<Utc>>,
     pub reminder_minutes: Option<i32>,
+    pub done: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -33,6 +35,7 @@ pub struct UpdateNoteRequest {
     pub labels: Option<Vec<String>>,
     pub deadline: Option<DateTime<Utc>>,
     pub reminder_minutes: Option<i32>,
+    pub done: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -61,6 +64,12 @@ pub struct DeleteNoteRequest {
     pub id: i64,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateNoteDoneRequest {
+    pub id: i64,
+    pub done: bool,
+}
+
 impl Note {
     pub fn new(title: String, content: String) -> Self {
         Self {
@@ -73,6 +82,7 @@ impl Note {
             labels: Vec::new(),
             deadline: None,
             reminder_minutes: 0,
+            done: false,
         }
     }
 
@@ -93,6 +103,11 @@ impl Note {
 
     pub fn with_reminder_minutes(mut self, reminder_minutes: i32) -> Self {
         self.reminder_minutes = reminder_minutes;
+        self
+    }
+
+    pub fn with_done(mut self, done: bool) -> Self {
+        self.done = done;
         self
     }
 }
