@@ -74,12 +74,7 @@ export function NoteEditor({ note, onSave, onCancel, loading }: NoteEditorProps)
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold mb-4">
-        {note ? 'Edit Note' : 'Create New Note'}
-      </h2>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="p-6 space-y-6">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
             Title
@@ -138,7 +133,7 @@ export function NoteEditor({ note, onSave, onCancel, loading }: NoteEditorProps)
               id="labels"
               value={labelInput}
               onChange={(e) => setLabelInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Add a label..."
               disabled={loading}
@@ -192,6 +187,5 @@ export function NoteEditor({ note, onSave, onCancel, loading }: NoteEditorProps)
           </button>
         </div>
       </form>
-    </div>
   );
 }
