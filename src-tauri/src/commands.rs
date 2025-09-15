@@ -2,7 +2,7 @@ use crate::database::{establish_connection, initialize_database, DbConnection};
 use crate::models::*;
 use rusqlite::Result;
 use std::sync::OnceLock;
-use tauri::State;
+use chrono::{DateTime, Utc};
 
 static DB_CONNECTION: OnceLock<DbConnection> = OnceLock::new();
 
@@ -13,7 +13,7 @@ fn get_db_connection() -> &'static DbConnection {
 }
 
 #[tauri::command]
-pub async fn initialize_db() -> Result<NotesListResponse, String> {
+pub fn initialize_db() -> Result<NotesListResponse, String> {
     let conn = get_db_connection();
     initialize_database(conn).map_err(|e| e.to_string())?;
 
@@ -26,14 +26,14 @@ pub async fn initialize_db() -> Result<NotesListResponse, String> {
 }
 
 #[tauri::command]
-pub async fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
+pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 
     let labels_json = serde_json::to_string(&request.labels.unwrap_or_default())
         .map_err(|e| format!("Failed to serialize labels: {}", e))?;
 
-    let now = chrono::Utc::now().timestamp();
+    let now = Utc::now().timestamp();
 
     conn.execute(
         "INSERT INTO notes (title, content, created_at, updated_at, priority, labels)
@@ -51,77 +51,19 @@ pub async fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, Str
     let id = conn.last_insert_rowid();
 
     // Retrieve the created note
-    let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels
-         FROM notes WHERE id = ?"
-    ).map_err(|e| format!("Failed to prepare query: {}", e))?;
-
-    let note = stmt.query_row([id], |row| {
-        let labels_str: String = row.get(6)?;
-        let labels: Vec<String> = serde_json::from_str(&labels_str)
-            .unwrap_or_default();
-
-        Ok(Note {
-            id: Some(row.get(0)?),
-            title: row.get(1)?,
-            content: row.get(2)?,
-            created_at: Some(DateTime::from_timestamp(row.get(3)?, 0).unwrap_or_default()),
-            updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
-            priority: row.get(5)?,
-            labels,
-        })
-    }).map_err(|e| format!("Failed to retrieve created note: {}", e))?;
-
-    Ok(NoteResponse {
-        success: true,
-        data: Some(note),
-        error: None,
-    })
+    get_note_sync(id, &conn)
 }
 
 #[tauri::command]
-pub async fn get_note(id: i64) -> Result<NoteResponse, String> {
+pub fn get_note(id: i64) -> Result<NoteResponse, String> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 
-    let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels
-         FROM notes WHERE id = ?"
-    ).map_err(|e| format!("Failed to prepare query: {}", e))?;
-
-    let note = stmt.query_row([id], |row| {
-        let labels_str: String = row.get(6)?;
-        let labels: Vec<String> = serde_json::from_str(&labels_str)
-            .unwrap_or_default();
-
-        Ok(Note {
-            id: Some(row.get(0)?),
-            title: row.get(1)?,
-            content: row.get(2)?,
-            created_at: Some(DateTime::from_timestamp(row.get(3)?, 0).unwrap_or_default()),
-            updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
-            priority: row.get(5)?,
-            labels,
-        })
-    });
-
-    match note {
-        Ok(note) => Ok(NoteResponse {
-            success: true,
-            data: Some(note),
-            error: None,
-        }),
-        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(NoteResponse {
-            success: false,
-            data: None,
-            error: Some("Note not found".to_string()),
-        }),
-        Err(e) => Err(format!("Failed to get note: {}", e)),
-    }
+    get_note_sync(id, &conn)
 }
 
 #[tauri::command]
-pub async fn get_all_notes() -> Result<NotesListResponse, String> {
+pub fn get_all_notes() -> Result<NotesListResponse, String> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 
@@ -162,34 +104,34 @@ pub async fn get_all_notes() -> Result<NotesListResponse, String> {
 }
 
 #[tauri::command]
-pub async fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
+pub fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 
     // Build dynamic update query
     let mut set_parts = Vec::new();
-    let mut params = Vec::new();
+    let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
 
     if let Some(title) = &request.title {
         set_parts.push("title = ?".to_string());
-        params.push(title.as_str());
+        params.push(Box::new(title.clone()));
     }
 
     if let Some(content) = &request.content {
         set_parts.push("content = ?".to_string());
-        params.push(content.as_str());
+        params.push(Box::new(content.clone()));
     }
 
     if let Some(priority) = request.priority {
         set_parts.push("priority = ?".to_string());
-        params.push(&priority.to_string());
+        params.push(Box::new(priority));
     }
 
     if let Some(labels) = &request.labels {
         let labels_json = serde_json::to_string(labels)
             .map_err(|e| format!("Failed to serialize labels: {}", e))?;
         set_parts.push("labels = ?".to_string());
-        params.push(&labels_json);
+        params.push(Box::new(labels_json));
     }
 
     if set_parts.is_empty() {
@@ -197,16 +139,16 @@ pub async fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, Str
     }
 
     set_parts.push("updated_at = ?".to_string());
-    let now = chrono::Utc::now().timestamp().to_string();
-    params.push(&now);
+    let now = Utc::now().timestamp();
+    params.push(Box::new(now));
 
     let query = format!(
         "UPDATE notes SET {} WHERE id = ?",
         set_parts.join(", ")
     );
-    params.push(&request.id.to_string());
+    params.push(Box::new(request.id));
 
-    let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|s| s as &dyn rusqlite::ToSql).collect();
+    let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
 
     let rows_affected = conn.execute(&query, &param_refs[..])
         .map_err(|e| format!("Failed to update note: {}", e))?;
@@ -220,16 +162,53 @@ pub async fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, Str
     }
 
     // Return the updated note
-    get_note(request.id).await
+    get_note_sync(request.id, &conn)
+}
+
+fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, String> {
+    let mut stmt = conn.prepare(
+        "SELECT id, title, content, created_at, updated_at, priority, labels
+         FROM notes WHERE id = ?"
+    ).map_err(|e| format!("Failed to prepare query: {}", e))?;
+
+    let note = stmt.query_row([id], |row| {
+        let labels_str: String = row.get(6)?;
+        let labels: Vec<String> = serde_json::from_str(&labels_str)
+            .unwrap_or_default();
+
+        Ok(Note {
+            id: Some(row.get(0)?),
+            title: row.get(1)?,
+            content: row.get(2)?,
+            created_at: Some(DateTime::from_timestamp(row.get(3)?, 0).unwrap_or_default()),
+            updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
+            priority: row.get(5)?,
+            labels,
+        })
+    });
+
+    match note {
+        Ok(note) => Ok(NoteResponse {
+            success: true,
+            data: Some(note),
+            error: None,
+        }),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(NoteResponse {
+            success: false,
+            data: None,
+            error: Some("Note not found".to_string()),
+        }),
+        Err(e) => Err(format!("Failed to get note: {}", e)),
+    }
 }
 
 #[tauri::command]
-pub async fn delete_note(request: DeleteNoteRequest) -> Result<NoteResponse, String> {
+pub fn delete_note(request: DeleteNoteRequest) -> Result<NoteResponse, String> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 
     // First get the note for return
-    let note_result = get_note(request.id).await?;
+    let note_result = get_note_sync(request.id, &conn)?;
     if !note_result.success {
         return Ok(note_result);
     }
@@ -256,7 +235,7 @@ pub async fn delete_note(request: DeleteNoteRequest) -> Result<NoteResponse, Str
 }
 
 #[tauri::command]
-pub async fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String> {
+pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 

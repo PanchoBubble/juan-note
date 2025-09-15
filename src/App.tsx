@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NoteList } from './components/NoteList';
 import { NoteEditor } from './components/NoteEditor';
 import { SearchBar } from './components/SearchBar';

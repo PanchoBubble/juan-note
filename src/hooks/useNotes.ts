@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { NoteService } from '../services/noteService';
-import type { Note, CreateNoteRequest, UpdateNoteRequest, SearchRequest, DeleteNoteRequest } from '../types/note';
+import type { Note, CreateNoteRequest, UpdateNoteRequest } from '../types/note';
 
 export interface UseNotesReturn {
   notes: Note[];

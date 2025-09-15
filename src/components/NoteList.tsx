@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { NoteItem } from './NoteItem';
 import type { Note } from '../types/note';
 

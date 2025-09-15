@@ -1,6 +1,6 @@
 use rusqlite::{Connection, Result};
-use std::path::Path;
 use std::sync::{Arc, Mutex};
+use std::env;
 
 pub type DbConnection = Arc<Mutex<Connection>>;
 
@@ -18,9 +18,9 @@ pub fn establish_connection() -> Result<DbConnection> {
 }
 
 pub fn get_database_path() -> String {
-    let app_dir = tauri::api::path::app_data_dir(&tauri::Config::default())
-        .expect("Failed to get app data directory");
-    app_dir.join("notes.db").to_string_lossy().to_string()
+    // Use a simple path in the current directory for now
+    // In production, you'd want to use proper app data directory
+    "notes.db".to_string()
 }
 
 pub fn initialize_database(conn: &DbConnection) -> Result<()> {
