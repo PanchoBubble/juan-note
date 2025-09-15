@@ -24,10 +24,10 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
 
   const getPriorityColor = (priority: number) => {
     switch (priority) {
-      case 1: return 'text-warning-700 dark:text-warning-400 bg-warning-light dark:bg-warning-950 border-warning-200 dark:border-warning-700';
-      case 2: return 'text-warning-800 dark:text-warning-300 bg-warning-light dark:bg-warning-950 border-warning-300 dark:border-warning-600';
-      case 3: return 'text-danger-700 dark:text-danger-400 bg-danger-light dark:bg-danger-950 border-danger-200 dark:border-danger-700';
-      default: return 'text-primary-500 dark:text-primary-400 bg-primary-50 dark:bg-primary-800 border-primary-300 dark:border-primary-600';
+      case 1: return 'text-monokai-yellow bg-monokai-bg bg-opacity-80 border-monokai-comment';
+      case 2: return 'text-monokai-orange bg-monokai-bg bg-opacity-80 border-monokai-comment';
+      case 3: return 'text-monokai-pink bg-monokai-bg bg-opacity-80 border-monokai-comment';
+      default: return 'text-monokai-comment bg-monokai-bg bg-opacity-80 border-monokai-comment';
     }
   };
 
@@ -41,16 +41,14 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
   };
 
   const getLabelColor = (label: string) => {
-    // Professional color assignment for consistent labels
+    // Monokai color assignment for consistent labels
     const colors = [
-      'bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-400 border-accent-200 dark:border-accent-700 hover:bg-accent-100 dark:hover:bg-accent-900',
-      'bg-success-50 dark:bg-success-950 text-success-700 dark:text-success-400 border-success-200 dark:border-success-700 hover:bg-success-100 dark:hover:bg-success-900',
-      'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900',
-      'bg-pink-50 dark:bg-pink-950 text-pink-700 dark:text-pink-400 border-pink-200 dark:border-pink-700 hover:bg-pink-100 dark:hover:bg-pink-900',
-      'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900',
-      'bg-warning-50 dark:bg-warning-950 text-warning-700 dark:text-warning-400 border-warning-200 dark:border-warning-700 hover:bg-warning-100 dark:hover:bg-warning-900',
-      'bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-700 hover:bg-teal-100 dark:hover:bg-teal-900',
-      'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900'
+      'bg-surface-tertiary text-monokai-blue border-monokai-blue border-opacity-30 hover:bg-monokai-blue hover:bg-opacity-20',
+      'bg-surface-tertiary text-monokai-green border-monokai-green border-opacity-30 hover:bg-monokai-green hover:bg-opacity-20',
+      'bg-surface-tertiary text-monokai-purple border-monokai-purple border-opacity-30 hover:bg-monokai-purple hover:bg-opacity-20',
+      'bg-surface-tertiary text-monokai-pink border-monokai-pink border-opacity-30 hover:bg-monokai-pink hover:bg-opacity-20',
+      'bg-surface-tertiary text-monokai-orange border-monokai-orange border-opacity-30 hover:bg-monokai-orange hover:bg-opacity-20',
+      'bg-surface-tertiary text-monokai-yellow border-monokai-yellow border-opacity-30 hover:bg-monokai-yellow hover:bg-opacity-20'
     ];
     const hash = label.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     return colors[hash % colors.length];
@@ -58,7 +56,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
 
   return (
     <article
-      className="bg-white dark:bg-primary-900 rounded-xl shadow-sm border border-primary-200 dark:border-primary-700 p-6 hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-200 hover:-translate-y-0.5 group"
+      className="bg-surface-secondary rounded-xl shadow-sm border border-monokai-comment border-opacity-30 p-6 hover:shadow-lg hover:border-monokai-comment transition-all duration-200 hover:-translate-y-0.5 group"
       role="article"
       aria-labelledby={`note-title-${note.id}`}
       aria-describedby={`note-content-${note.id}`}
@@ -66,7 +64,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
       <div className="flex items-start justify-between mb-2">
         <h3
           id={`note-title-${note.id}`}
-          className="text-lg font-semibold text-primary-900 dark:text-primary-50 flex-1 mr-4"
+          className="text-lg font-semibold text-monokai-fg flex-1 mr-4"
         >
           {note.title || 'Untitled Note'}
         </h3>
@@ -75,8 +73,8 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
             <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm ${getPriorityColor(note.priority)}`}>
               <span className="flex items-center space-x-1">
                 <span className={`w-2 h-2 rounded-full ${
-                  note.priority === 1 ? 'bg-warning-500' :
-                  note.priority === 2 ? 'bg-warning-600' : 'bg-danger-500'
+                  note.priority === 1 ? 'bg-monokai-yellow' :
+                  note.priority === 2 ? 'bg-monokai-orange' : 'bg-monokai-pink'
                 }`}></span>
                 <span>{getPriorityLabel(note.priority)}</span>
               </span>
@@ -85,7 +83,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(note)}
-              className="p-2 text-primary-500 dark:text-primary-400 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-200 dark:focus:ring-accent-800"
+              className="p-2 text-monokai-comment hover:text-monokai-blue hover:bg-monokai-blue hover:bg-opacity-20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-30"
               title="Edit note"
               aria-label={`Edit note: ${note.title || 'Untitled'}`}
             >
@@ -95,7 +93,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
             </button>
             <button
               onClick={() => onDelete(note)}
-              className="p-2 text-primary-500 dark:text-primary-400 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-danger-200 dark:focus:ring-danger-800"
+              className="p-2 text-monokai-comment hover:text-monokai-pink hover:bg-monokai-pink hover:bg-opacity-20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-monokai-pink focus:ring-opacity-30"
               title="Delete note"
               aria-label={`Delete note: ${note.title || 'Untitled'}`}
             >
@@ -107,11 +105,11 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
         </div>
       </div>
 
-      <div className="text-primary-700 dark:text-primary-200 text-sm leading-relaxed mb-3">
+      <div className="text-monokai-fg text-opacity-90 text-sm leading-relaxed mb-3">
         {note.content ? (
           <div
             id={`note-content-${note.id}`}
-            className="bg-primary-50 dark:bg-primary-800 rounded-lg p-3 border-l-4 border-primary-200 dark:border-primary-600"
+            className="bg-surface-tertiary rounded-lg p-3 border-l-4 border-monokai-comment border-opacity-50"
           >
             <p
               className={`${!isExpanded && note.content.length > 200 ? 'line-clamp-4' : ''}`}
@@ -125,7 +123,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
             {note.content.length > 200 && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-2 text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 text-xs font-medium hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-accent-light rounded"
+                className="mt-2 text-monokai-blue hover:text-monokai-purple text-xs font-medium hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-30 rounded"
                 aria-expanded={isExpanded}
                 aria-controls={`note-content-${note.id}`}
               >
@@ -136,7 +134,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
         ) : (
           <div
             id={`note-content-${note.id}`}
-            className="text-primary-500 dark:text-primary-400 italic bg-primary-50 dark:bg-primary-800 rounded-lg p-3 border-l-4 border-primary-200 dark:border-primary-600"
+            className="text-monokai-comment italic bg-surface-tertiary rounded-lg p-3 border-l-4 border-monokai-comment border-opacity-50"
           >
             No content
           </div>
@@ -161,7 +159,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs text-primary-500 dark:text-primary-400 border-t border-primary-200 dark:border-primary-700 pt-3">
+      <div className="flex items-center justify-between text-xs text-monokai-comment border-t border-monokai-comment border-opacity-30 pt-3">
         <div className="flex items-center space-x-4">
           {note.updated_at && (
             <span className="flex items-center space-x-1">
@@ -181,7 +179,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onDelete, o
           )}
         </div>
         <div className="flex items-center space-x-1">
-          <span className="text-primary-500 dark:text-primary-400">ID: {note.id}</span>
+          <span className="text-monokai-comment">ID: {note.id}</span>
         </div>
       </div>
     </article>

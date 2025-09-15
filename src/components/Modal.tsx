@@ -61,7 +61,7 @@ export function Modal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -69,20 +69,20 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className={`w-full ${sizeClasses[size]} bg-white dark:bg-primary-900 rounded-xl shadow-2xl max-h-[90vh] overflow-hidden border border-primary-200 dark:border-primary-700`}
+        className={`w-full ${sizeClasses[size]} bg-surface-secondary rounded-xl shadow-2xl max-h-[90vh] overflow-hidden border border-monokai-comment border-opacity-30`}
         tabIndex={-1}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-primary-200 dark:border-primary-700">
+          <div className="flex items-center justify-between p-6 border-b border-monokai-comment border-opacity-30">
             {title && (
-              <h2 id="modal-title" className="text-xl font-semibold text-primary dark:text-primary">
+              <h2 id="modal-title" className="text-xl font-semibold text-monokai-fg">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-50 dark:hover:bg-primary-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-200 dark:focus:ring-accent-800"
+                className="p-2 text-monokai-comment hover:text-monokai-pink hover:bg-monokai-pink hover:bg-opacity-20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-monokai-pink focus:ring-opacity-30"
                 aria-label="Close modal"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -26,7 +26,7 @@ export function SearchBar({ onSearch, loading, placeholder = "Search notes..." }
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg
-            className="h-5 w-5 text-gray-400"
+            className="h-5 w-5 text-monokai-comment"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -43,7 +43,7 @@ export function SearchBar({ onSearch, loading, placeholder = "Search notes..." }
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="block w-full pl-10 pr-10 py-3 bg-surface-secondary text-monokai-fg border border-monokai-comment border-opacity-30 rounded-lg focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-50 focus:border-monokai-blue placeholder-monokai-comment"
           placeholder={placeholder}
           disabled={loading}
         />
@@ -54,7 +54,7 @@ export function SearchBar({ onSearch, loading, placeholder = "Search notes..." }
             disabled={loading}
           >
             <svg
-              className="h-5 w-5 text-gray-400 hover:text-gray-600"
+              className="h-5 w-5 text-monokai-comment hover:text-monokai-pink"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -71,7 +71,7 @@ export function SearchBar({ onSearch, loading, placeholder = "Search notes..." }
       </div>
       {loading && query && (
         <div className="absolute right-3 top-3">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-monokai-blue"></div>
         </div>
       )}
     </div>
