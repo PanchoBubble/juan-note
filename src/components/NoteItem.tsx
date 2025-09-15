@@ -5,9 +5,10 @@ interface NoteItemProps {
   note: Note;
   onEdit: (note: Note) => void;
   onDelete: (note: Note) => void;
+  onLabelClick?: (label: string) => void;
 }
 
-export function NoteItem({ note, onEdit, onDelete }: NoteItemProps) {
+export function NoteItem({ note, onEdit, onDelete, onLabelClick }: NoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const formatDate = (dateString?: string) => {
@@ -37,6 +38,22 @@ export function NoteItem({ note, onEdit, onDelete }: NoteItemProps) {
       case 3: return 'High';
       default: return 'Normal';
     }
+  };
+
+  const getLabelColor = (label: string) => {
+    // Simple hash-based color assignment for consistent colors
+    const colors = [
+      'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100',
+      'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
+      'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100',
+      'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100',
+      'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100',
+      'bg-red-50 text-red-700 border-red-200 hover:bg-red-100',
+      'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100',
+      'bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100'
+    ];
+    const hash = label.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    return colors[hash % colors.length];
   };
 
   return (
@@ -96,12 +113,14 @@ export function NoteItem({ note, onEdit, onDelete }: NoteItemProps) {
       {note.labels && note.labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {note.labels.map((label, index) => (
-            <span
+            <button
               key={index}
-              className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+              onClick={() => onLabelClick?.(label)}
+              className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors cursor-pointer ${getLabelColor(label)}`}
+              title={`Filter by "${label}"`}
             >
               {label}
-            </span>
+            </button>
           ))}
         </div>
       )}

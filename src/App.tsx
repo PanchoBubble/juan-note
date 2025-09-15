@@ -14,6 +14,11 @@ function App() {
   const [showEditor, setShowEditor] = useState(false);
   const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
 
+  // Filter and sort state
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+  const [selectedPriority, setSelectedPriority] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'title'>('updated');
+
   const handleCreateNote = () => {
     setEditingNote(null);
     setShowEditor(true);
@@ -112,6 +117,12 @@ function App() {
           onEdit={handleEditNote}
           onDelete={handleDeleteNote}
           loading={loading}
+          selectedLabels={selectedLabels}
+          onLabelsChange={setSelectedLabels}
+          selectedPriority={selectedPriority}
+          onPriorityChange={setSelectedPriority}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
         />
 
         <Modal
