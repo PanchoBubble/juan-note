@@ -95,3 +95,26 @@ export interface StatesListResponse {
     data: State[];
     error?: string;
 }
+
+// Bulk Operations Types
+export interface BulkDeleteRequest {
+    note_ids: number[];
+}
+
+export interface BulkUpdatePriorityRequest {
+    note_ids: number[];
+    priority: number;
+}
+
+export interface BulkUpdateStateRequest {
+    note_ids: number[];
+    state_id: number;
+}
+
+export interface BulkOperationResponse {
+    success: boolean;
+    successful_count: number;
+    failed_count: number;
+    errors?: string[];
+    error?: string;
+}
