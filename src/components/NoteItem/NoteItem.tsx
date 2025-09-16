@@ -73,6 +73,9 @@ export const NoteItem = React.memo(function NoteItem({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Don't handle selection keys when editing
+      if (isEditing) return;
+
       if (showSelection && (e.key === " " || e.key === "Enter")) {
         e.preventDefault();
         if (note.id && onItemClick) {
@@ -94,7 +97,7 @@ export const NoteItem = React.memo(function NoteItem({
         // Focus management for keyboard users - drag is now available from anywhere
       }
     },
-    [showSelection, note.id, onItemClick, itemIndex, isDraggable]
+    [showSelection, note.id, onItemClick, itemIndex, isDraggable, isEditing]
   );
 
   const handleTitleSave = useCallback(
