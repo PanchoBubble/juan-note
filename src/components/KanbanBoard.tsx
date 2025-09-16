@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import { KanbanColumn } from './KanbanColumn';
 import { useKanbanView } from '../hooks/useKanbanView';
+import { useStates } from '../hooks/useStates';
 import type { Note } from '../types/note';
 
 interface KanbanBoardProps {
@@ -12,51 +14,90 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ notes, onEdit, onComplete, onDelete, onLabelClick }: KanbanBoardProps) {
-  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const { states } = useStates();
 
   const {
     handleDrop,
-    getNotesByStatus,
+    handleDragStart,
+    handleDragEnd,
+    getNotesByState,
+    getNotesWithoutState,
     STATUS_LABELS,
     STATUS_COLORS
-  } = useKanbanView(notes);
+  } = useKanbanView(notes, states);
 
-  const columns = [
-    { status: 'todo' as const, title: STATUS_LABELS['todo'], colorClass: STATUS_COLORS['todo'] },
-    { status: 'in-progress' as const, title: STATUS_LABELS['in-progress'], colorClass: STATUS_COLORS['in-progress'] },
-    { status: 'done' as const, title: STATUS_LABELS['done'], colorClass: STATUS_COLORS['done'] }
-  ];
-
-  const handleColumnDrop = (status: string) => {
-    if (dragOverColumn === status) {
-      handleDrop(status as any);
+  const handleDragStartEvent = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    const noteId = parseInt(event.active.id as string);
+    const note = notes.find(n => n.id === noteId);
+    if (note) {
+      handleDragStart({
+        ...note,
+        stateId: note.state_id
+      });
     }
-    setDragOverColumn(null);
   };
 
-  const handleColumnDragOver = (e: React.DragEvent, status: string) => {
-    e.preventDefault();
-    setDragOverColumn(status);
+  const handleDragOver = (event: DragOverEvent) => {
+    // Handle drag over logic if needed
   };
+
+  const handleDragEndEvent = (event: DragEndEvent) => {
+    setActiveId(null);
+    handleDragEnd();
+
+    const { active, over } = event;
+    if (!over) return;
+
+    const noteId = parseInt(active.id as string);
+    const targetStateId = parseInt(over.id as string);
+
+    if (!isNaN(noteId) && !isNaN(targetStateId)) {
+      handleDrop(targetStateId);
+    }
+  };
+
+  // Create columns from states
+  const columns = states.map(state => ({
+    id: state.id!,
+    title: state.name,
+    colorClass: state.color ? `bg-[${state.color}]` : 'bg-gray-100 border-gray-200',
+    notes: getNotesByState(state.id!)
+  }));
+
+  // Add a column for notes without states
+  if (getNotesWithoutState().length > 0) {
+    columns.unshift({
+      id: -1,
+      title: 'Unassigned',
+      colorClass: 'bg-gray-100 border-gray-200',
+      notes: getNotesWithoutState()
+    });
+  }
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-6">
-      {columns.map((column) => (
-        <KanbanColumn
-          key={column.status}
-          status={column.status}
-          title={column.title}
-          notes={getNotesByStatus(column.status)}
-          colorClass={column.colorClass}
-          onEdit={onEdit}
-          onComplete={onComplete}
-          onDelete={onDelete}
-          onLabelClick={onLabelClick}
-          onDrop={handleColumnDrop}
-          onDragOver={(e) => handleColumnDragOver(e, column.status)}
-          isDragOver={dragOverColumn === column.status}
-        />
-      ))}
-    </div>
+    <DndContext
+      onDragStart={handleDragStartEvent}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEndEvent}
+    >
+      <div className="flex gap-6 overflow-x-auto pb-6">
+        {columns.map((column) => (
+          <KanbanColumn
+            key={column.id}
+            id={column.id}
+            title={column.title}
+            notes={column.notes}
+            colorClass={column.colorClass}
+            onEdit={onEdit}
+            onComplete={onComplete}
+            onDelete={onDelete}
+            onLabelClick={onLabelClick}
+            isDragOver={activeId !== null}
+          />
+        ))}
+      </div>
+    </DndContext>
   );
 }

@@ -1,10 +1,10 @@
 import { NoteItem } from './NoteItem';
-import { useKanbanView } from '../hooks/useKanbanView';
-import type { KanbanNote, KanbanStatus } from '../hooks/useKanbanView';
+import { useDroppable } from '@dnd-kit/core';
+import type { KanbanNote } from '../hooks/useKanbanView';
 import type { Note } from '../types/note';
 
 interface KanbanColumnProps {
-  status: KanbanStatus;
+  id: number;
   title: string;
   notes: KanbanNote[];
   colorClass: string;
@@ -12,13 +12,11 @@ interface KanbanColumnProps {
   onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
   onLabelClick?: (label: string) => void;
-  onDrop: (status: string) => void;
-  onDragOver: (e: React.DragEvent) => void;
   isDragOver: boolean;
 }
 
 export function KanbanColumn({
-  status,
+  id,
   title,
   notes,
   colorClass,
@@ -26,29 +24,18 @@ export function KanbanColumn({
   onComplete,
   onDelete,
   onLabelClick,
-  onDrop,
-  onDragOver,
   isDragOver
 }: KanbanColumnProps) {
-  const { handleDragStart } = useKanbanView([]);
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    onDrop(status);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    onDragOver(e);
-  };
+  const { setNodeRef } = useDroppable({
+    id: id.toString(),
+  });
 
   return (
     <div
+      ref={setNodeRef}
       className={`flex-1 min-w-80 max-w-96 ${colorClass} rounded-lg p-4 transition-all duration-200 ${
         isDragOver ? 'ring-2 ring-blue-400 ring-opacity-50 scale-105' : ''
       }`}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
@@ -67,17 +54,13 @@ export function KanbanColumn({
             </div>
             <p className="text-sm">No {title.toLowerCase()} notes</p>
             <p className="text-xs text-gray-400 mt-1">
-              {status === 'todo' && 'Notes that are not done and without "in-progress" labels'}
-              {status === 'in-progress' && 'Notes with "in-progress" or "progress" labels'}
-              {status === 'done' && 'Notes marked as done'}
+              Drop notes here to assign them to {title.toLowerCase()}
             </p>
           </div>
         ) : (
           notes.map((note) => (
             <div
               key={note.id}
-              draggable
-              onDragStart={() => handleDragStart(note)}
               className="cursor-move"
             >
               <NoteItem

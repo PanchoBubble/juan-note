@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import type { Note } from '../types/note';
 
 interface NoteItemProps {
@@ -11,6 +12,20 @@ interface NoteItemProps {
 
 export const NoteItem = React.memo(function NoteItem({ note, onEdit, onComplete, onDelete, onLabelClick }: NoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: note.id?.toString() || '',
+  });
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
@@ -57,7 +72,13 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onComplete,
 
   return (
     <article
-      className="bg-surface-secondary rounded-xl shadow-sm border border-monokai-comment border-opacity-30 p-6 hover:shadow-lg hover:border-monokai-comment transition-all duration-200 hover:-translate-y-0.5 group"
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`bg-surface-secondary rounded-xl shadow-sm border border-monokai-comment border-opacity-30 p-6 hover:shadow-lg hover:border-monokai-comment transition-all duration-200 hover:-translate-y-0.5 group cursor-move ${
+        isDragging ? 'opacity-50' : ''
+      }`}
       role="article"
       aria-labelledby={`note-title-${note.id}`}
       aria-describedby={`note-content-${note.id}`}
