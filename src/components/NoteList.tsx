@@ -5,7 +5,7 @@ import { LabelFilter } from './LabelFilter';
 import { PriorityFilter } from './PriorityFilter';
 import { SortControls } from './SortControls';
 import { InlineCreate } from './InlineCreate';
-import { BulkActionsToolbar } from './BulkActionsToolbar';
+
 import { useMultiselect } from '../hooks/useMultiselect';
 import type { Note, CreateNoteRequest } from '../types/note';
 
@@ -14,9 +14,6 @@ interface NoteListProps {
     onEdit: (note: Note) => void;
     onComplete: (note: Note) => void;
     onDelete: (note: Note) => void;
-    onBulkDelete?: (noteIds: number[]) => Promise<void>;
-    onBulkUpdatePriority?: (noteIds: number[], priority: number) => Promise<void>;
-    onBulkMarkAsDone?: (noteIds: number[], done: boolean) => Promise<void>;
     loading: boolean;
     selectedLabels: string[];
     onLabelsChange: (labels: string[]) => void;
@@ -29,7 +26,7 @@ interface NoteListProps {
     showInlineCreate?: boolean;
     onCancelInlineCreate?: () => void;
     onSaveNote?: (request: CreateNoteRequest) => Promise<void>;
-    onSelectionChange?: (count: number, total: number) => void;
+    onSelectionChange?: (count: number, total: number, selectedIds?: Set<number>) => void;
 }
 
 export const NoteList = React.memo(function NoteList({
@@ -37,9 +34,6 @@ export const NoteList = React.memo(function NoteList({
     onEdit,
     onComplete,
     onDelete,
-    onBulkDelete,
-    onBulkUpdatePriority,
-    onBulkMarkAsDone,
     loading,
     selectedLabels,
     onLabelsChange,
@@ -58,7 +52,6 @@ export const NoteList = React.memo(function NoteList({
         selectedIds,
         selectedCount,
         isSelected,
-        selectAll,
         clearAll,
         toggleAll,
         handleItemClick,
@@ -144,9 +137,9 @@ export const NoteList = React.memo(function NoteList({
     // Notify parent component of selection changes
     React.useEffect(() => {
         if (onSelectionChange) {
-            onSelectionChange(selectedCount, filteredAndSortedNotes.length + doneNotes.length);
+            onSelectionChange(selectedCount, filteredAndSortedNotes.length + doneNotes.length, selectedIds);
         }
-    }, [selectedCount, filteredAndSortedNotes.length, doneNotes.length, onSelectionChange]);
+    }, [selectedCount, filteredAndSortedNotes.length, doneNotes.length, selectedIds, onSelectionChange]);
 
     if (loading && notes.length === 0) {
         return (
@@ -157,63 +150,11 @@ export const NoteList = React.memo(function NoteList({
         );
     }
 
-    // Bulk action handlers
-    const handleBulkDelete = async () => {
-        if (onBulkDelete && selectedIds.size > 0) {
-            const noteIds = Array.from(selectedIds);
-            await onBulkDelete(noteIds);
-            clearAll();
-        }
-    };
 
-    const handleBulkUpdatePriority = async (priority: number) => {
-        if (onBulkUpdatePriority && selectedIds.size > 0) {
-            const noteIds = Array.from(selectedIds);
-            await onBulkUpdatePriority(noteIds, priority);
-            clearAll();
-        }
-    };
-
-    const handleMarkAsDone = async () => {
-        if (onBulkMarkAsDone && selectedIds.size > 0) {
-            const noteIds = Array.from(selectedIds);
-            await onBulkMarkAsDone(noteIds, true);
-            clearAll();
-        }
-    };
-
-    const handleMarkAsUndone = async () => {
-        if (onBulkMarkAsDone && selectedIds.size > 0) {
-            const noteIds = Array.from(selectedIds);
-            await onBulkMarkAsDone(noteIds, false);
-            clearAll();
-        }
-    };
-
-
-
-    const handleSelectAll = () => {
-        selectAll(filteredAndSortedNotes);
-    };
-
-    const handleClearAll = () => {
-        clearAll();
-    };
 
     return (
         <div className="space-y-6">
-            {/* Bulk Actions Toolbar */}
-            <BulkActionsToolbar
-                selectedCount={selectedCount}
-                totalCount={filteredAndSortedNotes.length}
-                onSelectAll={handleSelectAll}
-                onClearAll={handleClearAll}
-                onDeleteSelected={handleBulkDelete}
-                onUpdatePriority={onBulkUpdatePriority ? handleBulkUpdatePriority : undefined}
-                onMarkAsDone={onBulkMarkAsDone ? handleMarkAsDone : undefined}
-                onMarkAsUndone={onBulkMarkAsDone ? handleMarkAsUndone : undefined}
-                isLoading={loading}
-            />
+
 
             {/* Filter and Sort Controls */}
             <div >

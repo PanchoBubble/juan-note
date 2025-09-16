@@ -4,6 +4,7 @@ interface SelectionMenuProps {
     selectedCount: number;
     totalCount: number;
     onClearSelection: () => void;
+    onSelectAll?: () => void;
     onDeleteSelected?: () => void;
     onUpdatePriority?: (priority: number) => void;
     onMarkAsDone?: () => void;
@@ -15,6 +16,7 @@ export const SelectionMenu = React.memo(function SelectionMenu({
     selectedCount,
     totalCount,
     onClearSelection,
+    onSelectAll,
     onDeleteSelected,
     onUpdatePriority,
     onMarkAsDone,
@@ -104,6 +106,17 @@ export const SelectionMenu = React.memo(function SelectionMenu({
                                         🗑️ Delete Selected
                                     </>
                                 )}
+                            </button>
+                        )}
+
+                        {/* Select All Button */}
+                        {onSelectAll && (
+                            <button
+                                onClick={onSelectAll}
+                                className="px-3 py-1 text-sm text-monokai-blue bg-surface-secondary border border-monokai-blue rounded-md hover:bg-monokai-blue hover:bg-opacity-20 transition-colors"
+                                disabled={isLoading}
+                            >
+                                Select All
                             </button>
                         )}
 

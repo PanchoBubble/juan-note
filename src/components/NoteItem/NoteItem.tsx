@@ -58,6 +58,8 @@ export const NoteItem = React.memo(function NoteItem({
             aria-labelledby={`note-title-${note.id}`}
             aria-describedby={`note-content-${note.id}`}
             aria-selected={isSelected}
+            data-note-id={note.id}
+            data-selected={isSelected}
             tabIndex={showSelection ? 0 : undefined}
             onClick={handleClick}
             onKeyDown={(e) => {

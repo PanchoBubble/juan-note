@@ -32,7 +32,7 @@ function App() {
   const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'title'>('updated');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
-  const [selectionState, setSelectionState] = useState<{ count: number; total: number }>({ count: 0, total: 0 });
+  const [selectionState, setSelectionState] = useState<{ count: number; total: number; selectedIds?: Set<number> }>({ count: 0, total: 0 });
 
   const handleCreateNote = () => {
     setEditingNote(null);
@@ -211,13 +211,52 @@ function App() {
   }, []);
 
   // Handle selection state changes from NoteList
-  const handleSelectionChange = (count: number, total: number) => {
-    setSelectionState({ count, total });
+  const handleSelectionChange = (count: number, total: number, selectedIds?: Set<number>) => {
+    setSelectionState({ count, total, selectedIds });
   };
 
   const handleClearSelection = () => {
     const clearSelectionEvent = new CustomEvent('clearNoteSelection');
     document.dispatchEvent(clearSelectionEvent);
+  };
+
+  const handleSelectAll = () => {
+    const selectAllEvent = new CustomEvent('selectAllNotes');
+    document.dispatchEvent(selectAllEvent);
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = async (noteIds: number[]) => {
+    try {
+      for (const id of noteIds) {
+        await deleteNote(id);
+      }
+      handleClearSelection();
+    } catch (error) {
+      console.error('Failed to delete notes:', error);
+    }
+  };
+
+  const handleBulkUpdatePriority = async (noteIds: number[], priority: number) => {
+    try {
+      for (const id of noteIds) {
+        await updateNote({ id, priority });
+      }
+      handleClearSelection();
+    } catch (error) {
+      console.error('Failed to update priorities:', error);
+    }
+  };
+
+  const handleBulkMarkAsDone = async (noteIds: number[], done: boolean) => {
+    try {
+      for (const id of noteIds) {
+        await updateNote({ id, done });
+      }
+      handleClearSelection();
+    } catch (error) {
+      console.error('Failed to update done status:', error);
+    }
   };
 
   const isSelectionMode = selectionState.count > 0;
@@ -231,6 +270,27 @@ function App() {
             selectedCount={selectionState.count}
             totalCount={selectionState.total}
             onClearSelection={handleClearSelection}
+            onSelectAll={handleSelectAll}
+            onDeleteSelected={() => {
+              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
+                handleBulkDelete(Array.from(selectionState.selectedIds));
+              }
+            }}
+            onUpdatePriority={(priority) => {
+              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
+                handleBulkUpdatePriority(Array.from(selectionState.selectedIds), priority);
+              }
+            }}
+            onMarkAsDone={() => {
+              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
+                handleBulkMarkAsDone(Array.from(selectionState.selectedIds), true);
+              }
+            }}
+            onMarkAsUndone={() => {
+              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
+                handleBulkMarkAsDone(Array.from(selectionState.selectedIds), false);
+              }
+            }}
             isLoading={loading}
           />
         ) : (
@@ -338,7 +398,7 @@ function App() {
             onSortChange={setSortBy}
             sortOrder={sortOrder}
             onSortOrderChange={setSortOrder}
-            onSelectionChange={handleSelectionChange}
+            onSelectionChange={(count, total, selectedIds) => handleSelectionChange(count, total, selectedIds)}
             onSaveNote={handleSaveNote}
           />
         ) : (
