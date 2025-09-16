@@ -1,8 +1,13 @@
-import { useState } from 'react';
-import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
-import { KanbanColumn } from './KanbanColumn';
-import { useKanbanView } from '../hooks/useKanbanView';
-import type { Note, State } from '../types/note';
+import { useState } from "react";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import { KanbanColumn } from "./KanbanColumn";
+import { useKanbanView } from "../hooks/useKanbanView";
+import type { Note, State } from "../types/note";
 
 interface KanbanBoardProps {
   notes: Note[];
@@ -13,7 +18,14 @@ interface KanbanBoardProps {
   onLabelClick?: (label: string) => void;
 }
 
-export function KanbanBoard({ notes, states, onEdit, onComplete, onDelete, onLabelClick }: KanbanBoardProps) {
+export function KanbanBoard({
+  notes,
+  states,
+  onEdit,
+  onComplete,
+  onDelete,
+  onLabelClick,
+}: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const {
@@ -21,7 +33,7 @@ export function KanbanBoard({ notes, states, onEdit, onComplete, onDelete, onLab
     handleDragStart,
     handleDragEnd,
     getNotesByState,
-    getNotesWithoutState
+    getNotesWithoutState,
   } = useKanbanView(notes, states);
 
   const handleDragStartEvent = (event: DragStartEvent) => {
@@ -31,7 +43,7 @@ export function KanbanBoard({ notes, states, onEdit, onComplete, onDelete, onLab
     if (note) {
       handleDragStart({
         ...note,
-        stateId: note.state_id
+        stateId: note.state_id,
       });
     }
   };
@@ -59,17 +71,19 @@ export function KanbanBoard({ notes, states, onEdit, onComplete, onDelete, onLab
   const columns = states.map(state => ({
     id: state.id!,
     title: state.name,
-    colorClass: state.color ? `bg-[${state.color}]` : 'bg-gray-100 border-gray-200',
-    notes: getNotesByState(state.id!)
+    colorClass: state.color
+      ? `bg-[${state.color}]`
+      : "bg-gray-100 border-gray-200",
+    notes: getNotesByState(state.id!),
   }));
 
   // Add a column for notes without states
   if (getNotesWithoutState().length > 0) {
     columns.unshift({
       id: -1,
-      title: 'Unassigned',
-      colorClass: 'bg-gray-100 border-gray-200',
-      notes: getNotesWithoutState()
+      title: "Unassigned",
+      colorClass: "bg-gray-100 border-gray-200",
+      notes: getNotesWithoutState(),
     });
   }
 
@@ -80,7 +94,7 @@ export function KanbanBoard({ notes, states, onEdit, onComplete, onDelete, onLab
       onDragEnd={handleDragEndEvent}
     >
       <div className="flex gap-6 overflow-x-auto pb-6">
-        {columns.map((column) => (
+        {columns.map(column => (
           <KanbanColumn
             key={column.id}
             id={column.id}

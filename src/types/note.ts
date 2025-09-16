@@ -1,47 +1,47 @@
 export interface State {
-    id?: number;
-    name: string;
-    position: number;
-    color?: string;
-    created_at?: string;
-    updated_at?: string;
+  id?: number;
+  name: string;
+  position: number;
+  color?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Note {
-    id?: number;
-    title: string;
-    content: string;
-    created_at?: string;
-    updated_at?: string;
-    priority: number;
-    labels: string[];
-    deadline?: string;
-    reminder_minutes: number;
-    done: boolean;
-    state_id?: number;
+  id?: number;
+  title: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
+  priority: number;
+  labels: string[];
+  deadline?: string;
+  reminder_minutes: number;
+  done: boolean;
+  state_id?: number;
 }
 
 export interface CreateNoteRequest {
-    title: string;
-    content: string;
-    priority?: number;
-    labels?: string[];
-    deadline?: string;
-    reminder_minutes?: number;
-    done?: boolean;
-    state_id?: number;
+  title: string;
+  content: string;
+  priority?: number;
+  labels?: string[];
+  deadline?: string;
+  reminder_minutes?: number;
+  done?: boolean;
+  state_id?: number;
 }
 
 export interface UpdateNoteRequest {
-    id: number;
-    title?: string;
-    content?: string;
-    priority?: number;
-    labels?: string[];
-    deadline?: string;
-    reminder_minutes?: number;
-    done?: boolean;
-    state_id?: number;
+  id: number;
+  title?: string;
+  content?: string;
+  priority?: number;
+  labels?: string[];
+  deadline?: string;
+  reminder_minutes?: number;
+  done?: boolean;
+  state_id?: number;
 }
 
 export interface NoteResponse {
@@ -63,63 +63,63 @@ export interface SearchRequest {
 }
 
 export interface DeleteNoteRequest {
-   id: number;
+  id: number;
 }
 
 export interface UpdateNoteDoneRequest {
-    id: number;
-    done: boolean;
+  id: number;
+  done: boolean;
 }
 
 export interface CreateStateRequest {
-    name: string;
-    position: number;
-    color?: string;
+  name: string;
+  position: number;
+  color?: string;
 }
 
 export interface UpdateStateRequest {
-    id: number;
-    name?: string;
-    position?: number;
-    color?: string;
+  id: number;
+  name?: string;
+  position?: number;
+  color?: string;
 }
 
 export interface StateResponse {
-    success: boolean;
-    data?: State;
-    error?: string;
+  success: boolean;
+  data?: State;
+  error?: string;
 }
 
 export interface StatesListResponse {
-    success: boolean;
-    data: State[];
-    error?: string;
+  success: boolean;
+  data: State[];
+  error?: string;
 }
 
 // Bulk Operations Types
 export interface BulkDeleteRequest {
-    note_ids: number[];
+  note_ids: number[];
 }
 
 export interface BulkUpdatePriorityRequest {
-    note_ids: number[];
-    priority: number;
+  note_ids: number[];
+  priority: number;
 }
 
 export interface BulkUpdateStateRequest {
-    note_ids: number[];
-    state_id: number;
+  note_ids: number[];
+  state_id: number;
 }
 
 export interface BulkUpdateDoneRequest {
-    note_ids: number[];
-    done: boolean;
+  note_ids: number[];
+  done: boolean;
 }
 
 export interface BulkOperationResponse {
-    success: boolean;
-    successful_count: number;
-    failed_count: number;
-    errors?: string[];
-    error?: string;
+  success: boolean;
+  successful_count: number;
+  failed_count: number;
+  errors?: string[];
+  error?: string;
 }

@@ -1,13 +1,16 @@
 # Implementation Plan: Done Flag & Dynamic Kanban
 
 ## Prerequisites
+
 - Juan Note app with existing kanban functionality using labels for status
 - MCP server for API monitoring already configured
 - SQLite database with existing notes table and FTS support
 - React frontend with TypeScript and Tailwind CSS
 
 ## Codebase Analysis
+
 **Current Architecture:**
+
 - **Frontend**: React 19 + TypeScript + Vite, Monokai dark theme
 - **Backend**: Tauri 2.0 + Rust + SQLite with WAL mode
 - **Database**: Notes table with labels (JSON), priority, timestamps
@@ -15,6 +18,7 @@
 - **MCP Server**: Configured to monitor API changes in key directories
 
 **Key Findings:**
+
 - Kanban system exists but uses labels for status determination
 - No dedicated completion flag separate from labels
 - Database schema supports JSON labels but no boolean done field
@@ -22,7 +26,9 @@
 - Existing filtering supports labels and priority
 
 ## Research Findings
+
 **Best Practices Adopted:**
+
 - Dedicated boolean field for completion status (separate from workflow labels)
 - Database migrations with proper rollback support
 - Optimistic UI updates for better UX
@@ -31,6 +37,7 @@
 - Local storage for state persistence
 
 **Anti-patterns to Avoid:**
+
 - Mixing completion status with workflow states
 - Large migrations without batching
 - Blocking UI during state updates
@@ -40,6 +47,7 @@
 ## Task Breakdown
 
 ### 1. Database Schema & Migration
+
 - **Files to modify:**
   - `src-tauri/src/database/migrations/migration_003.rs` (create new)
   - `src/types/note.ts`
@@ -59,6 +67,7 @@
   - Performance impact on large note collections
 
 ### 2. Backend API Implementation
+
 - **Files to modify:**
   - `src-tauri/src/commands.rs`
   - `src-tauri/src/lib.rs`
@@ -75,6 +84,7 @@
 - **Potential issues:** Concurrent updates to same note
 
 ### 3. Frontend Service Layer
+
 - **Files to modify:**
   - `src/services/noteService.ts`
   - `src/types/note.ts`
@@ -90,6 +100,7 @@
 - **Potential issues:** Network timeouts during status updates
 
 ### 4. Done Filter Component
+
 - **Files to modify:** None
 - **Files to create:**
   - `src/components/DoneFilter.tsx`
@@ -104,6 +115,7 @@
 - **Potential issues:** Filter state conflicts with existing filters
 
 ### 5. Kanban Dynamic State Management
+
 - **Files to modify:**
   - `src/hooks/useKanbanView.ts`
   - `src/components/KanbanBoard.tsx`
@@ -120,6 +132,7 @@
 - **Potential issues:** Conflicts between done flag and status labels
 
 ### 6. UI Components Enhancement
+
 - **Files to modify:**
   - `src/components/NoteItem.tsx`
   - `src/components/NoteEditor.tsx`
@@ -135,6 +148,7 @@
 - **Potential issues:** UI state synchronization issues
 
 ### 7. State Management Updates
+
 - **Files to modify:**
   - `src/App.tsx`
   - `src/hooks/useNotes.ts`
@@ -150,6 +164,7 @@
 - **Potential issues:** Complex filter combinations
 
 ### 8. MCP Server Integration
+
 - **Files to modify:**
   - `mcp-server/src/index.ts` (if exists)
   - `api-validation-report.md`
@@ -183,16 +198,19 @@
    **Mitigation:** Progressive disclosure and clear visual hierarchy
 
 ## File Description Updates
+
 - Update descriptions for modified files to reflect done flag functionality
 - Add descriptions for new migration and filter component files
 - Update kanban-related file descriptions
 
 ## Codebase Overview Updates
+
 - Add done flag section to overview
 - Update kanban section to reflect dynamic state management
 - Document new API endpoints in overview
 
 ## Validation Steps
+
 1. Database migration applies without errors
 2. New APIs return correct responses
 3. Done filter works with existing filters

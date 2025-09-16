@@ -7,6 +7,7 @@ This document provides comprehensive guidance for AI agents working on the Juan 
 ## Architecture Overview
 
 **Juan Note** is a desktop note-taking application built with:
+
 - **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
 - **Backend**: Tauri (Rust) with SQLite database
 - **Communication**: Tauri IPC commands between frontend and backend
@@ -18,6 +19,7 @@ This document provides comprehensive guidance for AI agents working on the Juan 
 All client-backend communication happens through Tauri's `invoke` API. The following patterns are established:
 
 #### Frontend Service Layer (`src/services/noteService.ts`)
+
 ```typescript
 // All API calls follow this pattern:
 static async methodName(params): Promise<ResponseType> {
@@ -30,6 +32,7 @@ static async methodName(params): Promise<ResponseType> {
 ```
 
 #### Backend Command Layer (`src-tauri/src/commands.rs`)
+
 ```rust
 // All commands follow this pattern:
 #[tauri::command]
@@ -40,15 +43,15 @@ pub fn command_name(params: RequestType) -> Result<ResponseType, String> {
 
 ### Existing API Endpoints
 
-| Frontend Method | Tauri Command | Purpose |
-|----------------|---------------|---------|
+| Frontend Method        | Tauri Command   | Purpose                    |
+| ---------------------- | --------------- | -------------------------- |
 | `initializeDatabase()` | `initialize_db` | Initialize SQLite database |
-| `createNote(request)` | `create_note` | Create new note |
-| `getNote(id)` | `get_note` | Get single note by ID |
-| `getAllNotes()` | `get_all_notes` | Get all notes |
-| `updateNote(request)` | `update_note` | Update existing note |
-| `deleteNote(request)` | `delete_note` | Delete note |
-| `searchNotes(request)` | `search_notes` | Full-text search notes |
+| `createNote(request)`  | `create_note`   | Create new note            |
+| `getNote(id)`          | `get_note`      | Get single note by ID      |
+| `getAllNotes()`        | `get_all_notes` | Get all notes              |
+| `updateNote(request)`  | `update_note`   | Update existing note       |
+| `deleteNote(request)`  | `delete_note`   | Delete note                |
+| `searchNotes(request)` | `search_notes`  | Full-text search notes     |
 
 ## MCP Server Integration Requirements
 
@@ -66,12 +69,13 @@ To ensure any new API connection to the client is properly tracked and managed, 
 The MCP server should be implemented as a separate Node.js service that:
 
 #### Core Responsibilities
+
 1. **File Watching**: Monitor changes in:
    - `src/services/noteService.ts`
    - `src-tauri/src/commands.rs`
    - `src/types/note.ts`
 
-2. **API Validation**: 
+2. **API Validation**:
    - Verify each frontend service method has corresponding Tauri command
    - Check parameter and return type consistency
    - Validate error handling patterns
@@ -105,6 +109,7 @@ This ensures systematic and organized development workflow.
 When adding new API functionality, follow this checklist:
 
 #### 1. Define Types First (`src/types/note.ts`)
+
 ```typescript
 // Add request/response types
 export interface NewFeatureRequest {
@@ -119,6 +124,7 @@ export interface NewFeatureResponse {
 ```
 
 #### 2. Implement Backend Command (`src-tauri/src/commands.rs`)
+
 ```rust
 #[tauri::command]
 pub fn new_feature_command(request: NewFeatureRequest) -> Result<NewFeatureResponse, String> {
@@ -127,6 +133,7 @@ pub fn new_feature_command(request: NewFeatureRequest) -> Result<NewFeatureRespo
 ```
 
 #### 3. Add Frontend Service Method (`src/services/noteService.ts`)
+
 ```typescript
 static async newFeature(request: NewFeatureRequest): Promise<NewFeatureResponse> {
   try {
@@ -141,6 +148,7 @@ static async newFeature(request: NewFeatureRequest): Promise<NewFeatureResponse>
 ```
 
 #### 4. Register Command in Tauri (`src-tauri/src/lib.rs`)
+
 ```rust
 // Add to the command list in main.rs or lib.rs
 .invoke_handler(tauri::generate_handler![
@@ -152,17 +160,20 @@ static async newFeature(request: NewFeatureRequest): Promise<NewFeatureResponse>
 ### Code Conventions
 
 #### Error Handling
+
 - All API methods must return responses with `success` boolean
 - Include descriptive error messages
 - Log errors on both frontend and backend
 - Never expose internal implementation details in error messages
 
 #### Type Safety
+
 - Use TypeScript interfaces for all request/response types
 - Maintain type consistency between frontend and backend
 - Use Rust's type system for compile-time safety
 
 #### Database Operations
+
 - All database operations go through the singleton connection
 - Use transactions for multi-step operations
 - Include proper error handling for SQLite operations
@@ -170,6 +181,7 @@ static async newFeature(request: NewFeatureRequest): Promise<NewFeatureResponse>
 ### Testing Requirements
 
 When adding new APIs:
+
 1. **Unit Tests**: Test individual commands and service methods
 2. **Integration Tests**: Test full frontend-to-backend flow
 3. **Error Cases**: Test all error scenarios
@@ -238,4 +250,4 @@ All API endpoints are properly synchronized between frontend and backend. ✅
 
 ---
 
-*This document should be updated automatically by the MCP server when API changes are detected.*
+_This document should be updated automatically by the MCP server when API changes are detected._

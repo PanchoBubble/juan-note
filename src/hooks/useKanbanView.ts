@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import type { Note, State } from '../types/note';
+import { useState, useEffect } from "react";
+import type { Note, State } from "../types/note";
 
 export interface KanbanNote extends Note {
   stateId?: number;
@@ -17,7 +17,7 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
       return {
         ...note,
         stateId: note.state_id,
-        state
+        state,
       };
     });
     setKanbanNotes(converted);
@@ -27,7 +27,11 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
     setKanbanNotes(prev =>
       prev.map(note =>
         note.id === noteId
-          ? { ...note, stateId: newStateId, state: states.find(s => s.id === newStateId) }
+          ? {
+              ...note,
+              stateId: newStateId,
+              state: states.find(s => s.id === newStateId),
+            }
           : note
       )
     );
@@ -57,15 +61,23 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
   };
 
   // Create status labels and colors from states
-  const STATUS_LABELS = states.reduce((acc, state) => {
-    acc[state.id!] = state.name;
-    return acc;
-  }, {} as Record<number, string>);
+  const STATUS_LABELS = states.reduce(
+    (acc, state) => {
+      acc[state.id!] = state.name;
+      return acc;
+    },
+    {} as Record<number, string>
+  );
 
-  const STATUS_COLORS = states.reduce((acc, state) => {
-    acc[state.id!] = state.color ? `bg-[${state.color}]` : 'bg-gray-100 border-gray-200';
-    return acc;
-  }, {} as Record<number, string>);
+  const STATUS_COLORS = states.reduce(
+    (acc, state) => {
+      acc[state.id!] = state.color
+        ? `bg-[${state.color}]`
+        : "bg-gray-100 border-gray-200";
+      return acc;
+    },
+    {} as Record<number, string>
+  );
 
   return {
     kanbanNotes,
@@ -77,6 +89,6 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
     getNotesByState,
     getNotesWithoutState,
     STATUS_LABELS,
-    STATUS_COLORS
+    STATUS_COLORS,
   };
 }

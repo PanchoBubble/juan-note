@@ -1,21 +1,31 @@
-import { useState, useEffect } from 'react';
-import { NoteList } from './components/NoteList';
-import { KanbanBoard } from './components/KanbanBoard';
-import { NoteEditor } from './components/NoteEditor';
-import { SearchBar } from './components/SearchBar';
-import { Modal } from './components/Modal';
-import { DeleteConfirmModal } from './components/DeleteConfirmModal';
-import { CompleteConfirmModal } from './components/CompleteConfirmModal';
-import { QuickCreateModal } from './components/QuickCreateModal';
-import { SelectionMenu } from './components/SelectionMenu';
-import { useNotes } from './hooks/useNotes';
-import { useStates } from './hooks/useStates';
+import { useState, useEffect } from "react";
+import { NoteList } from "./components/NoteList";
+import { KanbanBoard } from "./components/KanbanBoard";
+import { NoteEditor } from "./components/NoteEditor";
+import { SearchBar } from "./components/SearchBar";
+import { Modal } from "./components/Modal";
+import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
+import { CompleteConfirmModal } from "./components/CompleteConfirmModal";
+import { QuickCreateModal } from "./components/QuickCreateModal";
+import { SelectionMenu } from "./components/SelectionMenu";
+import { useNotes } from "./hooks/useNotes";
+import { useStates } from "./hooks/useStates";
 
-import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
-import './App.css';
+import type { Note, CreateNoteRequest, UpdateNoteRequest } from "./types/note";
+import "./App.css";
 
 function App() {
-  const { notes, loading, error, createNote, updateNote, completeNote, deleteNote, searchNotes, clearError } = useNotes();
+  const {
+    notes,
+    loading,
+    error,
+    createNote,
+    updateNote,
+    completeNote,
+    deleteNote,
+    searchNotes,
+    clearError,
+  } = useNotes();
   const { states } = useStates();
 
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -24,15 +34,20 @@ function App() {
   const [completeNoteData, setCompleteNoteData] = useState<Note | null>(null);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
 
-
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<number | null>(null);
 
-  const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'title'>('updated');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
-  const [selectionState, setSelectionState] = useState<{ count: number; total: number; selectedIds?: Set<number> }>({ count: 0, total: 0 });
+  const [sortBy, setSortBy] = useState<
+    "created" | "updated" | "priority" | "title"
+  >("updated");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  const [selectionState, setSelectionState] = useState<{
+    count: number;
+    total: number;
+    selectedIds?: Set<number>;
+  }>({ count: 0, total: 0 });
 
   const handleCreateNote = () => {
     setEditingNote(null);
@@ -44,9 +59,11 @@ function App() {
     setShowEditor(true);
   };
 
-  const handleSaveNote = async (request: CreateNoteRequest | UpdateNoteRequest) => {
+  const handleSaveNote = async (
+    request: CreateNoteRequest | UpdateNoteRequest
+  ) => {
     try {
-      if ('id' in request) {
+      if ("id" in request) {
         await updateNote(request);
       } else {
         await createNote(request);
@@ -54,7 +71,7 @@ function App() {
       setShowEditor(false);
       setEditingNote(null);
     } catch (err) {
-      console.error('Failed to save note:', err);
+      console.error("Failed to save note:", err);
     }
   };
 
@@ -97,54 +114,57 @@ function App() {
     setShowQuickCreate(true);
   };
 
-
-
-
-
   // Keyboard shortcuts and accessibility
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd/Ctrl + N for quick create
-      if ((e.metaKey || e.ctrlKey) && e.key === 'n' && !e.shiftKey) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "n" && !e.shiftKey) {
         e.preventDefault();
         handleQuickCreate();
       }
 
       // Cmd/Ctrl + A for select all (when not in input field)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a") {
         const activeElement = document.activeElement;
-        const isInputFocused = activeElement && (
-          activeElement.tagName === 'INPUT' ||
-          activeElement.tagName === 'TEXTAREA' ||
-          (activeElement as HTMLElement).contentEditable === 'true'
-        );
+        const isInputFocused =
+          activeElement &&
+          (activeElement.tagName === "INPUT" ||
+            activeElement.tagName === "TEXTAREA" ||
+            (activeElement as HTMLElement).contentEditable === "true");
 
         if (!isInputFocused) {
           e.preventDefault();
           // Trigger select all - this will be handled by NoteList component
-          const selectAllEvent = new CustomEvent('selectAllNotes');
+          const selectAllEvent = new CustomEvent("selectAllNotes");
           document.dispatchEvent(selectAllEvent);
         }
       }
 
       // Escape to close modals and clear selection
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         if (showQuickCreate) setShowQuickCreate(false);
         if (showEditor) handleCancelEdit();
         if (deleteNoteData) handleCancelDelete();
         if (completeNoteData) handleCancelComplete();
 
         // Clear selection if no modals are open
-        if (!showQuickCreate && !showEditor && !deleteNoteData && !completeNoteData) {
-          const clearSelectionEvent = new CustomEvent('clearNoteSelection');
+        if (
+          !showQuickCreate &&
+          !showEditor &&
+          !deleteNoteData &&
+          !completeNoteData
+        ) {
+          const clearSelectionEvent = new CustomEvent("clearNoteSelection");
           document.dispatchEvent(clearSelectionEvent);
         }
       }
 
       // Handle Shift+Enter to focus search input
-      if (e.key === 'Enter' && e.shiftKey) {
+      if (e.key === "Enter" && e.shiftKey) {
         e.preventDefault();
-        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+        const searchInput = document.querySelector(
+          'input[placeholder*="Search"]'
+        ) as HTMLInputElement;
         if (searchInput) {
           searchInput.focus();
         }
@@ -153,21 +173,33 @@ function App() {
 
       // Auto-focus search input when typing while no input is focused
       // Only trigger for printable characters (not modifier keys, function keys, etc.)
-      const isPrintableKey = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
-      const isSpecialNavigationKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key);
+      const isPrintableKey =
+        e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+      const isSpecialNavigationKey = [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Home",
+        "End",
+        "PageUp",
+        "PageDown",
+      ].includes(e.key);
 
       if (isPrintableKey || isSpecialNavigationKey) {
         // Check if any input/textarea is currently focused
         const activeElement = document.activeElement;
-        const isInputFocused = activeElement && (
-          activeElement.tagName === 'INPUT' ||
-          activeElement.tagName === 'TEXTAREA' ||
-          (activeElement as HTMLElement).contentEditable === 'true'
-        );
+        const isInputFocused =
+          activeElement &&
+          (activeElement.tagName === "INPUT" ||
+            activeElement.tagName === "TEXTAREA" ||
+            (activeElement as HTMLElement).contentEditable === "true");
 
         // If no input is focused, focus the search bar
         if (!isInputFocused) {
-          const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+          const searchInput = document.querySelector(
+            'input[placeholder*="Search"]'
+          ) as HTMLInputElement;
           if (searchInput) {
             e.preventDefault();
             searchInput.focus();
@@ -175,15 +207,15 @@ function App() {
             if (isPrintableKey) {
               searchInput.value += e.key;
               // Trigger the change event to update the search
-              searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+              searchInput.dispatchEvent(new Event("input", { bubbles: true }));
             }
           }
         }
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [showQuickCreate, showEditor, deleteNoteData, completeNoteData, viewMode]);
 
   // Focus search bar when window gets focus and no input is focused
@@ -191,38 +223,39 @@ function App() {
     const handleWindowFocus = () => {
       // Check if any input/textarea is currently focused
       const activeElement = document.activeElement;
-      const isInputFocused = activeElement && (
-        activeElement.tagName === 'INPUT' ||
-        activeElement.tagName === 'TEXTAREA' ||
-        (activeElement as HTMLElement).contentEditable === 'true'
-      );
+      const isInputFocused =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          (activeElement as HTMLElement).contentEditable === "true");
 
       // If no input is focused, focus the search bar
       if (!isInputFocused) {
-        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+        const searchInput = document.querySelector(
+          'input[placeholder*="Search"]'
+        ) as HTMLInputElement;
         if (searchInput) {
           searchInput.focus();
         }
       }
     };
 
-    window.addEventListener('focus', handleWindowFocus);
-    return () => window.removeEventListener('focus', handleWindowFocus);
+    window.addEventListener("focus", handleWindowFocus);
+    return () => window.removeEventListener("focus", handleWindowFocus);
   }, []);
 
   // Handle selection state changes from NoteList
-  const handleSelectionChange = (count: number, total: number, selectedIds?: Set<number>) => {
+  const handleSelectionChange = (
+    count: number,
+    total: number,
+    selectedIds?: Set<number>
+  ) => {
     setSelectionState({ count, total, selectedIds });
   };
 
   const handleClearSelection = () => {
-    const clearSelectionEvent = new CustomEvent('clearNoteSelection');
+    const clearSelectionEvent = new CustomEvent("clearNoteSelection");
     document.dispatchEvent(clearSelectionEvent);
-  };
-
-  const handleSelectAll = () => {
-    const selectAllEvent = new CustomEvent('selectAllNotes');
-    document.dispatchEvent(selectAllEvent);
   };
 
   // Bulk action handlers
@@ -233,18 +266,21 @@ function App() {
       }
       handleClearSelection();
     } catch (error) {
-      console.error('Failed to delete notes:', error);
+      console.error("Failed to delete notes:", error);
     }
   };
 
-  const handleBulkUpdatePriority = async (noteIds: number[], priority: number) => {
+  const handleBulkUpdatePriority = async (
+    noteIds: number[],
+    priority: number
+  ) => {
     try {
       for (const id of noteIds) {
         await updateNote({ id, priority });
       }
       handleClearSelection();
     } catch (error) {
-      console.error('Failed to update priorities:', error);
+      console.error("Failed to update priorities:", error);
     }
   };
 
@@ -255,7 +291,7 @@ function App() {
       }
       handleClearSelection();
     } catch (error) {
-      console.error('Failed to update done status:', error);
+      console.error("Failed to update done status:", error);
     }
   };
 
@@ -264,31 +300,51 @@ function App() {
   return (
     <div className="min-h-screen bg-monokai-bg select-none">
       {/* Fixed height header container to prevent content shift */}
-      <div className="relative" style={{ minHeight: '120px' }}>
+      <div className="relative" style={{ minHeight: "120px" }}>
         {isSelectionMode ? (
           <SelectionMenu
             selectedCount={selectionState.count}
             totalCount={selectionState.total}
             onClearSelection={handleClearSelection}
-            onSelectAll={handleSelectAll}
             onDeleteSelected={() => {
-              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
+              if (
+                selectionState.selectedIds &&
+                selectionState.selectedIds.size > 0
+              ) {
                 handleBulkDelete(Array.from(selectionState.selectedIds));
               }
             }}
-            onUpdatePriority={(priority) => {
-              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
-                handleBulkUpdatePriority(Array.from(selectionState.selectedIds), priority);
+            onUpdatePriority={priority => {
+              if (
+                selectionState.selectedIds &&
+                selectionState.selectedIds.size > 0
+              ) {
+                handleBulkUpdatePriority(
+                  Array.from(selectionState.selectedIds),
+                  priority
+                );
               }
             }}
             onMarkAsDone={() => {
-              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
-                handleBulkMarkAsDone(Array.from(selectionState.selectedIds), true);
+              if (
+                selectionState.selectedIds &&
+                selectionState.selectedIds.size > 0
+              ) {
+                handleBulkMarkAsDone(
+                  Array.from(selectionState.selectedIds),
+                  true
+                );
               }
             }}
             onMarkAsUndone={() => {
-              if (selectionState.selectedIds && selectionState.selectedIds.size > 0) {
-                handleBulkMarkAsDone(Array.from(selectionState.selectedIds), false);
+              if (
+                selectionState.selectedIds &&
+                selectionState.selectedIds.size > 0
+              ) {
+                handleBulkMarkAsDone(
+                  Array.from(selectionState.selectedIds),
+                  false
+                );
               }
             }}
             isLoading={loading}
@@ -305,28 +361,32 @@ function App() {
                     <span className="text-monokai-fg text-xl">📝</span>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-monokai-fg">Juan Notes</h1>
-                    <p className="text-monokai-fg opacity-80 text-sm">Organize your thoughts</p>
+                    <h1 className="text-2xl font-bold text-monokai-fg">
+                      Juan Notes
+                    </h1>
+                    <p className="text-monokai-fg opacity-80 text-sm">
+                      Organize your thoughts
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="hidden md:flex bg-surface-secondary rounded-lg p-1 shadow-sm">
                     <button
-                      onClick={() => setViewMode('list')}
+                      onClick={() => setViewMode("list")}
                       className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                        viewMode === 'list'
-                          ? 'bg-monokai-green text-monokai-bg'
-                          : 'text-monokai-fg hover:bg-surface-tertiary'
+                        viewMode === "list"
+                          ? "bg-monokai-green text-monokai-bg"
+                          : "text-monokai-fg hover:bg-surface-tertiary"
                       }`}
                     >
                       📋 List
                     </button>
                     <button
-                      onClick={() => setViewMode('kanban')}
+                      onClick={() => setViewMode("kanban")}
                       className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                        viewMode === 'kanban'
-                          ? 'bg-monokai-green text-monokai-bg'
-                          : 'text-monokai-fg hover:bg-surface-tertiary'
+                        viewMode === "kanban"
+                          ? "bg-monokai-green text-monokai-bg"
+                          : "text-monokai-fg hover:bg-surface-tertiary"
                       }`}
                     >
                       📊 Kanban
@@ -337,8 +397,18 @@ function App() {
                     className="hidden md:flex items-center px-4 py-2 bg-surface-secondary text-monokai-blue rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm"
                     disabled={loading}
                   >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                     New Note
                   </button>
@@ -372,10 +442,10 @@ function App() {
           onSearch={searchNotes}
           loading={loading}
           placeholder="Search notes by title or content..."
-          onQuickCreate={(content) => {
+          onQuickCreate={content => {
             const request: CreateNoteRequest = {
               title: content,
-              content: '',
+              content: "",
               priority: 0,
               labels: [],
             };
@@ -383,7 +453,7 @@ function App() {
           }}
         />
 
-        {viewMode === 'list' ? (
+        {viewMode === "list" ? (
           <NoteList
             notes={notes}
             onEdit={handleEditNote}
@@ -398,7 +468,9 @@ function App() {
             onSortChange={setSortBy}
             sortOrder={sortOrder}
             onSortOrderChange={setSortOrder}
-            onSelectionChange={(count, total, selectedIds) => handleSelectionChange(count, total, selectedIds)}
+            onSelectionChange={(count, total, selectedIds) =>
+              handleSelectionChange(count, total, selectedIds)
+            }
             onSaveNote={handleSaveNote}
           />
         ) : (
@@ -408,7 +480,7 @@ function App() {
             onEdit={handleEditNote}
             onComplete={handleCompleteNote}
             onDelete={handleDeleteNote}
-            onLabelClick={(label) => {
+            onLabelClick={label => {
               if (!selectedLabels.includes(label)) {
                 setSelectedLabels([...selectedLabels, label]);
               }
@@ -419,7 +491,7 @@ function App() {
         <Modal
           isOpen={showEditor}
           onClose={handleCancelEdit}
-          title={editingNote ? 'Edit Note' : 'Create New Note'}
+          title={editingNote ? "Edit Note" : "Create New Note"}
           size="lg"
         >
           <NoteEditor
@@ -462,8 +534,18 @@ function App() {
           disabled={loading}
           aria-label="Create new note"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
         </button>
       </main>

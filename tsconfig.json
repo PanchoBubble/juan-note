@@ -21,5 +21,14 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
+  "exclude": [
+    "*.config.js",
+    "*.config.ts",
+    "eslint.config.js",
+    "node_modules",
+    "dist",
+    "src-tauri",
+    "mcp-server"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

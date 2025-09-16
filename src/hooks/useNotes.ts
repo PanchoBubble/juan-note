@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { NoteService } from '../services/noteService';
-import type { Note, CreateNoteRequest, UpdateNoteRequest } from '../types/note';
+import { useState, useEffect, useCallback } from "react";
+import { NoteService } from "../services/noteService";
+import type { Note, CreateNoteRequest, UpdateNoteRequest } from "../types/note";
 
 export interface UseNotesReturn {
   notes: Note[];
@@ -32,10 +32,10 @@ export function useNotes(): UseNotesReturn {
       if (response.success) {
         setNotes(response.data);
       } else {
-        setError(response.error || 'Failed to load notes');
+        setError(response.error || "Failed to load notes");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load notes');
+      setError(err instanceof Error ? err.message : "Failed to load notes");
     } finally {
       setLoading(false);
     }
@@ -49,10 +49,10 @@ export function useNotes(): UseNotesReturn {
       if (response.success && response.data) {
         setNotes(prev => [response.data!, ...prev]);
       } else {
-        setError(response.error || 'Failed to create note');
+        setError(response.error || "Failed to create note");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create note');
+      setError(err instanceof Error ? err.message : "Failed to create note");
     } finally {
       setLoading(false);
     }
@@ -64,14 +64,14 @@ export function useNotes(): UseNotesReturn {
     try {
       const response = await NoteService.updateNote(request);
       if (response.success && response.data) {
-        setNotes(prev => prev.map(note =>
-          note.id === request.id ? response.data! : note
-        ));
+        setNotes(prev =>
+          prev.map(note => (note.id === request.id ? response.data! : note))
+        );
       } else {
-        setError(response.error || 'Failed to update note');
+        setError(response.error || "Failed to update note");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update note');
+      setError(err instanceof Error ? err.message : "Failed to update note");
     } finally {
       setLoading(false);
     }
@@ -83,14 +83,14 @@ export function useNotes(): UseNotesReturn {
     try {
       const response = await NoteService.updateNoteDone({ id, done: true });
       if (response.success && response.data) {
-        setNotes(prev => prev.map(note =>
-          note.id === id ? response.data! : note
-        ));
+        setNotes(prev =>
+          prev.map(note => (note.id === id ? response.data! : note))
+        );
       } else {
-        setError(response.error || 'Failed to complete note');
+        setError(response.error || "Failed to complete note");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to complete note');
+      setError(err instanceof Error ? err.message : "Failed to complete note");
     } finally {
       setLoading(false);
     }
@@ -104,36 +104,39 @@ export function useNotes(): UseNotesReturn {
       if (response.success) {
         setNotes(prev => prev.filter(note => note.id !== id));
       } else {
-        setError(response.error || 'Failed to delete note');
+        setError(response.error || "Failed to delete note");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete note');
+      setError(err instanceof Error ? err.message : "Failed to delete note");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const searchNotes = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      await refreshNotes();
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await NoteService.searchNotes({ query, limit: 50 });
-      if (response.success) {
-        setNotes(response.data);
-      } else {
-        setError(response.error || 'Failed to search notes');
+  const searchNotes = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
+        await refreshNotes();
+        return;
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to search notes');
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshNotes]);
+
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await NoteService.searchNotes({ query, limit: 50 });
+        if (response.success) {
+          setNotes(response.data);
+        } else {
+          setError(response.error || "Failed to search notes");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to search notes");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [refreshNotes]
+  );
 
   // Initialize database and load notes on mount
   useEffect(() => {
@@ -142,7 +145,9 @@ export function useNotes(): UseNotesReturn {
         await NoteService.initializeDatabase();
         await refreshNotes();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to initialize database');
+        setError(
+          err instanceof Error ? err.message : "Failed to initialize database"
+        );
       }
     };
 

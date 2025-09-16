@@ -4,54 +4,69 @@
 :root {
   /* Monokai base colors */
   --monokai-bg: #272822;
-  --monokai-fg: #F8F8F2;
-  --monokai-comment: #75715E;
-  --monokai-yellow: #E6DB74;
-  --monokai-green: #A6E22E;
-  --monokai-orange: #FD971F;
-  --monokai-purple: #AE81FF;
-  --monokai-pink: #F92672;
-  --monokai-blue: #66D9EF;
-  
+  --monokai-fg: #f8f8f2;
+  --monokai-comment: #75715e;
+  --monokai-yellow: #e6db74;
+  --monokai-green: #a6e22e;
+  --monokai-orange: #fd971f;
+  --monokai-purple: #ae81ff;
+  --monokai-pink: #f92672;
+  --monokai-blue: #66d9ef;
+
   /* Semantic color mapping using Monokai palette */
   --color-bg-primary: var(--monokai-bg);
   --color-bg-secondary: #2f2f2a;
   --color-bg-tertiary: #38382f;
   --color-bg-surface: var(--monokai-bg);
-  
+
   --color-text-primary: var(--monokai-fg);
   --color-text-secondary: #e8e8e3;
   --color-text-muted: var(--monokai-comment);
   --color-text-inverse: var(--monokai-bg);
-  
+
   --color-border-default: var(--monokai-comment);
   --color-border-secondary: #5e5a47;
   --color-border-focus: var(--monokai-blue);
-  
+
   --color-accent: var(--monokai-blue);
   --color-accent-hover: #7de9ff;
   --color-accent-light: #0a3749;
-  
+
   --color-success: var(--monokai-green);
   --color-success-light: #182c02;
   --color-warning: var(--monokai-yellow);
   --color-warning-light: #422006;
   --color-danger: var(--monokai-pink);
   --color-danger-light: #500724;
-  
+
   /* Typography optimized for Monokai theme */
-  font-family: 'Inter', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    "Inter",
+    "Monaco",
+    "Menlo",
+    "Ubuntu Mono",
+    monospace,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   font-size: 16px;
   line-height: 1.6;
   font-weight: 400;
-  
+
   /* Text rendering optimization for dark theme */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-  
+
   /* Force dark theme colors */
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);

@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { NoteService } from '../services/noteService';
-import type { State, CreateStateRequest, UpdateStateRequest } from '../types/note';
+import { useState, useEffect, useCallback } from "react";
+import { NoteService } from "../services/noteService";
+import type {
+  State,
+  CreateStateRequest,
+  UpdateStateRequest,
+} from "../types/note";
 
 export function useStates() {
   const [states, setStates] = useState<State[]>([]);
@@ -15,10 +19,10 @@ export function useStates() {
       if (response.success) {
         setStates(response.data);
       } else {
-        setError(response.error || 'Failed to load states');
+        setError(response.error || "Failed to load states");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -32,11 +36,11 @@ export function useStates() {
         setStates(prev => [...prev, response.data!]);
         return response.data;
       } else {
-        setError(response.error || 'Failed to create state');
+        setError(response.error || "Failed to create state");
         return null;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
       return null;
     }
   }, []);
@@ -46,16 +50,16 @@ export function useStates() {
     try {
       const response = await NoteService.updateState(request);
       if (response.success && response.data) {
-        setStates(prev => prev.map(state =>
-          state.id === request.id ? response.data! : state
-        ));
+        setStates(prev =>
+          prev.map(state => (state.id === request.id ? response.data! : state))
+        );
         return response.data;
       } else {
-        setError(response.error || 'Failed to update state');
+        setError(response.error || "Failed to update state");
         return null;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
       return null;
     }
   }, []);
@@ -68,48 +72,51 @@ export function useStates() {
         setStates(prev => prev.filter(state => state.id !== id));
         return true;
       } else {
-        setError(response.error || 'Failed to delete state');
+        setError(response.error || "Failed to delete state");
         return false;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
       return false;
     }
   }, []);
 
-  const reorderStates = useCallback(async (stateId: number, newPosition: number) => {
-    setError(null);
-    try {
-      // Optimistic update
-      setStates(prev => {
-        const newStates = [...prev];
-        const stateIndex = newStates.findIndex(s => s.id === stateId);
-        if (stateIndex === -1) return prev;
+  const reorderStates = useCallback(
+    async (stateId: number, newPosition: number) => {
+      setError(null);
+      try {
+        // Optimistic update
+        setStates(prev => {
+          const newStates = [...prev];
+          const stateIndex = newStates.findIndex(s => s.id === stateId);
+          if (stateIndex === -1) return prev;
 
-        const [movedState] = newStates.splice(stateIndex, 1);
-        movedState.position = newPosition;
-        newStates.splice(newPosition, 0, movedState);
+          const [movedState] = newStates.splice(stateIndex, 1);
+          movedState.position = newPosition;
+          newStates.splice(newPosition, 0, movedState);
 
-        // Update positions for all states
-        newStates.forEach((state, index) => {
-          state.position = index;
+          // Update positions for all states
+          newStates.forEach((state, index) => {
+            state.position = index;
+          });
+
+          return newStates;
         });
 
-        return newStates;
-      });
+        // Update in database
+        const updatePromises = states.map((state, index) =>
+          NoteService.updateState({ id: state.id!, position: index })
+        );
 
-      // Update in database
-      const updatePromises = states.map((state, index) =>
-        NoteService.updateState({ id: state.id!, position: index })
-      );
-
-      await Promise.all(updatePromises);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      // Reload states to revert optimistic update
-      await loadStates();
-    }
-  }, [states, loadStates]);
+        await Promise.all(updatePromises);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+        // Reload states to revert optimistic update
+        await loadStates();
+      }
+    },
+    [states, loadStates]
+  );
 
   useEffect(() => {
     loadStates();
@@ -123,6 +130,6 @@ export function useStates() {
     createState,
     updateState,
     deleteState,
-    reorderStates
+    reorderStates,
   };
 }
