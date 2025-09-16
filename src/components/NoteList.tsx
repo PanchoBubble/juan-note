@@ -28,6 +28,7 @@ interface NoteListProps {
   onEdit: (note: Note) => void;
   onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
+  onUpdate?: (note: Note) => void;
   loading: boolean;
   selectedLabels: string[];
   onLabelsChange: (labels: string[]) => void;
@@ -57,6 +58,7 @@ export const NoteList = React.memo(function NoteList({
   onEdit,
   onComplete,
   onDelete,
+  onUpdate,
   loading,
   selectedLabels,
   onLabelsChange,
@@ -340,6 +342,7 @@ export const NoteList = React.memo(function NoteList({
                   onEdit={onEdit}
                   onComplete={onComplete}
                   onDelete={onDelete}
+                  onUpdate={onUpdate}
                   onLabelClick={label => {
                     if (!selectedLabels.includes(label)) {
                       onLabelsChange([...selectedLabels, label]);
@@ -387,6 +390,7 @@ export const NoteList = React.memo(function NoteList({
                     onEdit={onEdit}
                     onComplete={onComplete}
                     onDelete={onDelete}
+                    onUpdate={onUpdate}
                     onLabelClick={label => {
                       if (!selectedLabels.includes(label)) {
                         onLabelsChange([...selectedLabels, label]);

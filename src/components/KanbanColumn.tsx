@@ -11,6 +11,7 @@ interface KanbanColumnProps {
   onEdit: (note: Note) => void;
   onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
+  onUpdate?: (note: Note) => void;
   onLabelClick?: (label: string) => void;
   isDragOver: boolean;
 }
@@ -23,6 +24,7 @@ export function KanbanColumn({
   onEdit,
   onComplete,
   onDelete,
+  onUpdate,
   onLabelClick,
   isDragOver,
 }: KanbanColumnProps) {
@@ -65,6 +67,7 @@ export function KanbanColumn({
                 onEdit={onEdit}
                 onComplete={onComplete}
                 onDelete={onDelete}
+                onUpdate={onUpdate}
                 onLabelClick={onLabelClick}
               />
             </div>

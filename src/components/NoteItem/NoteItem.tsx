@@ -1,7 +1,8 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Note } from "../../types/note";
+import type { Note, UpdateNoteRequest } from "../../types/note";
+import { NoteService } from "../../services/noteService";
 import {
   NoteItemActions,
   NoteItemTitle,
@@ -20,6 +21,7 @@ interface NoteItemProps {
   showSelection?: boolean;
   itemIndex?: number;
   isDraggable?: boolean;
+  onUpdate?: (note: Note) => void;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -33,7 +35,10 @@ export const NoteItem = React.memo(function NoteItem({
   showSelection = false,
   itemIndex = 0,
   isDraggable = false,
+  onUpdate,
 }: NoteItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+
   // Use sortable for list reordering
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({ id: note.id?.toString() || "" });
@@ -91,6 +96,44 @@ export const NoteItem = React.memo(function NoteItem({
     [showSelection, note.id, onItemClick, itemIndex, isDraggable]
   );
 
+  const handleTitleSave = useCallback(
+    async (newTitle: string) => {
+      if (note.id) {
+        const updateRequest: UpdateNoteRequest = {
+          id: note.id,
+          title: newTitle,
+        };
+        const response = await NoteService.updateNote(updateRequest);
+        if (response.success && response.data) {
+          onUpdate?.(response.data);
+        }
+      }
+      setIsEditing(false);
+    },
+    [note.id, onUpdate]
+  );
+
+  const handleContentSave = useCallback(
+    async (newContent: string) => {
+      if (note.id) {
+        const updateRequest: UpdateNoteRequest = {
+          id: note.id,
+          content: newContent,
+        };
+        const response = await NoteService.updateNote(updateRequest);
+        if (response.success && response.data) {
+          onUpdate?.(response.data);
+        }
+      }
+      setIsEditing(false);
+    },
+    [note.id, onUpdate]
+  );
+
+  const handleEditCancel = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
   return (
     <article
       ref={setNodeRef}
@@ -144,7 +187,11 @@ export const NoteItem = React.memo(function NoteItem({
       {/* Content area */}
       <div
         className="flex-1 flex flex-col"
-        onClick={handleClick}
+        onDoubleClick={e => {
+          e.stopPropagation();
+          e.preventDefault();
+          setIsEditing(!isEditing);
+        }}
         onPointerDown={e => {
           // Handle cmd/ctrl+click for selection before drag system takes over
           if (
@@ -159,9 +206,20 @@ export const NoteItem = React.memo(function NoteItem({
         }}
         onKeyDown={handleKeyDown}
       >
-        <NoteItemTitle note={note} />
+        <NoteItemTitle
+          note={note}
+          isEditing={isEditing}
+          onTitleSave={handleTitleSave}
+          onTitleCancel={handleEditCancel}
+        />
 
-        <NoteItemContent note={note} onLabelClick={onLabelClick} />
+        <NoteItemContent
+          note={note}
+          onLabelClick={onLabelClick}
+          isEditing={isEditing}
+          onContentSave={handleContentSave}
+          onContentCancel={handleEditCancel}
+        />
 
         <NoteItemMetadata note={note} />
       </div>

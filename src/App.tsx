@@ -77,6 +77,28 @@ function App() {
     [updateNote, createNote]
   );
 
+  const handleUpdateNote = useCallback(
+    async (note: Note) => {
+      try {
+        await updateNote({
+          id: note.id!,
+          title: note.title,
+          content: note.content,
+          priority: note.priority,
+          labels: note.labels,
+          deadline: note.deadline,
+          reminder_minutes: note.reminder_minutes,
+          done: note.done,
+          state_id: note.state_id,
+          order: note.order,
+        });
+      } catch (err) {
+        console.error("Failed to update note:", err);
+      }
+    },
+    [updateNote]
+  );
+
   const handleCancelEdit = useCallback(() => {
     setShowEditor(false);
     setEditingNote(null);
@@ -468,6 +490,7 @@ function App() {
             onEdit={handleEditNote}
             onComplete={handleCompleteNote}
             onDelete={handleDeleteNote}
+            onUpdate={handleUpdateNote}
             loading={loading}
             selectedLabels={selectedLabels}
             onLabelsChange={setSelectedLabels}
@@ -488,6 +511,7 @@ function App() {
             onEdit={handleEditNote}
             onComplete={handleCompleteNote}
             onDelete={handleDeleteNote}
+            onUpdate={handleUpdateNote}
             onLabelClick={label => {
               if (!selectedLabels.includes(label)) {
                 setSelectedLabels([...selectedLabels, label]);

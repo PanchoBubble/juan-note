@@ -15,6 +15,7 @@ interface KanbanBoardProps {
   onEdit: (note: Note) => void;
   onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
+  onUpdate?: (note: Note) => void;
   onLabelClick?: (label: string) => void;
 }
 
@@ -24,6 +25,7 @@ export function KanbanBoard({
   onEdit,
   onComplete,
   onDelete,
+  onUpdate,
   onLabelClick,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -104,6 +106,7 @@ export function KanbanBoard({
             onEdit={onEdit}
             onComplete={onComplete}
             onDelete={onDelete}
+            onUpdate={onUpdate}
             onLabelClick={onLabelClick}
             isDragOver={activeId !== null}
           />
