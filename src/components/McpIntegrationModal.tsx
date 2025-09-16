@@ -89,7 +89,9 @@ export function McpIntegrationModal({
                 disabled={isScanning}
                 className="px-6 py-3 bg-monokai-green text-monokai-bg rounded-lg hover:bg-monokai-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
-                {isScanning ? "🔍 Scanning..." : "🔍 Scan for MCP Configs"}
+                {isScanning
+                  ? "🔍 Scanning ~/.config, ~/, and app directories..."
+                  : "🔍 Scan for MCP Configs"}
               </button>
             </div>
 
@@ -105,8 +107,14 @@ export function McpIntegrationModal({
             {results.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-monokai-fg">
-                  Found MCP Configurations
+                  Configuration Scan Results
                 </h3>
+                <div className="text-sm text-monokai-comment mb-4">
+                  Found {results.length} configuration file
+                  {results.length !== 1 ? "s" : ""} (
+                  {results.filter(r => r.mcp_servers.length > 0).length} with
+                  MCP servers)
+                </div>
                 {results.map((result, index) => (
                   <div
                     key={index}
@@ -114,7 +122,13 @@ export function McpIntegrationModal({
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <span className="text-monokai-green">✅</span>
+                        {result.mcp_servers.length > 0 ? (
+                          <span className="text-monokai-green">✅</span>
+                        ) : result.error ? (
+                          <span className="text-monokai-pink">❌</span>
+                        ) : (
+                          <span className="text-monokai-yellow">⚠️</span>
+                        )}
                         <span className="font-medium text-monokai-fg capitalize">
                           {result.provider}
                         </span>
@@ -122,31 +136,45 @@ export function McpIntegrationModal({
                           {result.config_path}
                         </code>
                       </div>
-                      <button
-                        onClick={() => handleIntegrate(result)}
-                        className="px-4 py-2 bg-monokai-blue text-monokai-bg rounded hover:bg-monokai-blue-hover transition-colors text-sm font-medium"
-                      >
-                        Integrate
-                      </button>
+                      {result.mcp_servers.length > 0 && (
+                        <button
+                          onClick={() => handleIntegrate(result)}
+                          className="px-4 py-2 bg-monokai-blue text-monokai-bg rounded hover:bg-monokai-blue-hover transition-colors text-sm font-medium"
+                        >
+                          Integrate
+                        </button>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <div className="text-sm text-monokai-comment">
-                        Found {result.mcp_servers.length} MCP server
-                        {result.mcp_servers.length !== 1 ? "s" : ""}:
-                      </div>
-                      <div className="space-y-1">
-                        {result.mcp_servers.map(
-                          (server: any, serverIndex: number) => (
-                            <div
-                              key={serverIndex}
-                              className="text-xs bg-monokai-bg px-2 py-1 rounded font-mono text-monokai-fg"
-                            >
-                              {server.name}: {server.command}{" "}
-                              {server.args?.join(" ") || ""}
-                            </div>
-                          )
-                        )}
-                      </div>
+                      {result.error ? (
+                        <div className="text-sm text-monokai-pink">
+                          Error: {result.error}
+                        </div>
+                      ) : result.mcp_servers.length > 0 ? (
+                        <>
+                          <div className="text-sm text-monokai-comment">
+                            Found {result.mcp_servers.length} MCP server
+                            {result.mcp_servers.length !== 1 ? "s" : ""}:
+                          </div>
+                          <div className="space-y-1">
+                            {result.mcp_servers.map(
+                              (server: any, serverIndex: number) => (
+                                <div
+                                  key={serverIndex}
+                                  className="text-xs bg-monokai-bg px-2 py-1 rounded font-mono text-monokai-fg"
+                                >
+                                  {server.name}: {server.command}{" "}
+                                  {server.args?.join(" ") || ""}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-monokai-comment">
+                          File found but no MCP servers detected
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

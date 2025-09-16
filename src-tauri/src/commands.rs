@@ -3,6 +3,7 @@ use crate::models::*;
 use rusqlite::Result;
 use std::sync::OnceLock;
 use chrono::{DateTime, Utc};
+use std::path::Path;
 
 static DB_CONNECTION: OnceLock<DbConnection> = OnceLock::new();
 
@@ -899,7 +900,6 @@ pub fn migrate_notes_to_states() -> Result<NoteResponse, String> {
 #[tauri::command]
 pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
     use std::fs;
-    use std::path::Path;
 
     let mut results = Vec::new();
 
@@ -907,65 +907,95 @@ pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
     let home_dir = dirs::home_dir()
         .ok_or("Could not determine home directory")?;
 
-    // Config directories to scan
-    let config_dirs = vec![
+    // Config directories to scan (expanded list)
+    let mut config_dirs = vec![
         home_dir.join(".config"),
         home_dir.clone(),
     ];
 
-    // Config file patterns to look for
-    let config_patterns = vec![
+    // Add platform-specific directories
+    #[cfg(target_os = "macos")] {
+        config_dirs.push(home_dir.join("Library/Application Support"));
+        config_dirs.push(home_dir.join("Library/Preferences"));
+    }
+    #[cfg(target_os = "windows")] {
+        if let Some(appdata) = std::env::var_os("APPDATA") {
+            config_dirs.push(Path::new(&appdata).to_path_buf());
+        }
+        if let Some(local_appdata) = std::env::var_os("LOCALAPPDATA") {
+            config_dirs.push(Path::new(&local_appdata).to_path_buf());
+        }
+    }
+    #[cfg(target_os = "linux")] {
+        config_dirs.push(home_dir.join(".local/share"));
+    }
+
+    // Known MCP client config files and patterns
+    let known_configs = vec![
+        // Claude Desktop
         ("claude", ".claude.json"),
+        ("claude", "claude_desktop_config.json"),
+        ("claude", "claude.json"),
+
+        // OpenCode
         ("opencode", ".opencode.json"),
+        ("opencode", "opencode.json"),
+
+        // Gemini
         ("gemini", "gemini.json"),
+        ("gemini", ".gemini.json"),
+
+        // AMP
         ("amp", "amp.json"),
+        ("amp", ".amp.json"),
+
+        // Continue
+        ("continue", "continue.json"),
+        ("continue", ".continue.json"),
+        ("continue", "config.json"),
+
+        // Cline
+        ("cline", "cline.json"),
+        ("cline", ".cline.json"),
+
+        // Other MCP clients
+        ("mcp", "mcp.json"),
+        ("mcp", ".mcp.json"),
+        ("mcp-client", "mcp-client.json"),
     ];
 
-    for config_dir in config_dirs {
+    // Scan known config files
+    for config_dir in &config_dirs {
         if !config_dir.exists() {
             continue;
         }
 
-        for (provider, filename) in &config_patterns {
+        for (provider, filename) in &known_configs {
             let config_path = config_dir.join(filename);
 
             if config_path.exists() {
-                match fs::read_to_string(&config_path) {
-                    Ok(content) => {
-                        match serde_json::from_str::<serde_json::Value>(&content) {
-                            Ok(json) => {
-                                let mcp_servers = extract_mcp_servers(&json);
-                                if !mcp_servers.is_empty() {
-                                    results.push(McpConfigResult {
-                                        provider: provider.to_string(),
-                                        config_path: config_path.to_string_lossy().to_string(),
-                                        mcp_servers,
-                                        error: None,
-                                    });
-                                }
-                            }
-                            Err(e) => {
-                                results.push(McpConfigResult {
-                                    provider: provider.to_string(),
-                                    config_path: config_path.to_string_lossy().to_string(),
-                                    mcp_servers: Vec::new(),
-                                    error: Some(format!("Failed to parse JSON: {}", e)),
-                                });
+                process_config_file(&config_path, provider, &mut results);
+            }
+
+            // Also check subdirectories for some clients
+            if provider == &"claude" {
+                let claude_dir = config_dir.join("Claude");
+                if claude_dir.exists() {
+                    if let Ok(entries) = fs::read_dir(&claude_dir) {
+                        for entry in entries.flatten() {
+                            let path = entry.path();
+                            if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                                process_config_file(&path, provider, &mut results);
                             }
                         }
-                    }
-                    Err(e) => {
-                        results.push(McpConfigResult {
-                            provider: provider.to_string(),
-                            config_path: config_path.to_string_lossy().to_string(),
-                            mcp_servers: Vec::new(),
-                            error: Some(format!("Failed to read file: {}", e)),
-                        });
                     }
                 }
             }
         }
     }
+
+    // Also scan for any JSON files that might contain MCP configurations
+    scan_for_mcp_json_files(&config_dirs, &mut results);
 
     Ok(McpScanResponse {
         success: true,
@@ -974,37 +1004,203 @@ pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
     })
 }
 
+fn process_config_file(config_path: &Path, provider: &str, results: &mut Vec<McpConfigResult>) {
+    match std::fs::read_to_string(config_path) {
+        Ok(content) => {
+            match serde_json::from_str::<serde_json::Value>(&content) {
+                Ok(json) => {
+                    let mcp_servers = extract_mcp_servers(&json);
+                    if !mcp_servers.is_empty() {
+                        results.push(McpConfigResult {
+                            provider: provider.to_string(),
+                            config_path: config_path.to_string_lossy().to_string(),
+                            mcp_servers,
+                            error: None,
+                        });
+                    } else {
+                        // Even if no servers found, include the file for debugging
+                        results.push(McpConfigResult {
+                            provider: provider.to_string(),
+                            config_path: config_path.to_string_lossy().to_string(),
+                            mcp_servers: Vec::new(),
+                            error: Some("No MCP servers found in config".to_string()),
+                        });
+                    }
+                }
+                Err(e) => {
+                    results.push(McpConfigResult {
+                        provider: provider.to_string(),
+                        config_path: config_path.to_string_lossy().to_string(),
+                        mcp_servers: Vec::new(),
+                        error: Some(format!("Failed to parse JSON: {}", e)),
+                    });
+                }
+            }
+        }
+        Err(e) => {
+            results.push(McpConfigResult {
+                provider: provider.to_string(),
+                config_path: config_path.to_string_lossy().to_string(),
+                mcp_servers: Vec::new(),
+                error: Some(format!("Failed to read file: {}", e)),
+            });
+        }
+    }
+}
+
+fn scan_for_mcp_json_files(config_dirs: &[std::path::PathBuf], results: &mut Vec<McpConfigResult>) {
+    for config_dir in config_dirs {
+        if !config_dir.exists() {
+            continue;
+        }
+
+        // Recursively scan for JSON files that might contain MCP configs
+        if let Ok(entries) = walk_dir(config_dir, 3) { // Max depth of 3
+            for entry in entries {
+                if let Some(extension) = entry.extension() {
+                    if extension == "json" {
+                        if let Ok(content) = std::fs::read_to_string(&entry) {
+                            if content.contains("mcp") || content.contains("server") {
+                                match serde_json::from_str::<serde_json::Value>(&content) {
+                                    Ok(json) => {
+                                        let mcp_servers = extract_mcp_servers(&json);
+                                        if !mcp_servers.is_empty() {
+                                            let filename = entry.file_name()
+                                                .and_then(|n| n.to_str())
+                                                .unwrap_or("unknown");
+                                            results.push(McpConfigResult {
+                                                provider: format!("auto-detected ({})", filename),
+                                                config_path: entry.to_string_lossy().to_string(),
+                                                mcp_servers,
+                                                error: None,
+                                            });
+                                        }
+                                    }
+                                    _ => {} // Ignore invalid JSON
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn walk_dir(dir: &Path, max_depth: usize) -> Result<Vec<std::path::PathBuf>, std::io::Error> {
+    let mut results = Vec::new();
+    walk_dir_recursive(dir, max_depth, 0, &mut results)?;
+    Ok(results)
+}
+
+fn walk_dir_recursive(
+    dir: &Path,
+    max_depth: usize,
+    current_depth: usize,
+    results: &mut Vec<std::path::PathBuf>
+) -> Result<(), std::io::Error> {
+    if current_depth > max_depth {
+        return Ok(());
+    }
+
+    let entries = std::fs::read_dir(dir)?;
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.is_file() {
+            results.push(path);
+        } else if path.is_dir() && current_depth < max_depth {
+            walk_dir_recursive(&path, max_depth, current_depth + 1, results)?;
+        }
+    }
+
+    Ok(())
+}
+
 fn extract_mcp_servers(json: &serde_json::Value) -> Vec<McpServerConfig> {
     let mut servers = Vec::new();
 
-    if let Some(mcp_servers) = json.get("mcpServers") {
-        if let Some(obj) = mcp_servers.as_object() {
-            for (name, config) in obj {
-                if let Some(server_config) = config.as_object() {
-                    let command = server_config.get("command")
-                        .and_then(|c| c.as_str())
-                        .unwrap_or("")
-                        .to_string();
+    // Check for standard MCP configuration formats
+    let possible_keys = vec![
+        "mcpServers",
+        "servers",
+        "mcp",
+        "tools",
+        "integrations"
+    ];
 
-                    let args = server_config.get("args")
-                        .and_then(|a| a.as_array())
-                        .map(|arr| arr.iter()
-                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                            .collect::<Vec<_>>()
-                        );
+    for key in possible_keys {
+        if let Some(section) = json.get(key) {
+            if let Some(obj) = section.as_object() {
+                for (name, config) in obj {
+                    if let Some(server_config) = config.as_object() {
+                        let server = extract_server_config(name, server_config);
+                        servers.push(server);
+                    }
+                }
+            }
+        }
+    }
 
-                    let env = server_config.get("env").cloned();
+    // Also check for array-based configurations
+    if let Some(servers_array) = json.get("mcpServers").and_then(|v| v.as_array()) {
+        for (index, config) in servers_array.iter().enumerate() {
+            if let Some(server_config) = config.as_object() {
+                let default_name = format!("server-{}", index);
+                let name = server_config.get("name")
+                    .and_then(|n| n.as_str())
+                    .unwrap_or(&default_name);
+                let server = extract_server_config(name, server_config);
+                servers.push(server);
+            }
+        }
+    }
 
-                    servers.push(McpServerConfig {
-                        name: name.clone(),
-                        command,
-                        args,
-                        env,
-                    });
+    // Check for Claude Desktop specific format
+    if let Some(claude_config) = json.get("claude_desktop") {
+        if let Some(mcp) = claude_config.get("mcp") {
+            if let Some(servers_obj) = mcp.get("servers") {
+                if let Some(obj) = servers_obj.as_object() {
+                    for (name, config) in obj {
+                        if let Some(server_config) = config.as_object() {
+                            let server = extract_server_config(name, server_config);
+                            servers.push(server);
+                        }
+                    }
                 }
             }
         }
     }
 
     servers
+}
+
+fn extract_server_config(name: &str, config: &serde_json::Map<String, serde_json::Value>) -> McpServerConfig {
+    let command = config.get("command")
+        .or_else(|| config.get("cmd"))
+        .or_else(|| config.get("executable"))
+        .and_then(|c| c.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let args = config.get("args")
+        .or_else(|| config.get("arguments"))
+        .and_then(|a| a.as_array())
+        .map(|arr| arr.iter()
+            .filter_map(|v| v.as_str().map(|s| s.to_string()))
+            .collect::<Vec<_>>()
+        );
+
+    let env = config.get("env")
+        .or_else(|| config.get("environment"))
+        .or_else(|| config.get("envVars"))
+        .cloned();
+
+    McpServerConfig {
+        name: name.to_string(),
+        command,
+        args,
+        env,
+    }
 }
