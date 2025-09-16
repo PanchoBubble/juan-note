@@ -29,6 +29,7 @@ interface NoteListProps {
     showInlineCreate?: boolean;
     onCancelInlineCreate?: () => void;
     onSaveNote?: (request: CreateNoteRequest) => Promise<void>;
+    onSelectionChange?: (count: number, total: number) => void;
 }
 
 export const NoteList = React.memo(function NoteList({
@@ -50,7 +51,8 @@ export const NoteList = React.memo(function NoteList({
     onSortOrderChange,
     showInlineCreate = false,
     onCancelInlineCreate,
-    onSaveNote
+    onSaveNote,
+    onSelectionChange
 }: NoteListProps) {
     const {
         selectedIds,
@@ -138,6 +140,13 @@ export const NoteList = React.memo(function NoteList({
             document.removeEventListener('clearNoteSelection', handleClearSelection);
         };
     }, [toggleAll, clearAll, filteredAndSortedNotes]);
+
+    // Notify parent component of selection changes
+    React.useEffect(() => {
+        if (onSelectionChange) {
+            onSelectionChange(selectedCount, filteredAndSortedNotes.length + doneNotes.length);
+        }
+    }, [selectedCount, filteredAndSortedNotes.length, doneNotes.length, onSelectionChange]);
 
     if (loading && notes.length === 0) {
         return (
