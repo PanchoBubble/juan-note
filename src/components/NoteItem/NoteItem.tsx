@@ -131,7 +131,7 @@ export const NoteItem = React.memo(function NoteItem({
   );
 
   const handleEditCancel = useCallback(() => {
-    setIsEditing(false);
+    // setIsEditing(false);
   }, []);
 
   return (

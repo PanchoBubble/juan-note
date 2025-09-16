@@ -30,24 +30,25 @@ export const InlineTitleEditor = React.memo(function InlineTitleEditor({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      handleSave();
+      const trimmedValue = editValue.trim();
+      if (trimmedValue !== value) {
+        onSave(trimmedValue);
+      } else {
+        onCancel();
+      }
     } else if (e.key === "Escape") {
       e.preventDefault();
-      handleSave();
+      onCancel();
     }
   };
 
-  const handleSave = () => {
+  const handleBlur = () => {
     const trimmedValue = editValue.trim();
     if (trimmedValue !== value) {
       onSave(trimmedValue);
     } else {
       onCancel();
     }
-  };
-
-  const handleBlur = () => {
-    handleSave();
   };
 
   return (
