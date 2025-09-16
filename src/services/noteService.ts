@@ -161,4 +161,16 @@ export class NoteService {
       };
     }
   }
+
+  static async migrateNotesToStates(): Promise<NoteResponse> {
+    try {
+      return await invoke('migrate_notes_to_states');
+    } catch (error) {
+      console.error('Failed to migrate notes to states:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
 }

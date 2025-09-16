@@ -27,7 +27,8 @@ pub fn run() {
             get_all_states,
             create_state,
             update_state,
-            delete_state
+            delete_state,
+            migrate_notes_to_states
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

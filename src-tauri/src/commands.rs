@@ -524,3 +524,67 @@ fn get_state_sync(id: i64, conn: &rusqlite::Connection) -> Result<StateResponse,
         Err(e) => Err(format!("Failed to get state: {}", e)),
     }
 }
+
+#[tauri::command]
+pub fn migrate_notes_to_states() -> Result<NoteResponse, String> {
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+
+    // Get all notes that don't have a state_id assigned
+    let mut stmt = conn.prepare(
+        "SELECT id, done, labels FROM notes WHERE state_id IS NULL"
+    ).map_err(|e| format!("Failed to prepare migration query: {}", e))?;
+
+    let note_rows = stmt.query_map([], |row| {
+        let labels_str: String = row.get(2)?;
+        let labels: Vec<String> = serde_json::from_str(&labels_str)
+            .unwrap_or_default();
+
+        Ok((row.get::<_, i64>(0)?, row.get::<_, i32>(1)? != 0, labels))
+    }).map_err(|e| format!("Failed to query notes for migration: {}", e))?;
+
+    let mut migrated_count = 0;
+
+    for note_result in note_rows {
+        match note_result {
+            Ok((note_id, done, labels)) => {
+                // Determine appropriate state based on current logic
+                let state_name = if done {
+                    "Done"
+                } else if labels.iter().any(|l| l.to_lowercase().contains("progress") || l.to_lowercase().contains("in-progress")) {
+                    "In Progress"
+                } else {
+                    "To Do"
+                };
+
+                // Find the state ID
+                let mut state_stmt = conn.prepare(
+                    "SELECT id FROM states WHERE name = ?"
+                ).map_err(|e| format!("Failed to prepare state lookup: {}", e))?;
+
+                let state_id: Option<i64> = state_stmt.query_row([state_name], |row| row.get(0)).ok();
+
+                if let Some(state_id) = state_id {
+                    // Update the note with the state_id
+                    conn.execute(
+                        "UPDATE notes SET state_id = ?, updated_at = ? WHERE id = ?",
+                        rusqlite::params![
+                            state_id,
+                            Utc::now().timestamp(),
+                            note_id
+                        ],
+                    ).map_err(|e| format!("Failed to update note {}: {}", note_id, e))?;
+
+                    migrated_count += 1;
+                }
+            }
+            Err(e) => return Err(format!("Failed to process note: {}", e)),
+        }
+    }
+
+    Ok(NoteResponse {
+        success: true,
+        data: None,
+        error: None,
+    })
+}
