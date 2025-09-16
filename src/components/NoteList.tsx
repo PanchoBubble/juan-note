@@ -83,6 +83,7 @@ export const NoteList = React.memo(function NoteList({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
+        delay: 150, // Allow time for double-click detection
         distance: 3,
       },
       // Don't activate drag if cmd/ctrl is pressed
