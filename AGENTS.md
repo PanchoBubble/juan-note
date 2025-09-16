@@ -88,6 +88,18 @@ The MCP server should be implemented as a separate Node.js service that:
 
 ## Development Guidelines for Agents
 
+### Using Planning and Implementation Tools
+
+When working on changes to the codebase:
+
+1. **Planning Changes**: If the user requests planning a change, use the `tools_plan` tool to create a structured plan.
+
+2. **Applying Changes**: When the user asks to apply a change, use the `tools_implement` tool to execute the implementation steps.
+
+3. **No Changes Without Plan**: Do not allow changes to be applied without a previous plan.
+
+This ensures systematic and organized development workflow.
+
 ### Adding New API Endpoints
 
 When adding new API functionality, follow this checklist:

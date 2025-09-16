@@ -22,7 +22,7 @@ function App() {
   const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
   const [completeNoteData, setCompleteNoteData] = useState<Note | null>(null);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
-  const [showInlineCreate, setShowInlineCreate] = useState(false);
+
 
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
@@ -95,13 +95,9 @@ function App() {
     setShowQuickCreate(true);
   };
 
-  const handleInlineCreate = () => {
-    setShowInlineCreate(true);
-  };
 
-  const handleCancelInlineCreate = () => {
-    setShowInlineCreate(false);
-  };
+
+
 
   // Keyboard shortcuts and accessibility
   useEffect(() => {
@@ -111,24 +107,84 @@ function App() {
         e.preventDefault();
         handleQuickCreate();
       }
-      // Cmd/Ctrl + Shift + N for inline create (in list view)
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'n' && viewMode === 'list') {
-        e.preventDefault();
-        handleInlineCreate();
-      }
+
       // Escape to close modals
       if (e.key === 'Escape') {
         if (showQuickCreate) setShowQuickCreate(false);
         if (showEditor) handleCancelEdit();
         if (deleteNoteData) handleCancelDelete();
         if (completeNoteData) handleCancelComplete();
-        if (showInlineCreate) handleCancelInlineCreate();
+
+      }
+
+      // Handle Shift+Enter to focus search input
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+        return;
+      }
+
+      // Auto-focus search input when typing while no input is focused
+      // Only trigger for printable characters (not modifier keys, function keys, etc.)
+      const isPrintableKey = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+      const isSpecialNavigationKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key);
+
+      if (isPrintableKey || isSpecialNavigationKey) {
+        // Check if any input/textarea is currently focused
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          (activeElement as HTMLElement).contentEditable === 'true'
+        );
+
+        // If no input is focused, focus the search bar
+        if (!isInputFocused) {
+          const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+          if (searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+            // If it's a printable character, also insert it into the search input
+            if (isPrintableKey) {
+              searchInput.value += e.key;
+              // Trigger the change event to update the search
+              searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showQuickCreate, showEditor, deleteNoteData, completeNoteData, showInlineCreate, viewMode]);
+  }, [showQuickCreate, showEditor, deleteNoteData, completeNoteData, viewMode]);
+
+  // Focus search bar when window gets focus and no input is focused
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      // Check if any input/textarea is currently focused
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        (activeElement as HTMLElement).contentEditable === 'true'
+      );
+
+      // If no input is focused, focus the search bar
+      if (!isInputFocused) {
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    return () => window.removeEventListener('focus', handleWindowFocus);
+  }, []);
 
   return (
     <div className="min-h-screen bg-monokai-bg">
@@ -139,8 +195,8 @@ function App() {
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xl">📝</span>
+              <div className="w-10 h-10 bg-surface-secondary bg-opacity-80 rounded-lg flex items-center justify-center border border-monokai-comment border-opacity-30">
+                <span className="text-monokai-fg text-xl">📝</span>
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-monokai-fg">Juan Notes</h1>
@@ -208,6 +264,15 @@ function App() {
           onSearch={searchNotes}
           loading={loading}
           placeholder="Search notes by title or content..."
+          onQuickCreate={(content) => {
+            const request: CreateNoteRequest = {
+              title: content,
+              content: '',
+              priority: 0,
+              labels: [],
+            };
+            handleSaveNote(request);
+          }}
         />
 
         {viewMode === 'list' ? (
@@ -227,9 +292,7 @@ function App() {
             onSortChange={setSortBy}
             sortOrder={sortOrder}
             onSortOrderChange={setSortOrder}
-            showInlineCreate={showInlineCreate}
-            onInlineCreate={handleInlineCreate}
-            onCancelInlineCreate={handleCancelInlineCreate}
+
             onSaveNote={handleSaveNote}
           />
         ) : (

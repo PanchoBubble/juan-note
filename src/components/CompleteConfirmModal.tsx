@@ -59,14 +59,14 @@ export function CompleteConfirmModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-monokai-comment bg-surface-secondary border border-monokai-comment border-opacity-30 rounded-lg hover:bg-surface-tertiary focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-30 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-monokai-pink bg-surface-secondary border-2 border-monokai-pink rounded-lg hover:bg-surface-tertiary hover:border-monokai-pink focus:outline-none focus:ring-2 focus:ring-monokai-pink focus:ring-opacity-30 disabled:opacity-50 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-monokai-green border border-transparent rounded-lg hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-monokai-green focus:ring-opacity-30 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-monokai-green bg-monokai-green border-2 border-monokai-green rounded-lg hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-monokai-green focus:ring-opacity-30 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Completing...' : 'Mark Complete'}
           </button>

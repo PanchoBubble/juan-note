@@ -102,6 +102,34 @@ html {
   border-color: var(--color-border-secondary);
 }
 
+.border-monokai {
+  border-color: var(--monokai-comment);
+}
+
+.border-monokai-yellow {
+  border-color: var(--monokai-yellow);
+}
+
+.border-monokai-blue {
+  border-color: var(--monokai-blue);
+}
+
+.border-monokai-green {
+  border-color: var(--monokai-green);
+}
+
+.border-monokai-purple {
+  border-color: var(--monokai-purple);
+}
+
+.border-monokai-pink {
+  border-color: var(--monokai-pink);
+}
+
+.border-monokai-orange {
+  border-color: var(--monokai-orange);
+}
+
 /* Enhanced interactive elements */
 .btn-primary {
   background-color: var(--color-accent);

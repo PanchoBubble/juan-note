@@ -100,6 +100,13 @@ export default {
         border: {
           DEFAULT: '#75715E',
           secondary: '#5e5a47',
+          monokai: '#75715E',
+          'monokai-yellow': '#E6DB74',
+          'monokai-green': '#A6E22E',
+          'monokai-blue': '#66D9EF',
+          'monokai-purple': '#AE81FF',
+          'monokai-pink': '#F92672',
+          'monokai-orange': '#FD971F',
         },
       },
     },

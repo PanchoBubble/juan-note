@@ -72,7 +72,7 @@ export function QuickCreateModal({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-medium"
+            className="w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg text-lg font-medium placeholder-monokai-comment"
             placeholder="Note title..."
             disabled={loading}
             autoFocus
@@ -84,19 +84,19 @@ export function QuickCreateModal({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue resize-none text-monokai-fg placeholder-monokai-comment"
             placeholder="Note content..."
             disabled={loading}
           />
         </div>
 
         {(defaultLabels.length > 0 || defaultPriority > 0) && (
-          <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+          <div className="text-sm text-monokai-comment bg-surface-tertiary border border-monokai-yellow border-opacity-30 p-2 rounded">
             {defaultLabels.length > 0 && (
               <div className="mb-1">
-                <span className="font-medium">Labels:</span>{' '}
+                <span className="font-medium text-monokai-fg">Labels:</span>{' '}
                 {defaultLabels.map((label, index) => (
-                  <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1">
+                  <span key={index} className="inline-block bg-monokai-blue bg-opacity-20 text-monokai-blue text-xs px-2 py-1 rounded-full mr-1 border border-monokai-blue border-opacity-50">
                     {label}
                   </span>
                 ))}
@@ -104,11 +104,11 @@ export function QuickCreateModal({
             )}
             {defaultPriority > 0 && (
               <div>
-                <span className="font-medium">Priority:</span>{' '}
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  defaultPriority === 1 ? 'text-amber-700 bg-amber-50' :
-                  defaultPriority === 2 ? 'text-orange-700 bg-orange-50' :
-                  'text-red-700 bg-red-50'
+                <span className="font-medium text-monokai-fg">Priority:</span>{' '}
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${
+                  defaultPriority === 1 ? 'text-monokai-yellow bg-monokai-yellow bg-opacity-20 border-monokai-yellow border-opacity-50' :
+                  defaultPriority === 2 ? 'text-monokai-orange bg-monokai-orange bg-opacity-20 border-monokai-orange border-opacity-50' :
+                  'text-monokai-pink bg-monokai-pink bg-opacity-20 border-monokai-pink border-opacity-50'
                 }`}>
                   {defaultPriority === 1 ? 'Low' : defaultPriority === 2 ? 'Medium' : 'High'}
                 </span>
@@ -121,21 +121,21 @@ export function QuickCreateModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            className="px-4 py-2 text-monokai-pink border-2 border-monokai-pink rounded-md hover:bg-monokai-pink hover:bg-opacity-20 disabled:opacity-50 transition-colors"
             disabled={loading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-monokai-green text-monokai-green border-2 border-monokai-green rounded-md hover:bg-opacity-80 disabled:opacity-50 transition-colors"
             disabled={loading || (!title.trim() && !content.trim())}
           >
             {loading ? 'Creating...' : 'Create Note'}
           </button>
         </div>
 
-        <div className="text-xs text-gray-500 text-center">
+        <div className="text-xs text-monokai-comment text-center">
           Press Ctrl/Cmd + Enter to create quickly
         </div>
       </form>

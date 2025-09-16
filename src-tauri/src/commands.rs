@@ -274,6 +274,37 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
     let limit = request.limit.unwrap_or(50).min(100); // Max 100 results
     let offset = request.offset.unwrap_or(0);
 
+    // For partial substring search, use LIKE search as primary method
+    // FTS is better for full-text search with ranking, but LIKE handles substrings better
+    let query = request.query.trim();
+
+    // If query contains FTS operators or is complex, try FTS first
+    if query.contains(':') || query.contains('"') || query.contains('*') ||
+       query.contains("AND") || query.contains("OR") || query.contains("NOT") ||
+       query.split_whitespace().count() > 3 {
+        let search_query = enhance_search_query(query);
+        let fts_result = perform_fts_search(&conn, &search_query, limit, offset);
+
+        match fts_result {
+            Ok(notes) => {
+                return Ok(NotesListResponse {
+                    success: true,
+                    data: notes,
+                    error: None,
+                });
+            }
+            Err(_) => {
+                // Fallback to LIKE search
+                return perform_like_search(&conn, query, limit, offset);
+            }
+        }
+    } else {
+        // For simple queries, use LIKE search for better substring matching
+        return perform_like_search(&conn, query, limit, offset);
+    }
+}
+
+fn perform_fts_search(conn: &rusqlite::Connection, search_query: &str, limit: i32, offset: i32) -> Result<Vec<Note>, String> {
     let mut stmt = conn.prepare(
         "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes, n.done, n.state_id
          FROM notes_fts fts
@@ -281,10 +312,10 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
          WHERE notes_fts MATCH ?
          ORDER BY rank
          LIMIT ? OFFSET ?"
-    ).map_err(|e| format!("Failed to prepare search query: {}", e))?;
+    ).map_err(|e| format!("Failed to prepare FTS search query: {}", e))?;
 
     let notes_iter = stmt.query_map(
-        rusqlite::params![request.query, limit, offset],
+        rusqlite::params![search_query, limit as i64, offset as i64],
         |row| {
             let labels_str: String = row.get(6)?;
             let labels: Vec<String> = serde_json::from_str(&labels_str)
@@ -304,13 +335,58 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
             state_id: row.get(10)?,
         })
         }
-    ).map_err(|e| format!("Failed to execute search: {}", e))?;
+    ).map_err(|e| format!("Failed to execute FTS search: {}", e))?;
 
     let mut notes = Vec::new();
     for note in notes_iter {
         match note {
             Ok(note) => notes.push(note),
-            Err(e) => return Err(format!("Failed to parse search result: {}", e)),
+            Err(e) => return Err(format!("Failed to parse FTS search result: {}", e)),
+        }
+    }
+
+    Ok(notes)
+}
+
+fn perform_like_search(conn: &rusqlite::Connection, query: &str, limit: i32, offset: i32) -> Result<NotesListResponse, String> {
+    let search_pattern = format!("%{}%", query);
+
+    let mut stmt = conn.prepare(
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id
+         FROM notes
+         WHERE title LIKE ? COLLATE NOCASE OR content LIKE ? COLLATE NOCASE
+         ORDER BY updated_at DESC
+         LIMIT ? OFFSET ?"
+    ).map_err(|e| format!("Failed to prepare LIKE search query: {}", e))?;
+
+    let notes_iter = stmt.query_map(
+        rusqlite::params![search_pattern, search_pattern, limit as i64, offset as i64],
+        |row| {
+            let labels_str: String = row.get(6)?;
+            let labels: Vec<String> = serde_json::from_str(&labels_str)
+                .unwrap_or_default();
+
+        Ok(Note {
+            id: Some(row.get(0)?),
+            title: row.get(1)?,
+            content: row.get(2)?,
+            created_at: Some(DateTime::from_timestamp(row.get(3)?, 0).unwrap_or_default()),
+            updated_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
+            priority: row.get(5)?,
+            labels,
+            deadline: row.get::<_, Option<i64>>(7)?.map(|ts| DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+            reminder_minutes: row.get(8)?,
+            done: row.get::<_, i32>(9)? != 0,
+            state_id: row.get(10)?,
+        })
+        }
+    ).map_err(|e| format!("Failed to execute LIKE search: {}", e))?;
+
+    let mut notes = Vec::new();
+    for note in notes_iter {
+        match note {
+            Ok(note) => notes.push(note),
+            Err(e) => return Err(format!("Failed to parse LIKE search result: {}", e)),
         }
     }
 
@@ -319,6 +395,39 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
         data: notes,
         error: None,
     })
+}
+
+// Enhance search query to support better "like" matching for headers and descriptions
+fn enhance_search_query(query: &str) -> String {
+    let trimmed = query.trim();
+
+    // If query is empty, return as-is
+    if trimmed.is_empty() {
+        return trimmed.to_string();
+    }
+
+    // If query already contains FTS operators, use as-is
+    if trimmed.contains(':') || trimmed.contains('"') || trimmed.contains('*') ||
+       trimmed.contains("AND") || trimmed.contains("OR") || trimmed.contains("NOT") {
+        return trimmed.to_string();
+    }
+
+    // For simple queries, use FTS-compatible syntax that will trigger LIKE fallback for complex matching
+    let words: Vec<&str> = trimmed.split_whitespace().collect();
+
+    if words.len() == 1 {
+        // Single word: search in both title and content with prefix matching
+        // If this fails (due to complex queries), it will fallback to LIKE search
+        let word = words[0];
+        format!("title:{}* OR content:{}*", word, word)
+    } else {
+        // Multiple words: search for any of the words in either field
+        let word_searches: Vec<String> = words.iter()
+            .map(|word| format!("title:{}* OR content:{}*", word, word))
+            .collect();
+
+        format!("({})", word_searches.join(") OR ("))
+    }
 }
 
 #[tauri::command]
@@ -543,8 +652,6 @@ pub fn migrate_notes_to_states() -> Result<NoteResponse, String> {
         Ok((row.get::<_, i64>(0)?, row.get::<_, i32>(1)? != 0, labels))
     }).map_err(|e| format!("Failed to query notes for migration: {}", e))?;
 
-    let mut migrated_count = 0;
-
     for note_result in note_rows {
         match note_result {
             Ok((note_id, done, labels)) => {
@@ -574,8 +681,6 @@ pub fn migrate_notes_to_states() -> Result<NoteResponse, String> {
                             note_id
                         ],
                     ).map_err(|e| format!("Failed to update note {}: {}", note_id, e))?;
-
-                    migrated_count += 1;
                 }
             }
             Err(e) => return Err(format!("Failed to process note: {}", e)),

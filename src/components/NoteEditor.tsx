@@ -82,7 +82,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
   return (
     <form onSubmit={handleSubmit} className={`p-6 ${quick ? 'space-y-4' : 'space-y-6'}`}>
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="title" className="block text-sm font-medium text-monokai-fg mb-1">
             Title
           </label>
           <input
@@ -90,7 +90,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg placeholder-monokai-comment"
             placeholder="Enter note title..."
             disabled={loading}
             autoFocus
@@ -98,7 +98,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
         </div>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="content" className="block text-sm font-medium text-monokai-fg mb-1">
             Content
           </label>
           <textarea
@@ -106,7 +106,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={quick ? 4 : 8}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+            className="w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue resize-vertical text-monokai-fg placeholder-monokai-comment"
             placeholder="Enter note content..."
             disabled={loading}
           />
@@ -115,14 +115,14 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
         {!quick && (
           <>
             <div>
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="priority" className="block text-sm font-medium text-monokai-fg mb-1">
                 Priority
               </label>
               <select
                 id="priority"
                 value={priority}
                 onChange={(e) => setPriority(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-yellow border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-yellow focus:border-monokai-yellow text-monokai-fg"
                 disabled={loading}
               >
                 <option value={0}>Normal</option>
@@ -139,15 +139,15 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
                   id="done"
                   checked={done}
                   onChange={(e) => setDone(e.target.checked)}
-                  className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                  className="w-4 h-4 text-monokai-green bg-surface-secondary border-2 border-monokai-green border-opacity-50 rounded focus:ring-monokai-green focus:ring-2"
                   disabled={loading}
                 />
-                <span className="text-sm font-medium text-gray-700">Mark as Done</span>
+                <span className="text-sm font-medium text-monokai-fg">Mark as Done</span>
               </label>
             </div>
 
             <div>
-              <label htmlFor="labels" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="labels" className="block text-sm font-medium text-monokai-fg mb-1">
                 Labels
               </label>
               <div className="flex gap-2 mb-2">
@@ -157,14 +157,14 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
                   value={labelInput}
                   onChange={(e) => setLabelInput(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg placeholder-monokai-comment"
                   placeholder="Add a label..."
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={addLabel}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-monokai-green text-monokai-green border-2 border-monokai-green rounded-md hover:bg-opacity-80 disabled:opacity-50 transition-colors"
                   disabled={loading || !labelInput.trim()}
                 >
                   Add
@@ -175,13 +175,13 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
                   {labels.map((label, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                      className="inline-flex items-center px-2 py-1 bg-monokai-blue bg-opacity-20 text-monokai-blue text-sm rounded-full border border-monokai-blue border-opacity-50"
                     >
                       {label}
                       <button
                         type="button"
                         onClick={() => removeLabel(label)}
-                        className="ml-1 text-blue-600 hover:text-blue-800"
+                        className="ml-1 text-monokai-blue hover:text-monokai-pink transition-colors"
                         disabled={loading}
                       >
                         ×
@@ -198,14 +198,14 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            className="px-4 py-2 text-monokai-pink bg-surface-secondary border-2 border-monokai-pink rounded-md hover:bg-surface-tertiary hover:border-monokai-pink disabled:opacity-50 transition-colors"
             disabled={loading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-monokai-green text-monokai-green border-2 border-monokai-green rounded-md hover:bg-opacity-80 disabled:opacity-50 transition-colors"
             disabled={loading || (!title.trim() && !content.trim())}
           >
             {loading ? 'Saving...' : (note ? 'Update Note' : 'Create Note')}

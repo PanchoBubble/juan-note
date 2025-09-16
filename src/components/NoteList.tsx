@@ -25,7 +25,6 @@ interface NoteListProps {
   sortOrder: 'asc' | 'desc';
   onSortOrderChange: (order: 'asc' | 'desc') => void;
   showInlineCreate?: boolean;
-  onInlineCreate?: () => void;
   onCancelInlineCreate?: () => void;
   onSaveNote?: (request: CreateNoteRequest) => Promise<void>;
 }
@@ -47,7 +46,6 @@ export const NoteList = React.memo(function NoteList({
   sortOrder,
   onSortOrderChange,
   showInlineCreate = false,
-  onInlineCreate,
   onCancelInlineCreate,
   onSaveNote
 }: NoteListProps) {
@@ -109,8 +107,8 @@ export const NoteList = React.memo(function NoteList({
   if (loading && notes.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center py-16">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <span className="text-gray-600 font-medium">Loading your notes...</span>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-monokai-blue mb-4"></div>
+        <span className="text-monokai-comment font-medium">Loading your notes...</span>
       </div>
     );
   }
@@ -118,7 +116,7 @@ export const NoteList = React.memo(function NoteList({
   return (
     <div className="space-y-6">
       {/* Filter and Sort Controls */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="bg-surface-tertiary rounded-lg border-2 border-monokai-yellow p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-4">
           <LabelFilter
             availableLabels={availableLabels}
@@ -143,13 +141,7 @@ export const NoteList = React.memo(function NoteList({
             onSortOrderChange={onSortOrderChange}
           />
 
-          <button
-            onClick={onInlineCreate}
-            className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md"
-            disabled={loading}
-          >
-            + Add Note
-          </button>
+
 
           {(selectedLabels.length > 0 || selectedPriority !== null || selectedDone !== null) && (
             <button
@@ -158,7 +150,7 @@ export const NoteList = React.memo(function NoteList({
                 onPriorityChange(null);
                 onDoneChange(null);
               }}
-              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md border border-red-200"
+              className="px-3 py-1 text-sm text-monokai-pink bg-surface-secondary border-2 border-monokai-pink rounded-md hover:bg-monokai-pink hover:bg-opacity-20 transition-colors"
             >
               Clear filters
             </button>
@@ -169,11 +161,11 @@ export const NoteList = React.memo(function NoteList({
       {/* Notes List */}
       {filteredAndSortedNotes.length === 0 && !showInlineCreate ? (
         <div className="text-center py-16">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-24 h-24 bg-gradient-to-br from-monokai-blue to-monokai-purple bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-monokai-yellow">
             <span className="text-4xl">🔍</span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">No notes match your filters</h3>
-          <p className="text-gray-500 max-w-sm mx-auto mb-4">
+          <h3 className="text-2xl font-bold text-monokai-fg mb-3">No notes match your filters</h3>
+          <p className="text-monokai-comment max-w-sm mx-auto mb-4">
             Try adjusting your filters or create a new note that matches your criteria.
           </p>
           <button
@@ -181,7 +173,7 @@ export const NoteList = React.memo(function NoteList({
               onLabelsChange([]);
               onPriorityChange(null);
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-monokai-green text-monokai-green border-2 border-monokai-green rounded-lg hover:bg-opacity-80 transition-colors"
           >
             Clear all filters
           </button>

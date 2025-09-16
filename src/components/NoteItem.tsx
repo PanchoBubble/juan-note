@@ -76,7 +76,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onComplete,
       style={style}
       {...listeners}
       {...attributes}
-      className={`bg-surface-secondary rounded-xl shadow-sm border border-monokai-comment border-opacity-30 p-6 hover:shadow-lg hover:border-monokai-comment transition-all duration-200 hover:-translate-y-0.5 group cursor-move ${
+      className={`bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-6 hover:shadow-lg hover:border-monokai transition-all duration-200 hover:-translate-y-0.5 group cursor-move ${
         isDragging ? 'opacity-50' : ''
       }`}
       role="article"
@@ -133,16 +133,29 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onComplete,
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                </svg>
              </button>
-             <button
-               onClick={() => onDelete(note)}
-               className="p-2 text-monokai-comment hover:text-monokai-pink hover:bg-monokai-pink hover:bg-opacity-20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-monokai-pink focus:ring-opacity-30"
-               title="Delete note"
-               aria-label={`Delete note: ${note.title || 'Untitled'}`}
-             >
-               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-               </svg>
-             </button>
+              <button
+                onClick={() => onDelete(note)}
+                className="p-2 text-monokai-comment hover:text-monokai-pink hover:bg-monokai-pink hover:bg-opacity-20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-monokai-pink focus:ring-opacity-30"
+                title="Delete note"
+                aria-label={`Delete note: ${note.title || 'Untitled'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  const textToCopy = `${note.title || 'Untitled Note'}\n\n${note.content || 'No content'}`;
+                  navigator.clipboard.writeText(textToCopy);
+                }}
+                className="p-2 text-monokai-comment hover:text-monokai-purple hover:bg-monokai-purple hover:bg-opacity-20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-monokai-purple focus:ring-opacity-30 border border-monokai-purple border-opacity-50"
+                title="Copy note content"
+                aria-label={`Copy note content: ${note.title || 'Untitled'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
            </div>
         </div>
       </div>
@@ -201,7 +214,7 @@ export const NoteItem = React.memo(function NoteItem({ note, onEdit, onComplete,
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs text-monokai-comment border-t border-monokai-comment border-opacity-30 pt-3">
+      <div className="flex items-center justify-between text-xs text-monokai-comment border-t border-monokai border-opacity-30 pt-3">
         <div className="flex items-center space-x-4">
           {note.updated_at && (
             <span className="flex items-center space-x-1">
