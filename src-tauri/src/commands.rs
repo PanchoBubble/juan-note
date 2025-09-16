@@ -635,6 +635,122 @@ fn get_state_sync(id: i64, conn: &rusqlite::Connection) -> Result<StateResponse,
 }
 
 #[tauri::command]
+pub fn bulk_delete_notes(request: BulkDeleteRequest) -> Result<BulkOperationResponse, String> {
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+
+    let mut successful_count = 0;
+    let mut failed_count = 0;
+    let mut errors = Vec::new();
+
+    for &note_id in &request.note_ids {
+        match conn.execute(
+            "DELETE FROM notes WHERE id = ?",
+            [note_id],
+        ) {
+            Ok(rows_affected) => {
+                if rows_affected > 0 {
+                    successful_count += 1;
+                } else {
+                    failed_count += 1;
+                    errors.push(format!("Note {} not found", note_id));
+                }
+            }
+            Err(e) => {
+                failed_count += 1;
+                errors.push(format!("Failed to delete note {}: {}", note_id, e));
+            }
+        }
+    }
+
+    Ok(BulkOperationResponse {
+        success: true,
+        successful_count,
+        failed_count,
+        errors: if errors.is_empty() { None } else { Some(errors) },
+        error: None,
+    })
+}
+
+#[tauri::command]
+pub fn bulk_update_notes_priority(request: BulkUpdatePriorityRequest) -> Result<BulkOperationResponse, String> {
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+
+    let mut successful_count = 0;
+    let mut failed_count = 0;
+    let mut errors = Vec::new();
+    let now = Utc::now().timestamp();
+
+    for &note_id in &request.note_ids {
+        match conn.execute(
+            "UPDATE notes SET priority = ?, updated_at = ? WHERE id = ?",
+            rusqlite::params![request.priority, now, note_id],
+        ) {
+            Ok(rows_affected) => {
+                if rows_affected > 0 {
+                    successful_count += 1;
+                } else {
+                    failed_count += 1;
+                    errors.push(format!("Note {} not found", note_id));
+                }
+            }
+            Err(e) => {
+                failed_count += 1;
+                errors.push(format!("Failed to update note {}: {}", note_id, e));
+            }
+        }
+    }
+
+    Ok(BulkOperationResponse {
+        success: true,
+        successful_count,
+        failed_count,
+        errors: if errors.is_empty() { None } else { Some(errors) },
+        error: None,
+    })
+}
+
+#[tauri::command]
+pub fn bulk_update_notes_state(request: BulkUpdateStateRequest) -> Result<BulkOperationResponse, String> {
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+
+    let mut successful_count = 0;
+    let mut failed_count = 0;
+    let mut errors = Vec::new();
+    let now = Utc::now().timestamp();
+
+    for &note_id in &request.note_ids {
+        match conn.execute(
+            "UPDATE notes SET state_id = ?, updated_at = ? WHERE id = ?",
+            rusqlite::params![request.state_id, now, note_id],
+        ) {
+            Ok(rows_affected) => {
+                if rows_affected > 0 {
+                    successful_count += 1;
+                } else {
+                    failed_count += 1;
+                    errors.push(format!("Note {} not found", note_id));
+                }
+            }
+            Err(e) => {
+                failed_count += 1;
+                errors.push(format!("Failed to update note {}: {}", note_id, e));
+            }
+        }
+    }
+
+    Ok(BulkOperationResponse {
+        success: true,
+        successful_count,
+        failed_count,
+        errors: if errors.is_empty() { None } else { Some(errors) },
+        error: None,
+    })
+}
+
+#[tauri::command]
 pub fn migrate_notes_to_states() -> Result<NoteResponse, String> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
