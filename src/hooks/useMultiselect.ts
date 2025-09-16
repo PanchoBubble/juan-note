@@ -12,10 +12,13 @@ export interface UseMultiselectReturn {
   clearAll: () => void;
   toggleAll: (notes: Note[]) => void;
   getSelectedNotes: (notes: Note[]) => Note[];
+  handleItemClick: (id: number, index: number, event: React.MouseEvent) => void;
+  lastSelectedIndex: number | null;
 }
 
 export function useMultiselect(): UseMultiselectReturn {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
 
   const selectedCount = selectedIds.size;
   const isNoneSelected = selectedCount === 0;
@@ -48,6 +51,7 @@ export function useMultiselect(): UseMultiselectReturn {
 
   const clearAll = useCallback(() => {
     setSelectedIds(new Set());
+    setLastSelectedIndex(null);
   }, []);
 
   const toggleAll = useCallback((notes: Note[]) => {
@@ -62,6 +66,43 @@ export function useMultiselect(): UseMultiselectReturn {
     return notes.filter(note => note.id && selectedIds.has(note.id));
   }, [selectedIds]);
 
+  const handleItemClick = useCallback((id: number, index: number, event: React.MouseEvent) => {
+    const isShiftClick = event.shiftKey;
+    const isCmdClick = event.metaKey || event.ctrlKey;
+
+    setSelectedIds(prev => {
+      const newSelection = new Set(prev);
+
+      if (isShiftClick && lastSelectedIndex !== null) {
+        // Range selection: select all items between last selected and current
+        const start = Math.min(lastSelectedIndex, index);
+        const end = Math.max(lastSelectedIndex, index);
+
+        // Clear previous selection and add range
+        newSelection.clear();
+        for (let i = start; i <= end; i++) {
+          // Note: We'll need to map index back to item ID in the calling component
+          // For now, we'll handle this in the NoteList component
+        }
+      } else if (isCmdClick) {
+        // Toggle selection: add if not selected, remove if selected
+        if (newSelection.has(id)) {
+          newSelection.delete(id);
+        } else {
+          newSelection.add(id);
+        }
+      } else {
+        // Single selection: clear all and select only this item
+        newSelection.clear();
+        newSelection.add(id);
+      }
+
+      return newSelection;
+    });
+
+    setLastSelectedIndex(index);
+  }, [lastSelectedIndex]);
+
   return {
     selectedIds,
     selectedCount,
@@ -73,5 +114,7 @@ export function useMultiselect(): UseMultiselectReturn {
     clearAll,
     toggleAll,
     getSelectedNotes,
+    handleItemClick,
+    lastSelectedIndex,
   };
 }
