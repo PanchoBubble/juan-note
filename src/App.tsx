@@ -8,6 +8,7 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { CompleteConfirmModal } from "./components/CompleteConfirmModal";
 import { QuickCreateModal } from "./components/QuickCreateModal";
 import { SelectionMenu } from "./components/SelectionMenu";
+import { McpIntegrationModal } from "./components/McpIntegrationModal";
 import { useNotes } from "./hooks/useNotes";
 import { useStates } from "./hooks/useStates";
 
@@ -34,6 +35,7 @@ function App() {
   const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
   const [completeNoteData, setCompleteNoteData] = useState<Note | null>(null);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [showMcpIntegration, setShowMcpIntegration] = useState(false);
 
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
@@ -411,6 +413,26 @@ function App() {
                     {viewMode === "list" ? "📊 Kanban" : "📋 List"}
                   </button>
                   <button
+                    onClick={() => setShowMcpIntegration(true)}
+                    className="hidden md:flex items-center px-4 py-2 bg-surface-secondary text-monokai-green rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm"
+                    title="Integrate MCP servers"
+                  >
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                    MCP
+                  </button>
+                  <button
                     onClick={handleCreateNote}
                     className="hidden md:flex items-center px-4 py-2 bg-surface-secondary text-monokai-blue rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm"
                     disabled={loading}
@@ -567,6 +589,11 @@ function App() {
             />
           </svg>
         </button>
+
+        <McpIntegrationModal
+          isOpen={showMcpIntegration}
+          onClose={() => setShowMcpIntegration(false)}
+        />
       </main>
     </div>
   );
