@@ -190,7 +190,9 @@ export const NoteItem = React.memo(function NoteItem({
         onDoubleClick={e => {
           e.stopPropagation();
           e.preventDefault();
-          setIsEditing(!isEditing);
+          if (!isEditing) {
+            setIsEditing(true);
+          }
         }}
         onPointerDown={e => {
           // Handle cmd/ctrl+click for selection before drag system takes over
