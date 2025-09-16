@@ -36,20 +36,11 @@ export const InlineTitleEditor = React.memo(function InlineTitleEditor({
       } else {
         onCancel();
       }
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      onCancel();
     }
+    // ESC is handled globally by the parent component
   };
 
-  const handleBlur = () => {
-    const trimmedValue = editValue.trim();
-    if (trimmedValue !== value) {
-      onSave(trimmedValue);
-    } else {
-      onCancel();
-    }
-  };
+  // Blur is handled globally by the parent component
 
   return (
     <input
@@ -58,7 +49,6 @@ export const InlineTitleEditor = React.memo(function InlineTitleEditor({
       value={editValue}
       onChange={e => setEditValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      onBlur={handleBlur}
       className="text-base font-semibold text-orange-400 bg-transparent border-2 border-monokai-blue rounded px-2 py-1 focus:outline-none w-full"
       placeholder={placeholder}
       autoFocus

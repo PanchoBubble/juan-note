@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Note, UpdateNoteRequest } from "../../types/note";
@@ -38,6 +38,7 @@ export const NoteItem = React.memo(function NoteItem({
   onUpdate,
 }: NoteItemProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
 
   // Use sortable for list reordering
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -131,12 +132,44 @@ export const NoteItem = React.memo(function NoteItem({
   );
 
   const handleEditCancel = useCallback(() => {
-    // setIsEditing(false);
+    setIsEditing(false);
   }, []);
+
+  // Handle global events when editing
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        handleEditCancel();
+      } else if (e.key === "Enter" && !e.ctrlKey && !e.metaKey) {
+        // Let the inline editors handle Enter key
+        return;
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        handleEditCancel();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isEditing, handleEditCancel]);
 
   return (
     <article
-      ref={setNodeRef}
+      ref={el => {
+        setNodeRef(el);
+        (cardRef as any).current = el;
+      }}
       style={style}
       {...(isDraggable ? attributes : {})}
       {...(isDraggable ? listeners : {})}

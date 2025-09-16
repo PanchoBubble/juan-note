@@ -36,20 +36,11 @@ export const InlineContentEditor = React.memo(function InlineContentEditor({
       } else {
         onCancel();
       }
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      onCancel();
     }
+    // ESC is handled globally by the parent component
   };
 
-  const handleBlur = () => {
-    const trimmedValue = editValue.trim();
-    if (trimmedValue !== value) {
-      onSave(trimmedValue);
-    } else {
-      onCancel();
-    }
-  };
+  // Blur is handled globally by the parent component
 
   return (
     <textarea
@@ -57,7 +48,6 @@ export const InlineContentEditor = React.memo(function InlineContentEditor({
       value={editValue}
       onChange={e => setEditValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      onBlur={handleBlur}
       className="bg-transparent border-2 border-monokai-blue rounded px-2 py-1 focus:outline-none resize-none w-full text-sm leading-relaxed"
       placeholder={placeholder}
       rows={Math.max(3, Math.min(8, editValue.split("\n").length))}
