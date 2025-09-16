@@ -56,10 +56,12 @@ export const NoteList = React.memo(function NoteList({
         selectedIds,
         selectedCount,
         isSelected,
-        toggleSelection,
         selectAll,
         clearAll,
+        toggleAll,
+        handleItemClick,
     } = useMultiselect();
+
     // Get all available labels from notes
     const availableLabels = useMemo(() => {
         const labelSet = new Set<string>();
@@ -112,6 +114,30 @@ export const NoteList = React.memo(function NoteList({
 
         return sorted;
     }, [notes, selectedLabels, selectedPriority, sortBy, sortOrder]);
+
+    // Get done/archived notes
+    const doneNotes = useMemo(() => {
+        return notes.filter(note => note.done);
+    }, [notes]);
+
+    // Handle global keyboard shortcuts
+    React.useEffect(() => {
+        const handleSelectAll = () => {
+            toggleAll(filteredAndSortedNotes);
+        };
+
+        const handleClearSelection = () => {
+            clearAll();
+        };
+
+        document.addEventListener('selectAllNotes', handleSelectAll);
+        document.addEventListener('clearNoteSelection', handleClearSelection);
+
+        return () => {
+            document.removeEventListener('selectAllNotes', handleSelectAll);
+            document.removeEventListener('clearNoteSelection', handleClearSelection);
+        };
+    }, [toggleAll, clearAll, filteredAndSortedNotes]);
 
     if (loading && notes.length === 0) {
         return (
@@ -250,33 +276,29 @@ export const NoteList = React.memo(function NoteList({
                               defaultPriority={selectedPriority || 0}
                           />
                       )}
-                       {filteredAndSortedNotes.map((note) => (
-                           <NoteItem
-                               key={note.id}
-                               note={note}
-                               onEdit={onEdit}
-                               onComplete={onComplete}
-                               onDelete={onDelete}
-                                           onLabelClick={(label) => {
-                                               if (!selectedLabels.includes(label)) {
-                                                   onLabelsChange([...selectedLabels, label]);
-                                               }
-                                           }}
-                                           isSelected={note.id ? isSelected(note.id) : false}
-                                           onSelectionChange={() => {
-                                               if (note.id) {
-                                                   toggleSelection(note.id);
-                                               }
-                                           }}
-                                           showSelection={true}
-                           />
-                       ))}
+                        {filteredAndSortedNotes.map((note, index) => (
+                            <NoteItem
+                                key={note.id}
+                                note={note}
+                                onEdit={onEdit}
+                                onComplete={onComplete}
+                                onDelete={onDelete}
+                                onLabelClick={(label) => {
+                                    if (!selectedLabels.includes(label)) {
+                                        onLabelsChange([...selectedLabels, label]);
+                                    }
+                                }}
+                                isSelected={note.id ? isSelected(note.id) : false}
+                                            onItemClick={(id, index, event) => handleItemClick(id, index, event, doneNotes)}
+                                showSelection={true}
+                                itemIndex={index}
+                            />
+                        ))}
                   </div>
             )}
 
             {/* Done/Archived Notes Section */}
             {(() => {
-                const doneNotes = notes.filter(note => note.done);
                 if (doneNotes.length === 0) return null;
 
                 return (
@@ -288,29 +310,26 @@ export const NoteList = React.memo(function NoteList({
                             </span>
                         </div>
                           <div className="flex flex-col gap-4">
-                               {doneNotes
-                                   .sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())
-                                   .map((note) => (
-                                       <NoteItem
-                                           key={note.id}
-                                           note={note}
-                                           onEdit={onEdit}
-                                           onComplete={onComplete}
-                                           onDelete={onDelete}
-                                           onLabelClick={(label) => {
-                                               if (!selectedLabels.includes(label)) {
-                                                   onLabelsChange([...selectedLabels, label]);
-                                               }
-                                           }}
-                                           isSelected={note.id ? isSelected(note.id) : false}
-                                           onSelectionChange={() => {
-                                               if (note.id) {
-                                                   toggleSelection(note.id);
-                                               }
-                                           }}
-                                           showSelection={true}
-                                       />
-                                   ))}
+                                {doneNotes
+                                    .sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())
+                                    .map((note, index) => (
+                                        <NoteItem
+                                            key={note.id}
+                                            note={note}
+                                            onEdit={onEdit}
+                                            onComplete={onComplete}
+                                            onDelete={onDelete}
+                                            onLabelClick={(label) => {
+                                                if (!selectedLabels.includes(label)) {
+                                                    onLabelsChange([...selectedLabels, label]);
+                                                }
+                                            }}
+                                            isSelected={note.id ? isSelected(note.id) : false}
+                                            onItemClick={(id, index, event) => handleItemClick(id, index, event, doneNotes)}
+                                            showSelection={true}
+                                            itemIndex={filteredAndSortedNotes.length + index}
+                                        />
+                                    ))}
                           </div>
                     </div>
                 );

@@ -12,7 +12,7 @@ export interface UseMultiselectReturn {
   clearAll: () => void;
   toggleAll: (notes: Note[]) => void;
   getSelectedNotes: (notes: Note[]) => Note[];
-  handleItemClick: (id: number, index: number, event: React.MouseEvent) => void;
+  handleItemClick: (id: number, index: number, event: React.MouseEvent, notes?: Note[]) => void;
   lastSelectedIndex: number | null;
 }
 
@@ -66,14 +66,14 @@ export function useMultiselect(): UseMultiselectReturn {
     return notes.filter(note => note.id && selectedIds.has(note.id));
   }, [selectedIds]);
 
-  const handleItemClick = useCallback((id: number, index: number, event: React.MouseEvent) => {
+  const handleItemClick = useCallback((id: number, index: number, event: React.MouseEvent, notes?: Note[]) => {
     const isShiftClick = event.shiftKey;
     const isCmdClick = event.metaKey || event.ctrlKey;
 
     setSelectedIds(prev => {
       const newSelection = new Set(prev);
 
-      if (isShiftClick && lastSelectedIndex !== null) {
+      if (isShiftClick && lastSelectedIndex !== null && notes) {
         // Range selection: select all items between last selected and current
         const start = Math.min(lastSelectedIndex, index);
         const end = Math.max(lastSelectedIndex, index);
@@ -81,8 +81,10 @@ export function useMultiselect(): UseMultiselectReturn {
         // Clear previous selection and add range
         newSelection.clear();
         for (let i = start; i <= end; i++) {
-          // Note: We'll need to map index back to item ID in the calling component
-          // For now, we'll handle this in the NoteList component
+          const note = notes[i];
+          if (note && note.id) {
+            newSelection.add(note.id);
+          }
         }
       } else if (isCmdClick) {
         // Toggle selection: add if not selected, remove if selected

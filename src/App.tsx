@@ -108,13 +108,35 @@ function App() {
         handleQuickCreate();
       }
 
-      // Escape to close modals
+      // Cmd/Ctrl + A for select all (when not in input field)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          (activeElement as HTMLElement).contentEditable === 'true'
+        );
+
+        if (!isInputFocused) {
+          e.preventDefault();
+          // Trigger select all - this will be handled by NoteList component
+          const selectAllEvent = new CustomEvent('selectAllNotes');
+          document.dispatchEvent(selectAllEvent);
+        }
+      }
+
+      // Escape to close modals and clear selection
       if (e.key === 'Escape') {
         if (showQuickCreate) setShowQuickCreate(false);
         if (showEditor) handleCancelEdit();
         if (deleteNoteData) handleCancelDelete();
         if (completeNoteData) handleCancelComplete();
 
+        // Clear selection if no modals are open
+        if (!showQuickCreate && !showEditor && !deleteNoteData && !completeNoteData) {
+          const clearSelectionEvent = new CustomEvent('clearNoteSelection');
+          document.dispatchEvent(clearSelectionEvent);
+        }
       }
 
       // Handle Shift+Enter to focus search input
