@@ -5,6 +5,7 @@ import { NoteEditor } from './components/NoteEditor';
 import { SearchBar } from './components/SearchBar';
 import { Modal } from './components/Modal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
+import { CompleteConfirmModal } from './components/CompleteConfirmModal';
 import { QuickCreateModal } from './components/QuickCreateModal';
 import { useNotes } from './hooks/useNotes';
 
@@ -12,11 +13,12 @@ import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
 import './App.css';
 
 function App() {
-  const { notes, loading, error, createNote, updateNote, deleteNote, searchNotes, clearError } = useNotes();
+  const { notes, loading, error, createNote, updateNote, completeNote, deleteNote, searchNotes, clearError } = useNotes();
 
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
+  const [completeNoteData, setCompleteNoteData] = useState<Note | null>(null);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showInlineCreate, setShowInlineCreate] = useState(false);
 
@@ -72,6 +74,21 @@ function App() {
     setDeleteNoteData(null);
   };
 
+  const handleCompleteNote = (note: Note) => {
+    setCompleteNoteData(note);
+  };
+
+  const handleConfirmComplete = async () => {
+    if (completeNoteData) {
+      await completeNote(completeNoteData.id!);
+      setCompleteNoteData(null);
+    }
+  };
+
+  const handleCancelComplete = () => {
+    setCompleteNoteData(null);
+  };
+
   const handleQuickCreate = () => {
     setShowQuickCreate(true);
   };
@@ -102,13 +119,14 @@ function App() {
         if (showQuickCreate) setShowQuickCreate(false);
         if (showEditor) handleCancelEdit();
         if (deleteNoteData) handleCancelDelete();
+        if (completeNoteData) handleCancelComplete();
         if (showInlineCreate) handleCancelInlineCreate();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showQuickCreate, showEditor, deleteNoteData, showInlineCreate, viewMode]);
+  }, [showQuickCreate, showEditor, deleteNoteData, completeNoteData, showInlineCreate, viewMode]);
 
   return (
     <div className="min-h-screen bg-monokai-bg">
@@ -194,6 +212,7 @@ function App() {
           <NoteList
             notes={notes}
             onEdit={handleEditNote}
+            onComplete={handleCompleteNote}
             onDelete={handleDeleteNote}
             loading={loading}
             selectedLabels={selectedLabels}
@@ -215,6 +234,7 @@ function App() {
           <KanbanBoard
             notes={notes}
             onEdit={handleEditNote}
+            onComplete={handleCompleteNote}
             onDelete={handleDeleteNote}
             onLabelClick={(label) => {
               if (!selectedLabels.includes(label)) {
@@ -243,6 +263,14 @@ function App() {
           onClose={handleCancelDelete}
           onConfirm={handleConfirmDelete}
           note={deleteNoteData}
+          loading={loading}
+        />
+
+        <CompleteConfirmModal
+          isOpen={!!completeNoteData}
+          onClose={handleCancelComplete}
+          onConfirm={handleConfirmComplete}
+          note={completeNoteData}
           loading={loading}
         />
 

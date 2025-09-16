@@ -6,11 +6,12 @@ import type { Note } from '../types/note';
 interface KanbanBoardProps {
   notes: Note[];
   onEdit: (note: Note) => void;
+  onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
   onLabelClick?: (label: string) => void;
 }
 
-export function KanbanBoard({ notes, onEdit, onDelete, onLabelClick }: KanbanBoardProps) {
+export function KanbanBoard({ notes, onEdit, onComplete, onDelete, onLabelClick }: KanbanBoardProps) {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   const {
@@ -48,6 +49,7 @@ export function KanbanBoard({ notes, onEdit, onDelete, onLabelClick }: KanbanBoa
           notes={getNotesByStatus(column.status)}
           colorClass={column.colorClass}
           onEdit={onEdit}
+          onComplete={onComplete}
           onDelete={onDelete}
           onLabelClick={onLabelClick}
           onDrop={handleColumnDrop}

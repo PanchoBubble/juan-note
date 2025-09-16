@@ -47,6 +47,7 @@ pub fn run_migrations(conn: &DbConnection) -> Result<()> {
         (1, migrations::migration_001::up),
         (2, migrations::migration_002::up),
         (3, migrations::migration_003::up),
+        (4, migrations::migration_004::up),
     ];
 
     // Run pending migrations

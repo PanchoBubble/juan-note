@@ -11,6 +11,7 @@ import type { Note, CreateNoteRequest } from '../types/note';
 interface NoteListProps {
   notes: Note[];
   onEdit: (note: Note) => void;
+  onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
   loading: boolean;
   selectedLabels: string[];
@@ -32,6 +33,7 @@ interface NoteListProps {
 export const NoteList = React.memo(function NoteList({
   notes,
   onEdit,
+  onComplete,
   onDelete,
   loading,
   selectedLabels,
@@ -200,6 +202,7 @@ export const NoteList = React.memo(function NoteList({
               key={note.id}
               note={note}
               onEdit={onEdit}
+              onComplete={onComplete}
               onDelete={onDelete}
               onLabelClick={(label) => {
                 if (!selectedLabels.includes(label)) {

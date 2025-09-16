@@ -9,6 +9,7 @@ interface KanbanColumnProps {
   notes: KanbanNote[];
   colorClass: string;
   onEdit: (note: Note) => void;
+  onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
   onLabelClick?: (label: string) => void;
   onDrop: (status: string) => void;
@@ -22,6 +23,7 @@ export function KanbanColumn({
   notes,
   colorClass,
   onEdit,
+  onComplete,
   onDelete,
   onLabelClick,
   onDrop,
@@ -81,6 +83,7 @@ export function KanbanColumn({
               <NoteItem
                 note={note}
                 onEdit={onEdit}
+                onComplete={onComplete}
                 onDelete={onDelete}
                 onLabelClick={onLabelClick}
               />

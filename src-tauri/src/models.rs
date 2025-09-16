@@ -2,6 +2,45 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct State {
+    pub id: Option<i64>,
+    pub name: String,
+    pub position: i32,
+    pub color: Option<String>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateStateRequest {
+    pub name: String,
+    pub position: i32,
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateStateRequest {
+    pub id: i64,
+    pub name: Option<String>,
+    pub position: Option<i32>,
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StateResponse {
+    pub success: bool,
+    pub data: Option<State>,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StatesListResponse {
+    pub success: bool,
+    pub data: Vec<State>,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Note {
     pub id: Option<i64>,
     pub title: String,
@@ -13,6 +52,7 @@ pub struct Note {
     pub deadline: Option<DateTime<Utc>>,
     pub reminder_minutes: i32,
     pub done: bool,
+    pub state_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,6 +64,7 @@ pub struct CreateNoteRequest {
     pub deadline: Option<DateTime<Utc>>,
     pub reminder_minutes: Option<i32>,
     pub done: Option<bool>,
+    pub state_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,6 +77,7 @@ pub struct UpdateNoteRequest {
     pub deadline: Option<DateTime<Utc>>,
     pub reminder_minutes: Option<i32>,
     pub done: Option<bool>,
+    pub state_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -83,6 +125,7 @@ impl Note {
             deadline: None,
             reminder_minutes: 0,
             done: false,
+            state_id: None,
         }
     }
 

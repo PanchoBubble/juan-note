@@ -8,6 +8,7 @@ export interface UseNotesReturn {
   error: string | null;
   createNote: (request: CreateNoteRequest) => Promise<void>;
   updateNote: (request: UpdateNoteRequest) => Promise<void>;
+  completeNote: (id: number) => Promise<void>;
   deleteNote: (id: number) => Promise<void>;
   searchNotes: (query: string) => Promise<void>;
   refreshNotes: () => Promise<void>;
@@ -76,6 +77,25 @@ export function useNotes(): UseNotesReturn {
     }
   }, []);
 
+  const completeNote = useCallback(async (id: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await NoteService.updateNoteDone({ id, done: true });
+      if (response.success && response.data) {
+        setNotes(prev => prev.map(note =>
+          note.id === id ? response.data! : note
+        ));
+      } else {
+        setError(response.error || 'Failed to complete note');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete note');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const deleteNote = useCallback(async (id: number) => {
     setLoading(true);
     setError(null);
@@ -135,6 +155,7 @@ export function useNotes(): UseNotesReturn {
     error,
     createNote,
     updateNote,
+    completeNote,
     deleteNote,
     searchNotes,
     refreshNotes,
