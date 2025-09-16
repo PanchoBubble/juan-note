@@ -8,12 +8,14 @@ import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { CompleteConfirmModal } from './components/CompleteConfirmModal';
 import { QuickCreateModal } from './components/QuickCreateModal';
 import { useNotes } from './hooks/useNotes';
+import { useStates } from './hooks/useStates';
 
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from './types/note';
 import './App.css';
 
 function App() {
   const { notes, loading, error, createNote, updateNote, completeNote, deleteNote, searchNotes, clearError } = useNotes();
+  const { states } = useStates();
 
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -233,6 +235,7 @@ function App() {
         ) : (
           <KanbanBoard
             notes={notes}
+            states={states}
             onEdit={handleEditNote}
             onComplete={handleCompleteNote}
             onDelete={handleDeleteNote}

@@ -2,29 +2,26 @@ import { useState } from 'react';
 import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import { KanbanColumn } from './KanbanColumn';
 import { useKanbanView } from '../hooks/useKanbanView';
-import { useStates } from '../hooks/useStates';
-import type { Note } from '../types/note';
+import type { Note, State } from '../types/note';
 
 interface KanbanBoardProps {
   notes: Note[];
+  states: State[];
   onEdit: (note: Note) => void;
   onComplete: (note: Note) => void;
   onDelete: (note: Note) => void;
   onLabelClick?: (label: string) => void;
 }
 
-export function KanbanBoard({ notes, onEdit, onComplete, onDelete, onLabelClick }: KanbanBoardProps) {
+export function KanbanBoard({ notes, states, onEdit, onComplete, onDelete, onLabelClick }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const { states } = useStates();
 
   const {
     handleDrop,
     handleDragStart,
     handleDragEnd,
     getNotesByState,
-    getNotesWithoutState,
-    STATUS_LABELS,
-    STATUS_COLORS
+    getNotesWithoutState
   } = useKanbanView(notes, states);
 
   const handleDragStartEvent = (event: DragStartEvent) => {
@@ -39,7 +36,7 @@ export function KanbanBoard({ notes, onEdit, onComplete, onDelete, onLabelClick 
     }
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragOver = (_event: DragOverEvent) => {
     // Handle drag over logic if needed
   };
 
