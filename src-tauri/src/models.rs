@@ -233,3 +233,27 @@ pub struct McpScanResponse {
     pub data: Option<Vec<McpConfigResult>>,
     pub error: Option<String>,
 }
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct McpFunctionParameter {
+    pub name: String,
+    pub r#type: String,
+    pub description: Option<String>,
+    pub required: bool,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct McpFunction {
+    pub name: String,
+    pub description: Option<String>,
+    pub parameters: Vec<McpFunctionParameter>,
+    pub server_name: String,
+    pub server_provider: String,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct McpFunctionQueryResponse {
+    pub success: bool;
+    pub data: Option<Vec<McpFunction>>;
+    pub error: Option<String>;
+}

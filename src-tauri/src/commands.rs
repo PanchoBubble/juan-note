@@ -1004,6 +1004,122 @@ pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
     })
 }
 
+#[tauri::command]
+pub fn query_mcp_functions() -> Result<McpFunctionQueryResponse, String> {
+    // For now, return mock data showing what this would look like
+    // In a real implementation, this would query actual MCP servers
+    // for their available tools/functions
+
+    let mock_functions = vec![
+        McpFunction {
+            name: "get_weather".to_string(),
+            description: Some("Get current weather for a location".to_string()),
+            parameters: vec![
+                McpFunctionParameter {
+                    name: "location".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("City name or coordinates".to_string()),
+                    required: true,
+                },
+                McpFunctionParameter {
+                    name: "units".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("Temperature units (celsius/fahrenheit)".to_string()),
+                    required: false,
+                },
+            ],
+            server_name: "weather-api".to_string(),
+            server_provider: "claude".to_string(),
+        },
+        McpFunction {
+            name: "search_web".to_string(),
+            description: Some("Search the web for information".to_string()),
+            parameters: vec![
+                McpFunctionParameter {
+                    name: "query".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("Search query".to_string()),
+                    required: true,
+                },
+                McpFunctionParameter {
+                    name: "limit".to_string(),
+                    r#type: "number".to_string(),
+                    description: Some("Maximum number of results".to_string()),
+                    required: false,
+                },
+            ],
+            server_name: "web-search".to_string(),
+            server_provider: "claude".to_string(),
+        },
+        McpFunction {
+            name: "calculate".to_string(),
+            description: Some("Perform mathematical calculations".to_string()),
+            parameters: vec![
+                McpFunctionParameter {
+                    name: "expression".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("Mathematical expression to evaluate".to_string()),
+                    required: true,
+                },
+            ],
+            server_name: "calculator".to_string(),
+            server_provider: "opencode".to_string(),
+        },
+        McpFunction {
+            name: "read_file".to_string(),
+            description: Some("Read contents of a file".to_string()),
+            parameters: vec![
+                McpFunctionParameter {
+                    name: "path".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("File path to read".to_string()),
+                    required: true,
+                },
+                McpFunctionParameter {
+                    name: "encoding".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("File encoding (utf8, ascii, etc.)".to_string()),
+                    required: false,
+                },
+            ],
+            server_name: "filesystem".to_string(),
+            server_provider: "cline".to_string(),
+        },
+        McpFunction {
+            name: "send_email".to_string(),
+            description: Some("Send an email message".to_string()),
+            parameters: vec![
+                McpFunctionParameter {
+                    name: "to".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("Recipient email address".to_string()),
+                    required: true,
+                },
+                McpFunctionParameter {
+                    name: "subject".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("Email subject line".to_string()),
+                    required: true,
+                },
+                McpFunctionParameter {
+                    name: "body".to_string(),
+                    r#type: "string".to_string(),
+                    description: Some("Email message body".to_string()),
+                    required: true,
+                },
+            ],
+            server_name: "email-service".to_string(),
+            server_provider: "continue".to_string(),
+        },
+    ];
+
+    Ok(McpFunctionQueryResponse {
+        success: true,
+        data: Some(mock_functions),
+        error: None,
+    })
+}
+
 fn process_config_file(config_path: &Path, provider: &str, results: &mut Vec<McpConfigResult>) {
     match std::fs::read_to_string(config_path) {
         Ok(content) => {

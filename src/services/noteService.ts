@@ -13,6 +13,7 @@ import type {
   StatesListResponse,
   BulkOperationResponse,
   McpScanResponse,
+  McpFunctionQueryResponse,
 } from "../types/note";
 
 export class NoteService {
@@ -277,6 +278,18 @@ export class NoteService {
       return await invoke("scan_mcp_configs");
     } catch (error) {
       console.error("Failed to scan MCP configs:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  static async queryMcpFunctions(): Promise<McpFunctionQueryResponse> {
+    try {
+      return await invoke("query_mcp_functions");
+    } catch (error) {
+      console.error("Failed to query MCP functions:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",

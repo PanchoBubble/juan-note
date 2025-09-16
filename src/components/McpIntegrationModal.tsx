@@ -12,11 +12,13 @@ interface McpConfigResult {
 interface McpIntegrationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenFunctionBrowser?: () => void;
 }
 
 export function McpIntegrationModal({
   isOpen,
   onClose,
+  onOpenFunctionBrowser,
 }: McpIntegrationModalProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<McpConfigResult[]>([]);
@@ -191,6 +193,33 @@ export function McpIntegrationModal({
             )}
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center pt-4 border-t border-monokai-comment border-opacity-30">
+          {onOpenFunctionBrowser && (
+            <button
+              onClick={onOpenFunctionBrowser}
+              className="px-4 py-2 bg-monokai-cyan text-monokai-bg rounded-lg hover:bg-monokai-blue transition-colors"
+            >
+              🔍 Browse Functions
+            </button>
+          )}
+          <div className="flex space-x-3">
+            <button
+              onClick={handleScanConfigs}
+              disabled={isScanning}
+              className="px-4 py-2 text-monokai-blue hover:bg-monokai-blue hover:bg-opacity-20 rounded-lg transition-colors disabled:opacity-50"
+            >
+              🔄 Refresh
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-monokai-comment hover:bg-monokai-comment-hover text-monokai-bg rounded-lg transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </Modal>
   );

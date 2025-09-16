@@ -151,3 +151,24 @@ export interface McpScanResponse {
   data?: McpConfigResult[];
   error?: string;
 }
+
+export interface McpFunctionParameter {
+  name: string;
+  type: string;
+  description?: string;
+  required: boolean;
+}
+
+export interface McpFunction {
+  name: string;
+  description?: string;
+  parameters: McpFunctionParameter[];
+  server_name: string;
+  server_provider: string;
+}
+
+export interface McpFunctionQueryResponse {
+  success: boolean;
+  data?: McpFunction[];
+  error?: string;
+}
