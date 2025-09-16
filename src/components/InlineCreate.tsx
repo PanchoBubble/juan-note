@@ -68,7 +68,7 @@ export function InlineCreate({ onSave, onCancel, loading, defaultLabels = [], de
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 bg-surface-tertiary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg text-lg font-medium placeholder-monokai-comment"
+            className="select-text w-full px-3 py-2 bg-surface-tertiary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg text-lg font-medium placeholder-monokai-comment"
             placeholder="Note title..."
             disabled={loading}
             autoFocus
@@ -80,7 +80,7 @@ export function InlineCreate({ onSave, onCancel, loading, defaultLabels = [], de
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 bg-surface-tertiary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue resize-none text-monokai-fg placeholder-monokai-comment"
+            className="select-text w-full px-3 py-2 bg-surface-tertiary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue resize-none text-monokai-fg placeholder-monokai-comment"
             placeholder="Note content..."
             disabled={loading}
           />

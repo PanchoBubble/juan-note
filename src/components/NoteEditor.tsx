@@ -90,7 +90,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg placeholder-monokai-comment"
+            className="select-text w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg placeholder-monokai-comment"
             placeholder="Enter note title..."
             disabled={loading}
             autoFocus
@@ -106,7 +106,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={quick ? 4 : 8}
-            className="w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue resize-vertical text-monokai-fg placeholder-monokai-comment"
+            className="select-text w-full px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue resize-vertical text-monokai-fg placeholder-monokai-comment"
             placeholder="Enter note content..."
             disabled={loading}
           />
@@ -157,7 +157,7 @@ export function NoteEditor({ note, onSave, onCancel, loading, quick = false }: N
                   value={labelInput}
                   onChange={(e) => setLabelInput(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  className="flex-1 px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg placeholder-monokai-comment"
+                  className="select-text flex-1 px-3 py-2 bg-surface-secondary border-2 border-monokai-comment border-opacity-50 rounded-md focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:border-monokai-blue text-monokai-fg placeholder-monokai-comment"
                   placeholder="Add a label..."
                   disabled={loading}
                 />

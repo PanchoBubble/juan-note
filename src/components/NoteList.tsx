@@ -16,7 +16,6 @@ interface NoteListProps {
     onDelete: (note: Note) => void;
     onBulkDelete?: (noteIds: number[]) => Promise<void>;
     onBulkUpdatePriority?: (noteIds: number[], priority: number) => Promise<void>;
-    onBulkUpdateState?: (noteIds: number[], stateId: number) => Promise<void>;
     loading: boolean;
     selectedLabels: string[];
     onLabelsChange: (labels: string[]) => void;
@@ -38,7 +37,6 @@ export const NoteList = React.memo(function NoteList({
     onDelete,
     onBulkDelete,
     onBulkUpdatePriority,
-    onBulkUpdateState,
     loading,
     selectedLabels,
     onLabelsChange,
@@ -56,12 +54,9 @@ export const NoteList = React.memo(function NoteList({
         selectedIds,
         selectedCount,
         isSelected,
-        isAllSelected,
         toggleSelection,
         selectAll,
         clearAll,
-        toggleAll,
-        getSelectedNotes,
     } = useMultiselect();
     // Get all available labels from notes
     const availableLabels = useMemo(() => {
@@ -142,13 +137,7 @@ export const NoteList = React.memo(function NoteList({
         }
     };
 
-    const handleBulkUpdateState = async (stateId: number) => {
-        if (onBulkUpdateState && selectedIds.size > 0) {
-            const noteIds = Array.from(selectedIds);
-            await onBulkUpdateState(noteIds, stateId);
-            clearAll();
-        }
-    };
+
 
     const handleSelectAll = () => {
         selectAll(filteredAndSortedNotes);
@@ -168,7 +157,7 @@ export const NoteList = React.memo(function NoteList({
                 onClearAll={handleClearAll}
                 onDeleteSelected={handleBulkDelete}
                 onUpdatePriority={onBulkUpdatePriority ? handleBulkUpdatePriority : undefined}
-                onUpdateState={onBulkUpdateState ? handleBulkUpdateState : undefined}
+
                 isLoading={loading}
             />
 
@@ -249,18 +238,18 @@ export const NoteList = React.memo(function NoteList({
                                onEdit={onEdit}
                                onComplete={onComplete}
                                onDelete={onDelete}
-                               onLabelClick={(label) => {
-                                   if (!selectedLabels.includes(label)) {
-                                       onLabelsChange([...selectedLabels, label]);
-                                   }
-                               }}
-                               isSelected={note.id ? isSelected(note.id) : false}
-                               onSelectionChange={(selected) => {
-                                   if (note.id) {
-                                       toggleSelection(note.id);
-                                   }
-                               }}
-                               showSelection={true}
+                                           onLabelClick={(label) => {
+                                               if (!selectedLabels.includes(label)) {
+                                                   onLabelsChange([...selectedLabels, label]);
+                                               }
+                                           }}
+                                           isSelected={note.id ? isSelected(note.id) : false}
+                                           onSelectionChange={() => {
+                                               if (note.id) {
+                                                   toggleSelection(note.id);
+                                               }
+                                           }}
+                                           showSelection={true}
                            />
                        ))}
                   </div>
@@ -295,7 +284,7 @@ export const NoteList = React.memo(function NoteList({
                                                }
                                            }}
                                            isSelected={note.id ? isSelected(note.id) : false}
-                                           onSelectionChange={(selected) => {
+                                           onSelectionChange={() => {
                                                if (note.id) {
                                                    toggleSelection(note.id);
                                                }

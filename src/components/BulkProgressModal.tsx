@@ -22,10 +22,11 @@ export const BulkProgressModal = React.memo(function BulkProgressModal({
     isComplete = false,
     errors = []
 }: BulkProgressModalProps) {
+    const handleClose = onClose || (() => {});
     const progressPercentage = Math.round((progress / total) * 100);
 
     return (
-        <Modal isOpen={isOpen} onClose={isComplete ? onClose : undefined} title={`${operation} Progress`}>
+        <Modal isOpen={isOpen} onClose={handleClose} title={`${operation} Progress`}>
             <div className="space-y-4">
                 {/* Progress Bar */}
                 <div className="space-y-2">

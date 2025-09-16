@@ -1,16 +1,17 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
-   CreateNoteRequest,
-   UpdateNoteRequest,
-   NoteResponse,
-   NotesListResponse,
-   SearchRequest,
-   DeleteNoteRequest,
-   UpdateNoteDoneRequest,
-   CreateStateRequest,
-   UpdateStateRequest,
-   StateResponse,
-   StatesListResponse
+    CreateNoteRequest,
+    UpdateNoteRequest,
+    NoteResponse,
+    NotesListResponse,
+    SearchRequest,
+    DeleteNoteRequest,
+    UpdateNoteDoneRequest,
+    CreateStateRequest,
+    UpdateStateRequest,
+    StateResponse,
+    StatesListResponse,
+    BulkOperationResponse
 } from '../types/note';
 
 export class NoteService {
@@ -169,8 +170,8 @@ export class NoteService {
       console.error('Failed to bulk delete notes:', error);
       return {
         success: false,
-        successfulCount: 0,
-        failedCount: noteIds.length,
+        successful_count: 0,
+        failed_count: noteIds.length,
         errors: [error instanceof Error ? error.message : 'Unknown error'],
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -184,8 +185,8 @@ export class NoteService {
       console.error('Failed to bulk update notes priority:', error);
       return {
         success: false,
-        successfulCount: 0,
-        failedCount: noteIds.length,
+        successful_count: 0,
+        failed_count: noteIds.length,
         errors: [error instanceof Error ? error.message : 'Unknown error'],
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -199,8 +200,8 @@ export class NoteService {
       console.error('Failed to bulk update notes state:', error);
       return {
         success: false,
-        successfulCount: 0,
-        failedCount: noteIds.length,
+        successful_count: 0,
+        failed_count: noteIds.length,
         errors: [error instanceof Error ? error.message : 'Unknown error'],
         error: error instanceof Error ? error.message : 'Unknown error'
       };

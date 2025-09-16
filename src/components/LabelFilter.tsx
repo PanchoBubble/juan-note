@@ -52,7 +52,7 @@ export function LabelFilter({ availableLabels, selectedLabels, onLabelsChange }:
     <div className="relative label-filter-dropdown">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center px-3 py-2 bg-surface-secondary border-2 border-monokai-blue rounded-lg hover:bg-surface-tertiary hover:border-monokai-blue transition-colors text-monokai-fg"
+        className="flex items-center px-2 py-1 bg-surface-secondary border-2 border-monokai-blue rounded-lg hover:bg-surface-tertiary hover:border-monokai-blue transition-colors text-monokai-fg"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -61,8 +61,8 @@ export function LabelFilter({ availableLabels, selectedLabels, onLabelsChange }:
         </svg>
         <span className="text-sm text-monokai-fg">
           {selectedLabels.length === 0
-            ? 'Filter by labels'
-            : `${selectedLabels.length} label${selectedLabels.length > 1 ? 's' : ''} selected`
+            ? 'Labels'
+            : `${selectedLabels.length} selected`
           }
         </span>
         <svg className={`w-4 h-4 ml-2 transition-transform text-monokai-comment ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

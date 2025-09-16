@@ -1,5 +1,4 @@
 import React from 'react';
-import type { Note } from '../types/note';
 
 interface BulkActionsToolbarProps {
     selectedCount: number;
@@ -8,7 +7,7 @@ interface BulkActionsToolbarProps {
     onClearAll: () => void;
     onDeleteSelected: () => void;
     onUpdatePriority?: (priority: number) => void;
-    onUpdateState?: (stateId: number) => void;
+
     isLoading?: boolean;
 }
 
@@ -19,7 +18,6 @@ export const BulkActionsToolbar = React.memo(function BulkActionsToolbar({
     onClearAll,
     onDeleteSelected,
     onUpdatePriority,
-    onUpdateState,
     isLoading = false
 }: BulkActionsToolbarProps) {
     if (selectedCount === 0) return null;

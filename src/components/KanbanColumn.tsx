@@ -1,4 +1,4 @@
-import { NoteItem } from './NoteItem';
+import { NoteItem } from './NoteItem/';
 import { useDroppable } from '@dnd-kit/core';
 import type { KanbanNote } from '../hooks/useKanbanView';
 import type { Note } from '../types/note';
@@ -46,34 +46,34 @@ export function KanbanColumn({
         </h3>
       </div>
 
-      <div className="space-y-3 min-h-32">
-        {notes.length === 0 ? (
-          <div className="text-center py-8 text-monokai-comment">
-            <div className="w-12 h-12 bg-surface-secondary bg-opacity-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-monokai-comment border-opacity-30">
-              <span className="text-2xl">📝</span>
-            </div>
-            <p className="text-sm">No {title.toLowerCase()} notes</p>
-            <p className="text-xs text-monokai-comment mt-1">
-              Drop notes here to assign them to {title.toLowerCase()}
-            </p>
-          </div>
-        ) : (
-          notes.map((note) => (
-            <div
-              key={note.id}
-              className="cursor-move"
-            >
-              <NoteItem
-                note={note}
-                onEdit={onEdit}
-                onComplete={onComplete}
-                onDelete={onDelete}
-                onLabelClick={onLabelClick}
-              />
-            </div>
-          ))
-        )}
-      </div>
+       <div className="flex flex-wrap gap-3 min-h-32">
+         {notes.length === 0 ? (
+           <div className="text-center py-8 text-monokai-comment w-full">
+             <div className="w-12 h-12 bg-surface-secondary bg-opacity-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-monokai-comment border-opacity-30">
+               <span className="text-2xl">📝</span>
+             </div>
+             <p className="text-sm">No {title.toLowerCase()} notes</p>
+             <p className="text-xs text-monokai-comment mt-1">
+               Drop notes here to assign them to {title.toLowerCase()}
+             </p>
+           </div>
+         ) : (
+           notes.map((note) => (
+             <div
+               key={note.id}
+               className="cursor-move"
+             >
+               <NoteItem
+                 note={note}
+                 onEdit={onEdit}
+                 onComplete={onComplete}
+                 onDelete={onDelete}
+                 onLabelClick={onLabelClick}
+               />
+             </div>
+           ))
+         )}
+       </div>
     </div>
   );
 }

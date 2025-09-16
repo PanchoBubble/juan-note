@@ -27,7 +27,7 @@ function App() {
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<number | null>(null);
-  const [selectedDone, setSelectedDone] = useState<boolean | null>(null);
+
   const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'title'>('updated');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
@@ -187,7 +187,7 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-monokai-bg">
+    <div className="min-h-screen bg-monokai-bg select-none">
       <header
         className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment"
         role="banner"
@@ -286,8 +286,6 @@ function App() {
             onLabelsChange={setSelectedLabels}
             selectedPriority={selectedPriority}
             onPriorityChange={setSelectedPriority}
-            selectedDone={selectedDone}
-            onDoneChange={setSelectedDone}
             sortBy={sortBy}
             onSortChange={setSortBy}
             sortOrder={sortOrder}

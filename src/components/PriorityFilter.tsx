@@ -9,7 +9,7 @@ export function PriorityFilter({ selectedPriority, onPriorityChange }: PriorityF
   const [isOpen, setIsOpen] = useState(false);
 
   const priorities = [
-    { value: null, label: 'All Priorities', color: 'text-monokai-comment bg-surface-tertiary border-monokai-yellow' },
+    { value: null, label: 'All', color: 'text-monokai-comment bg-surface-tertiary border-monokai-yellow' },
     { value: 1, label: 'Low', color: 'text-monokai-yellow bg-surface-tertiary border-monokai-yellow' },
     { value: 2, label: 'Medium', color: 'text-monokai-orange bg-surface-tertiary border-monokai-yellow' },
     { value: 3, label: 'High', color: 'text-monokai-pink bg-surface-tertiary border-monokai-yellow' }
@@ -33,7 +33,7 @@ export function PriorityFilter({ selectedPriority, onPriorityChange }: PriorityF
     <div className="relative priority-filter-dropdown">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center px-3 py-2 bg-surface-secondary border-2 border-monokai-blue rounded-lg hover:bg-surface-tertiary hover:border-monokai-blue transition-colors text-monokai-fg"
+        className="flex items-center px-2 py-1 bg-surface-secondary border-2 border-monokai-blue rounded-lg hover:bg-surface-tertiary hover:border-monokai-blue transition-colors text-monokai-fg"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -41,7 +41,7 @@ export function PriorityFilter({ selectedPriority, onPriorityChange }: PriorityF
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
         </svg>
         <span className="text-sm text-monokai-fg">
-          {selectedPriorityItem ? selectedPriorityItem.label : 'Filter by priority'}
+          {selectedPriorityItem ? selectedPriorityItem.label : 'Priorities'}
         </span>
         <svg className={`w-4 h-4 ml-2 transition-transform text-monokai-comment ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

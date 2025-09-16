@@ -46,7 +46,7 @@ export function SearchBar({ onSearch, loading, placeholder = "Search notes...", 
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="block w-full pl-4 pr-56 py-3 bg-surface-secondary text-monokai-fg border border-monokai border-opacity-30 rounded-lg focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-50 focus:border-monokai-blue placeholder-monokai-comment"
+                    className="select-text block w-full pl-4 pr-56 py-3 bg-surface-secondary text-monokai-fg border-2 border-monokai-fg rounded-lg focus:ring-2 focus:ring-monokai-pink focus:ring-opacity-50 focus:border-purple-600 placeholder-monokai-comment"
                     placeholder={placeholder}
                     disabled={loading}
                     autoComplete="off"
