@@ -162,6 +162,51 @@ export class NoteService {
     }
   }
 
+  static async bulkDeleteNotes(noteIds: number[]): Promise<BulkOperationResponse> {
+    try {
+      return await invoke('bulk_delete_notes', { noteIds });
+    } catch (error) {
+      console.error('Failed to bulk delete notes:', error);
+      return {
+        success: false,
+        successfulCount: 0,
+        failedCount: noteIds.length,
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  static async bulkUpdateNotesPriority(noteIds: number[], priority: number): Promise<BulkOperationResponse> {
+    try {
+      return await invoke('bulk_update_notes_priority', { noteIds, priority });
+    } catch (error) {
+      console.error('Failed to bulk update notes priority:', error);
+      return {
+        success: false,
+        successfulCount: 0,
+        failedCount: noteIds.length,
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  static async bulkUpdateNotesState(noteIds: number[], stateId: number): Promise<BulkOperationResponse> {
+    try {
+      return await invoke('bulk_update_notes_state', { noteIds, stateId });
+    } catch (error) {
+      console.error('Failed to bulk update notes state:', error);
+      return {
+        success: false,
+        successfulCount: 0,
+        failedCount: noteIds.length,
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
   static async migrateNotesToStates(): Promise<NoteResponse> {
     try {
       return await invoke('migrate_notes_to_states');
