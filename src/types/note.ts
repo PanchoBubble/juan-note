@@ -131,3 +131,23 @@ export interface BulkOperationResponse {
   errors?: string[];
   error?: string;
 }
+
+export interface McpServerConfig {
+  name: string;
+  command: string;
+  args?: string[];
+  env?: any;
+}
+
+export interface McpConfigResult {
+  provider: string;
+  config_path: string;
+  mcp_servers: McpServerConfig[];
+  error?: string;
+}
+
+export interface McpScanResponse {
+  success: boolean;
+  data?: McpConfigResult[];
+  error?: string;
+}

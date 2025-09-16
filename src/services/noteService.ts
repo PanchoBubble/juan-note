@@ -12,6 +12,7 @@ import type {
   StateResponse,
   StatesListResponse,
   BulkOperationResponse,
+  McpScanResponse,
 } from "../types/note";
 
 export class NoteService {
@@ -264,6 +265,18 @@ export class NoteService {
       return await invoke("migrate_notes_to_states");
     } catch (error) {
       console.error("Failed to migrate notes to states:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  static async scanMcpConfigs(): Promise<McpScanResponse> {
+    try {
+      return await invoke("scan_mcp_configs");
+    } catch (error) {
+      console.error("Failed to scan MCP configs:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
