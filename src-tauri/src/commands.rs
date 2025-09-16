@@ -895,3 +895,116 @@ pub fn migrate_notes_to_states() -> Result<NoteResponse, String> {
         error: None,
     })
 }
+
+#[tauri::command]
+pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
+    use std::fs;
+    use std::path::Path;
+
+    let mut results = Vec::new();
+
+    // Get home directory
+    let home_dir = dirs::home_dir()
+        .ok_or("Could not determine home directory")?;
+
+    // Config directories to scan
+    let config_dirs = vec![
+        home_dir.join(".config"),
+        home_dir.clone(),
+    ];
+
+    // Config file patterns to look for
+    let config_patterns = vec![
+        ("claude", ".claude.json"),
+        ("opencode", ".opencode.json"),
+        ("gemini", "gemini.json"),
+        ("amp", "amp.json"),
+    ];
+
+    for config_dir in config_dirs {
+        if !config_dir.exists() {
+            continue;
+        }
+
+        for (provider, filename) in &config_patterns {
+            let config_path = config_dir.join(filename);
+
+            if config_path.exists() {
+                match fs::read_to_string(&config_path) {
+                    Ok(content) => {
+                        match serde_json::from_str::<serde_json::Value>(&content) {
+                            Ok(json) => {
+                                let mcp_servers = extract_mcp_servers(&json);
+                                if !mcp_servers.is_empty() {
+                                    results.push(McpConfigResult {
+                                        provider: provider.to_string(),
+                                        config_path: config_path.to_string_lossy().to_string(),
+                                        mcp_servers,
+                                        error: None,
+                                    });
+                                }
+                            }
+                            Err(e) => {
+                                results.push(McpConfigResult {
+                                    provider: provider.to_string(),
+                                    config_path: config_path.to_string_lossy().to_string(),
+                                    mcp_servers: Vec::new(),
+                                    error: Some(format!("Failed to parse JSON: {}", e)),
+                                });
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        results.push(McpConfigResult {
+                            provider: provider.to_string(),
+                            config_path: config_path.to_string_lossy().to_string(),
+                            mcp_servers: Vec::new(),
+                            error: Some(format!("Failed to read file: {}", e)),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(McpScanResponse {
+        success: true,
+        data: Some(results),
+        error: None,
+    })
+}
+
+fn extract_mcp_servers(json: &serde_json::Value) -> Vec<McpServerConfig> {
+    let mut servers = Vec::new();
+
+    if let Some(mcp_servers) = json.get("mcpServers") {
+        if let Some(obj) = mcp_servers.as_object() {
+            for (name, config) in obj {
+                if let Some(server_config) = config.as_object() {
+                    let command = server_config.get("command")
+                        .and_then(|c| c.as_str())
+                        .unwrap_or("")
+                        .to_string();
+
+                    let args = server_config.get("args")
+                        .and_then(|a| a.as_array())
+                        .map(|arr| arr.iter()
+                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                            .collect::<Vec<_>>()
+                        );
+
+                    let env = server_config.get("env").cloned();
+
+                    servers.push(McpServerConfig {
+                        name: name.clone(),
+                        command,
+                        args,
+                        env,
+                    });
+                }
+            }
+        }
+    }
+
+    servers
+}

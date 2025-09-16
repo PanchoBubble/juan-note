@@ -210,3 +210,26 @@ impl Note {
         self
     }
 }
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct McpServerConfig {
+    pub name: String,
+    pub command: String,
+    pub args: Option<Vec<String>>,
+    pub env: Option<serde_json::Value>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct McpConfigResult {
+    pub provider: String,
+    pub config_path: String,
+    pub mcp_servers: Vec<McpServerConfig>,
+    pub error: Option<String>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct McpScanResponse {
+    pub success: bool,
+    pub data: Option<Vec<McpConfigResult>>,
+    pub error: Option<String>,
+}
