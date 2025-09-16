@@ -22,10 +22,6 @@
         "csp": null
       }
     },
-    "capabilities": [
-      "src-tauri/capabilities/default.json",
-      "src-tauri/capabilities/mcp-integration.json"
-    ],
    "bundle": {
      "active": true,
      "targets": "all",
