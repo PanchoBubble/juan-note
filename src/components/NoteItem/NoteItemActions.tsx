@@ -19,7 +19,7 @@ export const NoteItemActions = React.memo(function NoteItemActions({
     return (
         <>
             {/* Action buttons - only visible on hover */}
-            <div className="absolute top-2 right-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+            <div className="absolute top-2 right-8 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
                 {/* Mark as complete button */}
                 {!note.done && (
                     <button
