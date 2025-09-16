@@ -10,8 +10,9 @@ interface NoteItemProps {
     onDelete: (note: Note) => void;
     onLabelClick?: (label: string) => void;
     isSelected?: boolean;
-    onSelectionChange?: (selected: boolean) => void;
+    onItemClick?: (id: number, index: number, event: React.MouseEvent) => void;
     showSelection?: boolean;
+    itemIndex?: number;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -21,8 +22,9 @@ export const NoteItem = React.memo(function NoteItem({
     onDelete,
     onLabelClick,
     isSelected = false,
-    onSelectionChange,
-    showSelection = false
+    onItemClick,
+    showSelection = false,
+    itemIndex = 0
 }: NoteItemProps) {
     const {
         attributes,
@@ -40,35 +42,52 @@ export const NoteItem = React.memo(function NoteItem({
 
 
 
+    const handleClick = (e: React.MouseEvent) => {
+        if (showSelection && note.id && onItemClick) {
+            onItemClick(note.id, itemIndex, e);
+        }
+    };
+
     return (
         <article
             ref={setNodeRef}
             style={style}
-            className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange transition-all duration-200 group flex-1 min-w-80 max-h-80 overflow-visible ${isDragging ? 'opacity-50' : ''
-                } ${isSelected ? 'ring-2 ring-monokai-blue ring-opacity-50 bg-monokai-blue bg-opacity-5' : ''}`}
+            className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange transition-all duration-200 group flex-1 min-w-80 max-h-80 overflow-visible cursor-pointer select-none ${isDragging ? 'opacity-50' : ''
+                } ${isSelected ? 'ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue' : ''}`}
             role="article"
             aria-labelledby={`note-title-${note.id}`}
             aria-describedby={`note-content-${note.id}`}
+            aria-selected={isSelected}
             tabIndex={showSelection ? 0 : undefined}
+            onClick={handleClick}
             onKeyDown={(e) => {
                 if (showSelection && e.key === ' ') {
                     e.preventDefault();
-                    onSelectionChange?.(!isSelected);
+                    if (note.id && onItemClick) {
+                        // Create a mock mouse event for space key selection
+                        const mockEvent = {
+                            shiftKey: false,
+                            metaKey: false,
+                            ctrlKey: false,
+                            preventDefault: () => {},
+                            stopPropagation: () => {},
+                        } as React.MouseEvent;
+                        onItemClick(note.id, itemIndex, mockEvent);
+                    }
                 }
             }}
         >
-            {/* Selection Checkbox */}
-            {showSelection && (
+            {/* Selection Indicator */}
+            {showSelection && isSelected && (
                 <div className="absolute top-3 right-3 z-10">
-                    <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => onSelectionChange?.(e.target.checked)}
-                        className="w-4 h-4 text-monokai-blue bg-surface-secondary border-monokai-comment rounded focus:ring-monokai-blue focus:ring-2"
-                        aria-label={`Select note: ${note.title || 'Untitled'}`}
-                    />
+                    <div className="w-5 h-5 bg-monokai-blue rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </div>
                 </div>
             )}
+
             <NoteItemActions
                 note={note}
                 onComplete={onComplete}
@@ -81,6 +100,7 @@ export const NoteItem = React.memo(function NoteItem({
                 {...listeners}
                 {...attributes}
                 className="cursor-move flex-1 flex flex-col"
+                onClick={(e) => e.stopPropagation()} // Prevent selection when clicking draggable area
             >
                 <NoteItemTitle note={note} />
 
