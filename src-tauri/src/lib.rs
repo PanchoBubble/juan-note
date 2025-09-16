@@ -31,6 +31,7 @@ pub fn run() {
             migrate_notes_to_states,
             bulk_delete_notes,
             bulk_update_notes_priority,
+            bulk_update_notes_done,
             bulk_update_notes_state
         ])
         .run(tauri::generate_context!())

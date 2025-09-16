@@ -49,10 +49,17 @@ export const NoteItem = React.memo(function NoteItem({
             role="article"
             aria-labelledby={`note-title-${note.id}`}
             aria-describedby={`note-content-${note.id}`}
+            tabIndex={showSelection ? 0 : undefined}
+            onKeyDown={(e) => {
+                if (showSelection && e.key === ' ') {
+                    e.preventDefault();
+                    onSelectionChange?.(!isSelected);
+                }
+            }}
         >
             {/* Selection Checkbox */}
             {showSelection && (
-                <div className="absolute top-3 left-3 z-10">
+                <div className="absolute top-3 right-3 z-10">
                     <input
                         type="checkbox"
                         checked={isSelected}

@@ -111,6 +111,11 @@ export interface BulkUpdateStateRequest {
     state_id: number;
 }
 
+export interface BulkUpdateDoneRequest {
+    note_ids: number[];
+    done: boolean;
+}
+
 export interface BulkOperationResponse {
     success: boolean;
     successful_count: number;

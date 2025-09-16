@@ -7,7 +7,8 @@ interface BulkActionsToolbarProps {
     onClearAll: () => void;
     onDeleteSelected: () => void;
     onUpdatePriority?: (priority: number) => void;
-
+    onMarkAsDone?: () => void;
+    onMarkAsUndone?: () => void;
     isLoading?: boolean;
 }
 
@@ -18,6 +19,8 @@ export const BulkActionsToolbar = React.memo(function BulkActionsToolbar({
     onClearAll,
     onDeleteSelected,
     onUpdatePriority,
+    onMarkAsDone,
+    onMarkAsUndone,
     isLoading = false
 }: BulkActionsToolbarProps) {
     if (selectedCount === 0) return null;
@@ -72,6 +75,26 @@ export const BulkActionsToolbar = React.memo(function BulkActionsToolbar({
                                 </button>
                             ))}
                         </div>
+                    )}
+
+                    {/* Mark as Done/Undone Buttons */}
+                    {onMarkAsDone && (
+                        <button
+                            onClick={onMarkAsDone}
+                            className="px-3 py-1 text-sm text-monokai-green bg-surface-tertiary border border-monokai-green rounded-md hover:bg-monokai-green hover:bg-opacity-20 transition-colors flex items-center gap-1"
+                            disabled={isLoading}
+                        >
+                            ✅ Mark as Done
+                        </button>
+                    )}
+                    {onMarkAsUndone && (
+                        <button
+                            onClick={onMarkAsUndone}
+                            className="px-3 py-1 text-sm text-monokai-orange bg-surface-tertiary border border-monokai-orange rounded-md hover:bg-monokai-orange hover:bg-opacity-20 transition-colors flex items-center gap-1"
+                            disabled={isLoading}
+                        >
+                            ↩️ Mark as Undone
+                        </button>
                     )}
 
                     {/* Delete Button */}

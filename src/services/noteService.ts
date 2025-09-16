@@ -208,6 +208,21 @@ export class NoteService {
     }
   }
 
+  static async bulkUpdateNotesDone(noteIds: number[], done: boolean): Promise<BulkOperationResponse> {
+    try {
+      return await invoke('bulk_update_notes_done', { noteIds, done });
+    } catch (error) {
+      console.error('Failed to bulk update notes done status:', error);
+      return {
+        success: false,
+        successful_count: 0,
+        failed_count: noteIds.length,
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
   static async migrateNotesToStates(): Promise<NoteResponse> {
     try {
       return await invoke('migrate_notes_to_states');

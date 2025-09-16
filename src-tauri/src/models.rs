@@ -130,6 +130,12 @@ pub struct BulkUpdateStateRequest {
     pub state_id: i64,
 }
 
+#[derive(serde::Deserialize)]
+pub struct BulkUpdateDoneRequest {
+    pub note_ids: Vec<i64>,
+    pub done: bool,
+}
+
 #[derive(serde::Serialize)]
 pub struct BulkOperationResponse {
     pub success: bool,

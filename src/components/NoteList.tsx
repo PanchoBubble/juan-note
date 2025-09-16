@@ -16,6 +16,7 @@ interface NoteListProps {
     onDelete: (note: Note) => void;
     onBulkDelete?: (noteIds: number[]) => Promise<void>;
     onBulkUpdatePriority?: (noteIds: number[], priority: number) => Promise<void>;
+    onBulkMarkAsDone?: (noteIds: number[], done: boolean) => Promise<void>;
     loading: boolean;
     selectedLabels: string[];
     onLabelsChange: (labels: string[]) => void;
@@ -37,6 +38,7 @@ export const NoteList = React.memo(function NoteList({
     onDelete,
     onBulkDelete,
     onBulkUpdatePriority,
+    onBulkMarkAsDone,
     loading,
     selectedLabels,
     onLabelsChange,
@@ -137,6 +139,22 @@ export const NoteList = React.memo(function NoteList({
         }
     };
 
+    const handleMarkAsDone = async () => {
+        if (onBulkMarkAsDone && selectedIds.size > 0) {
+            const noteIds = Array.from(selectedIds);
+            await onBulkMarkAsDone(noteIds, true);
+            clearAll();
+        }
+    };
+
+    const handleMarkAsUndone = async () => {
+        if (onBulkMarkAsDone && selectedIds.size > 0) {
+            const noteIds = Array.from(selectedIds);
+            await onBulkMarkAsDone(noteIds, false);
+            clearAll();
+        }
+    };
+
 
 
     const handleSelectAll = () => {
@@ -157,7 +175,8 @@ export const NoteList = React.memo(function NoteList({
                 onClearAll={handleClearAll}
                 onDeleteSelected={handleBulkDelete}
                 onUpdatePriority={onBulkUpdatePriority ? handleBulkUpdatePriority : undefined}
-
+                onMarkAsDone={onBulkMarkAsDone ? handleMarkAsDone : undefined}
+                onMarkAsUndone={onBulkMarkAsDone ? handleMarkAsUndone : undefined}
                 isLoading={loading}
             />
 
