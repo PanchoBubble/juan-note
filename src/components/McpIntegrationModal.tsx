@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Modal } from "./Modal";
+import { NoteService } from "../services/noteService";
 
 interface McpConfigResult {
   provider: string;
-  configPath: string;
-  mcpServers: any[];
+  config_path: string;
+  mcp_servers: any[];
   error?: string;
 }
 
@@ -34,34 +35,15 @@ export function McpIntegrationModal({
     setResults([]);
 
     try {
-      // This will be implemented when we add the backend command
-      // const response = await invoke('scan_mcp_configs');
-      // setResults(response.data || []);
-
-      // For now, show a placeholder
-      setTimeout(() => {
-        setResults([
-          {
-            provider: "claude",
-            configPath: "~/.config/claude.json",
-            mcpServers: [
-              {
-                name: "google-maps",
-                command: "npx",
-                args: ["@modelcontextprotocol/server-google-maps"],
-              },
-              {
-                name: "filesystem",
-                command: "npx",
-                args: ["@modelcontextprotocol/server-filesystem", "/tmp"],
-              },
-            ],
-          },
-        ]);
-        setIsScanning(false);
-      }, 2000);
+      const response = await NoteService.scanMcpConfigs();
+      if (response.success && response.data) {
+        setResults(response.data);
+      } else {
+        setError(response.error || "Failed to scan MCP configurations");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error occurred");
+    } finally {
       setIsScanning(false);
     }
   };
@@ -137,7 +119,7 @@ export function McpIntegrationModal({
                           {result.provider}
                         </span>
                         <code className="text-monokai-comment text-sm">
-                          {result.configPath}
+                          {result.config_path}
                         </code>
                       </div>
                       <button
@@ -149,11 +131,11 @@ export function McpIntegrationModal({
                     </div>
                     <div className="space-y-2">
                       <div className="text-sm text-monokai-comment">
-                        Found {result.mcpServers.length} MCP server
-                        {result.mcpServers.length !== 1 ? "s" : ""}:
+                        Found {result.mcp_servers.length} MCP server
+                        {result.mcp_servers.length !== 1 ? "s" : ""}:
                       </div>
                       <div className="space-y-1">
-                        {result.mcpServers.map(
+                        {result.mcp_servers.map(
                           (server: any, serverIndex: number) => (
                             <div
                               key={serverIndex}
