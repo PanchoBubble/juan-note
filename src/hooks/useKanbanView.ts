@@ -1,44 +1,33 @@
 import { useState, useEffect } from 'react';
-import type { Note } from '../types/note';
-
-export type KanbanStatus = 'todo' | 'in-progress' | 'done';
+import type { Note, State } from '../types/note';
 
 export interface KanbanNote extends Note {
-  status: KanbanStatus;
+  stateId?: number;
+  state?: State;
 }
 
-const STATUS_LABELS: Record<KanbanStatus, string> = {
-  'todo': 'To Do',
-  'in-progress': 'In Progress',
-  'done': 'Done'
-};
-
-const STATUS_COLORS: Record<KanbanStatus, string> = {
-  'todo': 'bg-gray-100 border-gray-200',
-  'in-progress': 'bg-blue-100 border-blue-200',
-  'done': 'bg-green-100 border-green-200'
-};
-
-export function useKanbanView(notes: Note[]) {
+export function useKanbanView(notes: Note[], states: State[] = []) {
   const [kanbanNotes, setKanbanNotes] = useState<KanbanNote[]>([]);
   const [draggedNote, setDraggedNote] = useState<KanbanNote | null>(null);
 
-  // Convert notes to kanban format
+  // Convert notes to kanban format with state information
   useEffect(() => {
-    const converted = notes.map(note => ({
-      ...note,
-      status: (note.done ? 'done' :
-               note.labels?.includes('in-progress') || note.labels?.includes('progress') ? 'in-progress' :
-               'todo') as KanbanStatus
-    }));
+    const converted = notes.map(note => {
+      const state = states.find(s => s.id === note.state_id);
+      return {
+        ...note,
+        stateId: note.state_id,
+        state
+      };
+    });
     setKanbanNotes(converted);
-  }, [notes]);
+  }, [notes, states]);
 
-  const moveNote = (noteId: number, newStatus: KanbanStatus) => {
+  const moveNote = (noteId: number, newStateId: number) => {
     setKanbanNotes(prev =>
       prev.map(note =>
         note.id === noteId
-          ? { ...note, status: newStatus }
+          ? { ...note, stateId: newStateId, state: states.find(s => s.id === newStateId) }
           : note
       )
     );
@@ -52,16 +41,31 @@ export function useKanbanView(notes: Note[]) {
     setDraggedNote(null);
   };
 
-  const handleDrop = (status: KanbanStatus) => {
-    if (draggedNote && draggedNote.status !== status) {
-      moveNote(draggedNote.id!, status);
+  const handleDrop = (stateId: number) => {
+    if (draggedNote && draggedNote.stateId !== stateId) {
+      moveNote(draggedNote.id!, stateId);
     }
     setDraggedNote(null);
   };
 
-  const getNotesByStatus = (status: KanbanStatus) => {
-    return kanbanNotes.filter(note => note.status === status);
+  const getNotesByState = (stateId: number) => {
+    return kanbanNotes.filter(note => note.stateId === stateId);
   };
+
+  const getNotesWithoutState = () => {
+    return kanbanNotes.filter(note => !note.stateId);
+  };
+
+  // Create status labels and colors from states
+  const STATUS_LABELS = states.reduce((acc, state) => {
+    acc[state.id!] = state.name;
+    return acc;
+  }, {} as Record<number, string>);
+
+  const STATUS_COLORS = states.reduce((acc, state) => {
+    acc[state.id!] = state.color ? `bg-[${state.color}]` : 'bg-gray-100 border-gray-200';
+    return acc;
+  }, {} as Record<number, string>);
 
   return {
     kanbanNotes,
@@ -70,7 +74,8 @@ export function useKanbanView(notes: Note[]) {
     handleDragStart,
     handleDragEnd,
     handleDrop,
-    getNotesByStatus,
+    getNotesByState,
+    getNotesWithoutState,
     STATUS_LABELS,
     STATUS_COLORS
   };
