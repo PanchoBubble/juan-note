@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { Note } from "../../types/note";
 import {
@@ -42,11 +42,43 @@ export const NoteItem = React.memo(function NoteItem({
       }
     : undefined;
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (showSelection && note.id && onItemClick) {
-      onItemClick(note.id, itemIndex, e);
-    }
-  };
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Prevent selection when clicking on interactive elements
+      if (
+        (e.target as HTMLElement).closest(
+          '.interactive-element, button, input, textarea, select, a, [role="button"]'
+        )
+      ) {
+        return;
+      }
+
+      if (showSelection && note.id && onItemClick) {
+        onItemClick(note.id, itemIndex, e);
+      }
+    },
+    [showSelection, note.id, onItemClick, itemIndex]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (showSelection && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault();
+        if (note.id && onItemClick) {
+          // Create a mock mouse event for keyboard selection
+          const mockEvent = {
+            shiftKey: e.shiftKey,
+            metaKey: e.metaKey,
+            ctrlKey: e.ctrlKey,
+            preventDefault: () => {},
+            stopPropagation: () => {},
+          } as React.MouseEvent;
+          onItemClick(note.id, itemIndex, mockEvent);
+        }
+      }
+    },
+    [showSelection, note.id, onItemClick, itemIndex]
+  );
 
   return (
     <article
@@ -55,7 +87,7 @@ export const NoteItem = React.memo(function NoteItem({
       className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange transition-all duration-200 group flex-1 min-w-80 max-h-80 overflow-visible cursor-pointer select-none ${
         isDragging ? "opacity-50" : ""
       } ${isSelected ? "ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue" : ""}`}
-      role="article"
+      role={showSelection ? "button" : "article"}
       aria-labelledby={`note-title-${note.id}`}
       aria-describedby={`note-content-${note.id}`}
       aria-selected={isSelected}
@@ -63,22 +95,7 @@ export const NoteItem = React.memo(function NoteItem({
       data-selected={isSelected}
       tabIndex={showSelection ? 0 : undefined}
       onClick={handleClick}
-      onKeyDown={e => {
-        if (showSelection && e.key === " ") {
-          e.preventDefault();
-          if (note.id && onItemClick) {
-            // Create a mock mouse event for space key selection
-            const mockEvent = {
-              shiftKey: false,
-              metaKey: false,
-              ctrlKey: false,
-              preventDefault: () => {},
-              stopPropagation: () => {},
-            } as React.MouseEvent;
-            onItemClick(note.id, itemIndex, mockEvent);
-          }
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       {/* Selection Indicator */}
       {showSelection && isSelected && (
@@ -111,7 +128,12 @@ export const NoteItem = React.memo(function NoteItem({
         {...listeners}
         {...attributes}
         className="cursor-move flex-1 flex flex-col"
-        onClick={e => e.stopPropagation()} // Prevent selection when clicking draggable area
+        onClick={e => {
+          // Only prevent selection when actually dragging or when clicking interactive elements
+          if (isDragging) {
+            e.stopPropagation();
+          }
+        }}
       >
         <NoteItemTitle note={note} />
 

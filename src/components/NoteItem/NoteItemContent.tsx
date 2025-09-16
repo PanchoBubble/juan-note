@@ -10,6 +10,35 @@ export const NoteItemContent = React.memo(function NoteItemContent({
   note,
   onLabelClick,
 }: NoteItemContentProps) {
+  const getPriorityColor = (priority: number) => {
+    switch (priority) {
+      case 1:
+        return "bg-monokai-yellow text-monokai-bg border-monokai-yellow";
+      case 2:
+        return "bg-monokai-orange text-monokai-bg border-monokai-orange";
+      case 3:
+        return "bg-monokai-pink text-monokai-bg border-monokai-pink";
+      default:
+        return "bg-monokai-comment text-monokai-bg border-monokai-comment";
+    }
+  };
+
+  const getPriorityLabel = (priority: number) => {
+    switch (priority) {
+      case 1:
+        return "Low";
+      case 2:
+        return "Medium";
+      case 3:
+        return "High";
+      default:
+        return "Normal";
+    }
+  };
+
+  const hasMetadata =
+    note.priority > 0 || (note.labels && note.labels.length > 0);
+
   return (
     <div className="text-yellow-300 text-sm leading-relaxed flex-1 min-h-0 flex flex-col">
       <div className="grid grid-cols-[1fr_auto] gap-3 flex-1">
@@ -24,11 +53,10 @@ export const NoteItemContent = React.memo(function NoteItemContent({
               title={note.content}
               style={{
                 display: "-webkit-box",
-                WebkitLineClamp: note.labels && note.labels.length > 0 ? 8 : 6,
+                WebkitLineClamp: hasMetadata ? 8 : 6,
                 WebkitBoxOrient: "vertical",
                 lineHeight: "1.4",
-                maxHeight:
-                  note.labels && note.labels.length > 0 ? "11.2em" : "5.6em",
+                maxHeight: hasMetadata ? "11.2em" : "5.6em",
               }}
             >
               {note.content}
@@ -42,21 +70,41 @@ export const NoteItemContent = React.memo(function NoteItemContent({
             No content
           </div>
         )}
-        {note.labels && note.labels.length > 0 && (
-          <div className="flex flex-col gap-1 flex-shrink-0">
-            {note.labels.map((label: string, index: number) => (
-              <button
-                key={index}
-                onClick={() => onLabelClick?.(label)}
-                className="px-2 py-0.5 text-xs font-medium rounded border border-green-400 text-green-400 transition-all duration-200 cursor-pointer hover:bg-green-400 hover:bg-opacity-20 truncate max-w-32"
-                title={`Click to filter by "${label}"`}
+        {hasMetadata && (
+          <div className="flex flex-col gap-1.5 flex-shrink-0">
+            {/* Priority badge - filled style for prominence */}
+            {note.priority > 0 && (
+              <div
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${getPriorityColor(note.priority)} flex-shrink-0 min-w-fit`}
               >
-                <span className="flex items-center space-x-1">
-                  <span className="w-1 h-1 rounded-full bg-green-400 flex-shrink-0"></span>
-                  <span className="truncate">{label}</span>
+                <span className="flex items-center space-x-1.5">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full bg-monokai-bg opacity-80`}
+                  ></span>
+                  <span className="whitespace-nowrap font-bold">
+                    {getPriorityLabel(note.priority)}
+                  </span>
                 </span>
-              </button>
-            ))}
+              </div>
+            )}
+            {/* Label badges - outline style for secondary info */}
+            {note.labels &&
+              note.labels.map((label: string, index: number) => (
+                <button
+                  key={index}
+                  onClick={e => {
+                    e.stopPropagation();
+                    onLabelClick?.(label);
+                  }}
+                  className="px-2.5 py-1 text-xs font-medium rounded-full border-2 border-monokai-green text-monokai-green bg-transparent transition-all duration-200 cursor-pointer hover:bg-monokai-green hover:bg-opacity-15 hover:shadow-sm truncate max-w-32 min-w-fit shadow-sm"
+                  title={`Click to filter by "${label}"`}
+                >
+                  <span className="flex items-center space-x-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-monokai-green flex-shrink-0"></span>
+                    <span className="truncate font-medium">{label}</span>
+                  </span>
+                </button>
+              ))}
           </div>
         )}
       </div>
