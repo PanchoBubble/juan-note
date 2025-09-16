@@ -53,6 +53,7 @@ pub struct Note {
     pub reminder_minutes: i32,
     pub done: bool,
     pub state_id: Option<i64>,
+    pub order: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -65,6 +66,7 @@ pub struct CreateNoteRequest {
     pub reminder_minutes: Option<i32>,
     pub done: Option<bool>,
     pub state_id: Option<i64>,
+    pub order: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -78,6 +80,7 @@ pub struct UpdateNoteRequest {
     pub reminder_minutes: Option<i32>,
     pub done: Option<bool>,
     pub state_id: Option<i64>,
+    pub order: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -136,6 +139,12 @@ pub struct BulkUpdateDoneRequest {
     pub done: bool,
 }
 
+#[derive(serde::Deserialize)]
+pub struct BulkUpdateOrderRequest {
+    pub note_ids: Vec<i64>,
+    pub orders: Vec<i32>,
+}
+
 #[derive(serde::Serialize)]
 pub struct BulkOperationResponse {
     pub success: bool,
@@ -159,6 +168,7 @@ impl Note {
             reminder_minutes: 0,
             done: false,
             state_id: None,
+            order: 0,
         }
     }
 
@@ -191,5 +201,12 @@ impl Note {
 impl Default for Note {
     fn default() -> Self {
         Self::new(String::new(), String::new())
+    }
+}
+
+impl Note {
+    pub fn with_order(mut self, order: i32) -> Self {
+        self.order = order;
+        self
     }
 }

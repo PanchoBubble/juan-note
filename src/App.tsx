@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { NoteList } from "./components/NoteList";
 import { KanbanBoard } from "./components/KanbanBoard";
 import { NoteEditor } from "./components/NoteEditor";
@@ -24,6 +24,7 @@ function App() {
     completeNote,
     deleteNote,
     searchNotes,
+    reorderNotes,
     clearError,
   } = useNotes();
   const { states } = useStates();
@@ -39,8 +40,8 @@ function App() {
   const [selectedPriority, setSelectedPriority] = useState<number | null>(null);
 
   const [sortBy, setSortBy] = useState<
-    "created" | "updated" | "priority" | "title"
-  >("updated");
+    "created" | "updated" | "priority" | "title" | "custom"
+  >("custom");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [selectionState, setSelectionState] = useState<{
@@ -49,70 +50,71 @@ function App() {
     selectedIds?: Set<number>;
   }>({ count: 0, total: 0 });
 
-  const handleCreateNote = () => {
+  const handleCreateNote = useCallback(() => {
     setEditingNote(null);
     setShowEditor(true);
-  };
+  }, []);
 
-  const handleEditNote = (note: Note) => {
+  const handleEditNote = useCallback((note: Note) => {
     setEditingNote(note);
     setShowEditor(true);
-  };
+  }, []);
 
-  const handleSaveNote = async (
-    request: CreateNoteRequest | UpdateNoteRequest
-  ) => {
-    try {
-      if ("id" in request) {
-        await updateNote(request);
-      } else {
-        await createNote(request);
+  const handleSaveNote = useCallback(
+    async (request: CreateNoteRequest | UpdateNoteRequest) => {
+      try {
+        if ("id" in request) {
+          await updateNote(request);
+        } else {
+          await createNote(request);
+        }
+        setShowEditor(false);
+        setEditingNote(null);
+      } catch (err) {
+        console.error("Failed to save note:", err);
       }
-      setShowEditor(false);
-      setEditingNote(null);
-    } catch (err) {
-      console.error("Failed to save note:", err);
-    }
-  };
+    },
+    [updateNote, createNote]
+  );
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setShowEditor(false);
     setEditingNote(null);
-  };
+  }, []);
 
-  const handleDeleteNote = (note: Note) => {
+  const handleDeleteNote = useCallback((note: Note) => {
     setDeleteNoteData(note);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (deleteNoteData) {
       await deleteNote(deleteNoteData.id!);
       setDeleteNoteData(null);
     }
-  };
+  }, [deleteNoteData, deleteNote]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setDeleteNoteData(null);
-  };
+  }, []);
 
-  const handleCompleteNote = (note: Note) => {
+  const handleCompleteNote = useCallback((note: Note) => {
     setCompleteNoteData(note);
-  };
+  }, []);
 
-  const handleConfirmComplete = async () => {
+  const handleConfirmComplete = useCallback(async () => {
     if (completeNoteData) {
       await completeNote(completeNoteData.id!);
       setCompleteNoteData(null);
     }
-  };
+  }, [completeNoteData, completeNote]);
 
-  const handleCancelComplete = () => {
+  const handleCancelComplete = useCallback(() => {
     setCompleteNoteData(null);
-  };
+  }, []);
 
-  const handleQuickCreate = () => {
+  const handleQuickCreate = useCallback(() => {
     setShowQuickCreate(true);
-  };
+  }, []);
 
   // Keyboard shortcuts and accessibility
   useEffect(() => {
@@ -216,7 +218,17 @@ function App() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [showQuickCreate, showEditor, deleteNoteData, completeNoteData, viewMode]);
+  }, [
+    showQuickCreate,
+    showEditor,
+    deleteNoteData,
+    completeNoteData,
+    viewMode,
+    handleQuickCreate,
+    handleCancelEdit,
+    handleCancelDelete,
+    handleCancelComplete,
+  ]);
 
   // Focus search bar when window gets focus and no input is focused
   useEffect(() => {
@@ -244,56 +256,53 @@ function App() {
     return () => window.removeEventListener("focus", handleWindowFocus);
   }, []);
 
-  // Handle selection state changes from NoteList
-  const handleSelectionChange = (
-    count: number,
-    total: number,
-    selectedIds?: Set<number>
-  ) => {
-    setSelectionState({ count, total, selectedIds });
-  };
-
-  const handleClearSelection = () => {
+  const handleClearSelection = useCallback(() => {
     const clearSelectionEvent = new CustomEvent("clearNoteSelection");
     document.dispatchEvent(clearSelectionEvent);
-  };
+  }, []);
 
   // Bulk action handlers
-  const handleBulkDelete = async (noteIds: number[]) => {
-    try {
-      for (const id of noteIds) {
-        await deleteNote(id);
+  const handleBulkDelete = useCallback(
+    async (noteIds: number[]) => {
+      try {
+        for (const id of noteIds) {
+          await deleteNote(id);
+        }
+        handleClearSelection();
+      } catch (error) {
+        console.error("Failed to delete notes:", error);
       }
-      handleClearSelection();
-    } catch (error) {
-      console.error("Failed to delete notes:", error);
-    }
-  };
+    },
+    [deleteNote]
+  );
 
-  const handleBulkUpdatePriority = async (
-    noteIds: number[],
-    priority: number
-  ) => {
-    try {
-      for (const id of noteIds) {
-        await updateNote({ id, priority });
+  const handleBulkUpdatePriority = useCallback(
+    async (noteIds: number[], priority: number) => {
+      try {
+        for (const id of noteIds) {
+          await updateNote({ id, priority });
+        }
+        handleClearSelection();
+      } catch (error) {
+        console.error("Failed to update priorities:", error);
       }
-      handleClearSelection();
-    } catch (error) {
-      console.error("Failed to update priorities:", error);
-    }
-  };
+    },
+    [updateNote]
+  );
 
-  const handleBulkMarkAsDone = async (noteIds: number[], done: boolean) => {
-    try {
-      for (const id of noteIds) {
-        await updateNote({ id, done });
+  const handleBulkMarkAsDone = useCallback(
+    async (noteIds: number[], done: boolean) => {
+      try {
+        for (const id of noteIds) {
+          await updateNote({ id, done });
+        }
+        handleClearSelection();
+      } catch (error) {
+        console.error("Failed to update done status:", error);
       }
-      handleClearSelection();
-    } catch (error) {
-      console.error("Failed to update done status:", error);
-    }
-  };
+    },
+    [updateNote]
+  );
 
   const isSelectionMode = selectionState.count > 0;
 
@@ -468,9 +477,8 @@ function App() {
             onSortChange={setSortBy}
             sortOrder={sortOrder}
             onSortOrderChange={setSortOrder}
-            onSelectionChange={(count, total, selectedIds) =>
-              handleSelectionChange(count, total, selectedIds)
-            }
+            setSelectionState={setSelectionState}
+            onReorderNotes={reorderNotes}
             onSaveNote={handleSaveNote}
           />
         ) : (

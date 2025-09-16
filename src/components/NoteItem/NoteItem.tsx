@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Note } from "../../types/note";
 import {
   NoteItemActions,
@@ -18,6 +19,7 @@ interface NoteItemProps {
   onItemClick?: (id: number, index: number, event: React.MouseEvent) => void;
   showSelection?: boolean;
   itemIndex?: number;
+  isDraggable?: boolean;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -30,15 +32,16 @@ export const NoteItem = React.memo(function NoteItem({
   onItemClick,
   showSelection = false,
   itemIndex = 0,
+  isDraggable = false,
 }: NoteItemProps) {
+  // Use sortable for list reordering
   const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: note.id?.toString() || "",
-    });
+    useSortable({ id: note.id?.toString() || "" });
 
   const style = transform
     ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transform: CSS.Transform.toString(transform),
+        transition: "none", // Disable transitions during transform
       }
     : undefined;
 
@@ -78,16 +81,24 @@ export const NoteItem = React.memo(function NoteItem({
           onItemClick(note.id, itemIndex, mockEvent);
         }
       }
+
+      // Handle drag activation with keyboard
+      if (isDraggable && e.key === "Enter" && e.ctrlKey) {
+        e.preventDefault();
+        // Focus management for keyboard users - drag is now available from anywhere
+      }
     },
-    [showSelection, note.id, onItemClick, itemIndex]
+    [showSelection, note.id, onItemClick, itemIndex, isDraggable]
   );
 
   return (
     <article
       ref={setNodeRef}
       style={style}
-      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange transition-all duration-200 group flex-1 min-w-80 max-h-80 overflow-visible cursor-pointer select-none ${
-        isDragging ? "opacity-50" : ""
+      {...(isDraggable ? attributes : {})}
+      {...(isDraggable ? listeners : {})}
+      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange group flex-1 min-w-80 max-h-80 overflow-visible ${isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} select-none ${
+        isDragging ? "opacity-50 shadow-2xl scale-105 z-50" : ""
       } ${isSelected ? "ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue" : ""}`}
       role={showSelection ? "button" : "article"}
       aria-labelledby={`note-title-${note.id}`}
@@ -118,6 +129,11 @@ export const NoteItem = React.memo(function NoteItem({
         </div>
       )}
 
+      {/* Drag Indicator */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-monokai-blue bg-opacity-10 border-2 border-monokai-blue border-dashed rounded-xl pointer-events-none z-40"></div>
+      )}
+
       <NoteItemActions
         note={note}
         onComplete={onComplete}
@@ -125,29 +141,23 @@ export const NoteItem = React.memo(function NoteItem({
         onDelete={onDelete}
       />
 
-      {/* Draggable content area */}
+      {/* Content area */}
       <div
-        {...listeners}
-        {...attributes}
-        className="cursor-move flex-1 flex flex-col"
-        onMouseDown={e => {
-          // Prevent drag start if shift or cmd key is pressed for selection
-          if ((e.shiftKey || e.metaKey || e.ctrlKey) && showSelection) {
+        className="flex-1 flex flex-col"
+        onClick={handleClick}
+        onPointerDown={e => {
+          // Handle cmd/ctrl+click for selection before drag system takes over
+          if (
+            (e.metaKey || e.ctrlKey) &&
+            showSelection &&
+            note.id &&
+            onItemClick
+          ) {
             e.preventDefault();
-            e.stopPropagation();
+            onItemClick(note.id, itemIndex, e as any);
           }
         }}
-        onClick={e => {
-          // Allow modifier key clicks to bubble up for selection
-          if ((e.shiftKey || e.metaKey || e.ctrlKey) && showSelection) {
-            return; // Let the event bubble up to the card's click handler
-          }
-
-          // Only prevent selection when actually dragging
-          if (isDragging) {
-            e.stopPropagation();
-          }
-        }}
+        onKeyDown={handleKeyDown}
       >
         <NoteItemTitle note={note} />
 

@@ -85,8 +85,10 @@ export function useStates() {
     async (stateId: number, newPosition: number) => {
       setError(null);
       try {
-        // Optimistic update
+        // Optimistic update and get current states for database update
+        let currentStates: State[] = [];
         setStates(prev => {
+          currentStates = [...prev];
           const newStates = [...prev];
           const stateIndex = newStates.findIndex(s => s.id === stateId);
           if (stateIndex === -1) return prev;
@@ -103,8 +105,8 @@ export function useStates() {
           return newStates;
         });
 
-        // Update in database
-        const updatePromises = states.map((state, index) =>
+        // Update in database using the captured currentStates
+        const updatePromises = currentStates.map((state, index) =>
           NoteService.updateState({ id: state.id!, position: index })
         );
 
@@ -112,15 +114,35 @@ export function useStates() {
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
         // Reload states to revert optimistic update
-        await loadStates();
+        const response = await NoteService.getAllStates();
+        if (response.success) {
+          setStates(response.data);
+        }
       }
     },
-    [states, loadStates]
+    [] // No dependencies needed since we capture states inside the function
   );
 
   useEffect(() => {
-    loadStates();
-  }, [loadStates]);
+    const initializeStates = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await NoteService.getAllStates();
+        if (response.success) {
+          setStates(response.data);
+        } else {
+          setError(response.error || "Failed to load states");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeStates();
+  }, []);
 
   return {
     states,

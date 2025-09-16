@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 
 interface SortControlsProps {
-  sortBy: "created" | "updated" | "priority" | "title";
-  onSortChange: (sort: "created" | "updated" | "priority" | "title") => void;
+  sortBy: "created" | "updated" | "priority" | "title" | "custom";
+  onSortChange: (
+    sort: "created" | "updated" | "priority" | "title" | "custom"
+  ) => void;
   sortOrder: "asc" | "desc";
   onSortOrderChange: (order: "asc" | "desc") => void;
 }
@@ -20,6 +22,7 @@ export function SortControls({
     { value: "created", label: "Date Created", icon: "📅" },
     { value: "priority", label: "Priority", icon: "⚡" },
     { value: "title", label: "Title", icon: "🔤" },
+    { value: "custom", label: "Custom Order", icon: "🎯" },
   ];
 
   const selectedSortOption = sortOptions.find(

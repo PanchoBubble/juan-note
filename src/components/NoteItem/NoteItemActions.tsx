@@ -19,7 +19,7 @@ export const NoteItemActions = React.memo(function NoteItemActions({
   return (
     <>
       {/* Action buttons - only visible on hover */}
-      <div className="interactive-element absolute top-2 right-8 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+      <div className="interactive-element absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 z-10">
         {/* Mark as complete button */}
         {!note.done && (
           <button
@@ -27,7 +27,7 @@ export const NoteItemActions = React.memo(function NoteItemActions({
               e.stopPropagation();
               onComplete(note);
             }}
-            className="w-7 h-7 p-0 m-0 flex items-center justify-center text-monokai-comment hover:text-white hover:bg-monokai-green rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-monokai-green focus:ring-opacity-50 shadow-lg bg-surface-secondary border border-monokai-comment border-opacity-30"
+            className="w-7 h-7 p-0 m-0 flex items-center justify-center text-monokai-comment hover:text-white hover:bg-monokai-green rounded-full focus:outline-none focus:ring-2 focus:ring-monokai-green focus:ring-opacity-50 shadow-lg bg-surface-secondary"
             style={{ margin: 0, padding: 0 }}
             title="Mark as complete"
             aria-label={`Mark note as complete: ${note.title || "Untitled"}`}
@@ -55,7 +55,7 @@ export const NoteItemActions = React.memo(function NoteItemActions({
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
             }}
-            className="w-7 h-7 p-0 m-0 flex items-center justify-center text-monokai-comment hover:text-monokai-fg hover:bg-surface-primary rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-monokai-fg focus:ring-opacity-50 shadow-lg bg-surface-secondary border border-monokai-comment border-opacity-30"
+            className="w-7 h-7 p-0 m-0 flex items-center justify-center text-monokai-comment hover:text-monokai-fg hover:bg-surface-primary rounded-full focus:outline-none focus:ring-2 focus:ring-monokai-fg focus:ring-opacity-50 shadow-lg bg-surface-secondary"
             style={{ margin: 0, padding: 0 }}
             title="More options"
             aria-label="More options"
@@ -83,7 +83,7 @@ export const NoteItemActions = React.memo(function NoteItemActions({
                 className="fixed inset-0 z-40"
                 onClick={() => setIsMenuOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-1 w-48 bg-surface-secondary border border-monokai-comment border-opacity-30 rounded-lg shadow-xl z-50 py-1">
+              <div className="absolute right-0 top-full mt-1 w-48 rounded-lg shadow-xl z-50 py-1">
                 <button
                   onClick={e => {
                     e.stopPropagation();

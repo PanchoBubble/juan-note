@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { Note } from "../types/note";
 
 export interface UseMultiselectReturn {
@@ -19,9 +19,31 @@ export interface UseMultiselectReturn {
     notes?: Note[]
   ) => void;
   lastSelectedIndex: number | null;
+  notifySelectionChange: (
+    totalNotes: number,
+    onSelectionChange?: (
+      count: number,
+      total: number,
+      selectedIds: Set<number>
+    ) => void
+  ) => void;
 }
 
-export function useMultiselect(): UseMultiselectReturn {
+export function useMultiselect(
+  onSelectionChange?: (
+    count: number,
+    total: number,
+    selectedIds: Set<number>
+  ) => void,
+  getTotalNotes?: () => number,
+  setSelectionState?: React.Dispatch<
+    React.SetStateAction<{
+      count: number;
+      total: number;
+      selectedIds?: Set<number>;
+    }>
+  >
+): UseMultiselectReturn {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
     null
@@ -126,8 +148,43 @@ export function useMultiselect(): UseMultiselectReturn {
 
       setLastSelectedIndex(index);
     },
-    [lastSelectedIndex]
+    [lastSelectedIndex] // This is actually fine - lastSelectedIndex is a primitive
   );
+
+  const notifySelectionChange = useCallback(
+    (
+      totalNotes: number,
+      onSelectionChange?: (
+        count: number,
+        total: number,
+        selectedIds: Set<number>
+      ) => void
+    ) => {
+      if (onSelectionChange) {
+        onSelectionChange(selectedCount, totalNotes, selectedIds);
+      }
+    },
+    [selectedCount, selectedIds]
+  );
+
+  // Automatically notify parent of selection changes
+  useEffect(() => {
+    if (setSelectionState && getTotalNotes) {
+      setSelectionState({
+        count: selectedCount,
+        total: getTotalNotes(),
+        selectedIds,
+      });
+    } else if (onSelectionChange && getTotalNotes) {
+      onSelectionChange(selectedCount, getTotalNotes(), selectedIds);
+    }
+  }, [
+    selectedCount,
+    selectedIds,
+    onSelectionChange,
+    getTotalNotes,
+    setSelectionState,
+  ]);
 
   return {
     selectedIds,
@@ -142,5 +199,6 @@ export function useMultiselect(): UseMultiselectReturn {
     getSelectedNotes,
     handleItemClick,
     lastSelectedIndex,
+    notifySelectionChange,
   };
 }

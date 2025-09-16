@@ -240,6 +240,25 @@ export class NoteService {
     }
   }
 
+  static async bulkUpdateNotesOrder(
+    noteIds: number[],
+    orders: number[]
+  ): Promise<BulkOperationResponse> {
+    try {
+      const request = { note_ids: noteIds, orders };
+      return await invoke("bulk_update_notes_order", { request });
+    } catch (error) {
+      console.error("Failed to bulk update notes order:", error);
+      return {
+        success: false,
+        successful_count: 0,
+        failed_count: noteIds.length,
+        errors: [error instanceof Error ? error.message : "Unknown error"],
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
   static async migrateNotesToStates(): Promise<NoteResponse> {
     try {
       return await invoke("migrate_notes_to_states");

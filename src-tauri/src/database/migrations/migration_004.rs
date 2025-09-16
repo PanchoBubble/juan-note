@@ -8,8 +8,8 @@ pub fn up(conn: &Connection) -> rusqlite::Result<()> {
             name TEXT NOT NULL,
             position INTEGER NOT NULL,
             color TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at INTEGER DEFAULT (strftime('%s', 'now')),
+            updated_at INTEGER DEFAULT (strftime('%s', 'now'))
         )",
         [],
     )?;

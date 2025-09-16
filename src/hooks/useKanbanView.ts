@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Note, State } from "../types/note";
 
 export interface KanbanNote extends Note {
@@ -23,60 +23,77 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
     setKanbanNotes(converted);
   }, [notes, states]);
 
-  const moveNote = (noteId: number, newStateId: number) => {
-    setKanbanNotes(prev =>
-      prev.map(note =>
-        note.id === noteId
-          ? {
-              ...note,
-              stateId: newStateId,
-              state: states.find(s => s.id === newStateId),
-            }
-          : note
-      )
-    );
-  };
-
-  const handleDragStart = (note: KanbanNote) => {
-    setDraggedNote(note);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedNote(null);
-  };
-
-  const handleDrop = (stateId: number) => {
-    if (draggedNote && draggedNote.stateId !== stateId) {
-      moveNote(draggedNote.id!, stateId);
-    }
-    setDraggedNote(null);
-  };
-
-  const getNotesByState = (stateId: number) => {
-    return kanbanNotes.filter(note => note.stateId === stateId);
-  };
-
-  const getNotesWithoutState = () => {
-    return kanbanNotes.filter(note => !note.stateId);
-  };
-
-  // Create status labels and colors from states
-  const STATUS_LABELS = states.reduce(
-    (acc, state) => {
-      acc[state.id!] = state.name;
-      return acc;
+  const moveNote = useCallback(
+    (noteId: number, newStateId: number) => {
+      setKanbanNotes(prev =>
+        prev.map(note =>
+          note.id === noteId
+            ? {
+                ...note,
+                stateId: newStateId,
+                state: states.find(s => s.id === newStateId),
+              }
+            : note
+        )
+      );
     },
-    {} as Record<number, string>
+    [states]
   );
 
-  const STATUS_COLORS = states.reduce(
-    (acc, state) => {
-      acc[state.id!] = state.color
-        ? `bg-[${state.color}]`
-        : "bg-gray-100 border-gray-200";
-      return acc;
+  const handleDragStart = useCallback((note: KanbanNote) => {
+    setDraggedNote(note);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedNote(null);
+  }, []);
+
+  const handleDrop = useCallback(
+    (stateId: number) => {
+      if (draggedNote && draggedNote.stateId !== stateId) {
+        moveNote(draggedNote.id!, stateId);
+      }
+      setDraggedNote(null);
     },
-    {} as Record<number, string>
+    [draggedNote, moveNote]
+  );
+
+  const getNotesByState = useCallback(
+    (stateId: number) => {
+      return kanbanNotes.filter(note => note.stateId === stateId);
+    },
+    [kanbanNotes]
+  );
+
+  const getNotesWithoutState = useCallback(() => {
+    return kanbanNotes.filter(note => !note.stateId);
+  }, [kanbanNotes]);
+
+  // Create status labels and colors from states
+  const STATUS_LABELS = useMemo(
+    () =>
+      states.reduce(
+        (acc, state) => {
+          acc[state.id!] = state.name;
+          return acc;
+        },
+        {} as Record<number, string>
+      ),
+    [states]
+  );
+
+  const STATUS_COLORS = useMemo(
+    () =>
+      states.reduce(
+        (acc, state) => {
+          acc[state.id!] = state.color
+            ? `bg-[${state.color}]`
+            : "bg-gray-100 border-gray-200";
+          return acc;
+        },
+        {} as Record<number, string>
+      ),
+    [states]
   );
 
   return {

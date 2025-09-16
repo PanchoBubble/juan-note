@@ -12,6 +12,7 @@ export interface UseNotesReturn {
   deleteNote: (id: number) => Promise<void>;
   searchNotes: (query: string) => Promise<void>;
   refreshNotes: () => Promise<void>;
+  reorderNotes: (notes: Note[]) => Promise<void>;
   clearError: () => void;
 }
 
@@ -116,7 +117,21 @@ export function useNotes(): UseNotesReturn {
   const searchNotes = useCallback(
     async (query: string) => {
       if (!query.trim()) {
-        await refreshNotes();
+        // Inline the refresh logic to avoid dependency on refreshNotes
+        setLoading(true);
+        setError(null);
+        try {
+          const response = await NoteService.getAllNotes();
+          if (response.success) {
+            setNotes(response.data);
+          } else {
+            setError(response.error || "Failed to load notes");
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to load notes");
+        } finally {
+          setLoading(false);
+        }
         return;
       }
 
@@ -135,24 +150,59 @@ export function useNotes(): UseNotesReturn {
         setLoading(false);
       }
     },
-    [refreshNotes]
+    [] // Remove refreshNotes dependency
+  );
+
+  const reorderNotes = useCallback(
+    async (reorderedNotes: Note[]) => {
+      // Prepare data for bulk update
+      const noteIds = reorderedNotes.map(note => note.id!).filter(Boolean);
+      const orders = reorderedNotes.map(note => note.order);
+
+      try {
+        const response = await NoteService.bulkUpdateNotesOrder(
+          noteIds,
+          orders
+        );
+        if (response.success) {
+          // Only update state after successful API call
+          setNotes(reorderedNotes);
+        } else {
+          setError(response.error || "Failed to reorder notes");
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to reorder notes"
+        );
+      }
+    },
+    [] // Remove refreshNotes dependency
   );
 
   // Initialize database and load notes on mount
   useEffect(() => {
     const initialize = async () => {
+      setLoading(true);
+      setError(null);
       try {
         await NoteService.initializeDatabase();
-        await refreshNotes();
+        const response = await NoteService.getAllNotes();
+        if (response.success) {
+          setNotes(response.data);
+        } else {
+          setError(response.error || "Failed to load notes");
+        }
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to initialize database"
         );
+      } finally {
+        setLoading(false);
       }
     };
 
     initialize();
-  }, [refreshNotes]);
+  }, []);
 
   return {
     notes,
@@ -164,6 +214,7 @@ export function useNotes(): UseNotesReturn {
     deleteNote,
     searchNotes,
     refreshNotes,
+    reorderNotes,
     clearError,
   };
 }

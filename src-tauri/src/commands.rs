@@ -36,8 +36,8 @@ pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
     let now = Utc::now().timestamp();
 
     conn.execute(
-        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\")
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         rusqlite::params![
             request.title,
             request.content,
@@ -48,7 +48,8 @@ pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
             request.deadline.map(|dt| dt.timestamp()),
             request.reminder_minutes.unwrap_or(0),
             request.done.unwrap_or(false) as i32,
-            request.state_id
+            request.state_id,
+            request.order.unwrap_or(0)
         ],
     ).map_err(|e| format!("Failed to create note: {}", e))?;
 
@@ -72,8 +73,8 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
     let conn = conn.lock().unwrap();
 
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id
-         FROM notes ORDER BY updated_at DESC"
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"
+         FROM notes ORDER BY \"order\" ASC, updated_at DESC"
     ).map_err(|e| format!("Failed to prepare query: {}", e))?;
 
     let notes_iter = stmt.query_map([], |row| {
@@ -93,6 +94,7 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
             reminder_minutes: row.get(8)?,
             done: row.get::<_, i32>(9)? != 0,
             state_id: row.get(10)?,
+            order: row.get(11)?,
         })
     }).map_err(|e| format!("Failed to query notes: {}", e))?;
 
@@ -195,7 +197,7 @@ pub fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
 
 fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, String> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"
          FROM notes WHERE id = ?"
     ).map_err(|e| format!("Failed to prepare query: {}", e))?;
 
@@ -216,6 +218,7 @@ fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, S
             reminder_minutes: row.get(8)?,
             done: row.get::<_, i32>(9)? != 0,
             state_id: row.get(10)?,
+            order: row.get(11)?,
         })
     });
 
@@ -306,7 +309,7 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
 
 fn perform_fts_search(conn: &rusqlite::Connection, search_query: &str, limit: i32, offset: i32) -> Result<Vec<Note>, String> {
     let mut stmt = conn.prepare(
-        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes, n.done, n.state_id
+        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes, n.done, n.state_id, n.\"order\"
          FROM notes_fts fts
          JOIN notes n ON fts.rowid = n.id
          WHERE notes_fts MATCH ?
@@ -333,6 +336,7 @@ fn perform_fts_search(conn: &rusqlite::Connection, search_query: &str, limit: i3
             reminder_minutes: row.get(8)?,
             done: row.get::<_, i32>(9)? != 0,
             state_id: row.get(10)?,
+            order: row.get(11)?,
         })
         }
     ).map_err(|e| format!("Failed to execute FTS search: {}", e))?;
@@ -352,10 +356,10 @@ fn perform_like_search(conn: &rusqlite::Connection, query: &str, limit: i32, off
     let search_pattern = format!("%{}%", query);
 
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"
          FROM notes
          WHERE title LIKE ? COLLATE NOCASE OR content LIKE ? COLLATE NOCASE
-         ORDER BY updated_at DESC
+         ORDER BY \"order\" ASC, updated_at DESC
          LIMIT ? OFFSET ?"
     ).map_err(|e| format!("Failed to prepare LIKE search query: {}", e))?;
 
@@ -378,6 +382,7 @@ fn perform_like_search(conn: &rusqlite::Connection, query: &str, limit: i32, off
             reminder_minutes: row.get(8)?,
             done: row.get::<_, i32>(9)? != 0,
             state_id: row.get(10)?,
+            order: row.get(11)?,
         })
         }
     ).map_err(|e| format!("Failed to execute LIKE search: {}", e))?;
@@ -764,6 +769,48 @@ pub fn bulk_update_notes_state(request: BulkUpdateStateRequest) -> Result<BulkOp
         match conn.execute(
             "UPDATE notes SET state_id = ?, updated_at = ? WHERE id = ?",
             rusqlite::params![request.state_id, now, note_id],
+        ) {
+            Ok(rows_affected) => {
+                if rows_affected > 0 {
+                    successful_count += 1;
+                } else {
+                    failed_count += 1;
+                    errors.push(format!("Note {} not found", note_id));
+                }
+            }
+            Err(e) => {
+                failed_count += 1;
+                errors.push(format!("Failed to update note {}: {}", note_id, e));
+            }
+        }
+    }
+
+    Ok(BulkOperationResponse {
+        success: true,
+        successful_count,
+        failed_count,
+        errors: if errors.is_empty() { None } else { Some(errors) },
+        error: None,
+    })
+}
+
+#[tauri::command]
+pub fn bulk_update_notes_order(request: BulkUpdateOrderRequest) -> Result<BulkOperationResponse, String> {
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+
+    let mut successful_count = 0;
+    let mut failed_count = 0;
+    let mut errors = Vec::new();
+    let now = Utc::now().timestamp();
+
+    // Update each note with its corresponding order value
+    for (i, &note_id) in request.note_ids.iter().enumerate() {
+        let order = request.orders.get(i).copied().unwrap_or(0);
+
+        match conn.execute(
+            "UPDATE notes SET \"order\" = ?, updated_at = ? WHERE id = ?",
+            rusqlite::params![order, now, note_id],
         ) {
             Ok(rows_affected) => {
                 if rows_affected > 0 {

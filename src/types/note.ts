@@ -19,6 +19,7 @@ export interface Note {
   reminder_minutes: number;
   done: boolean;
   state_id?: number;
+  order: number;
 }
 
 export interface CreateNoteRequest {
@@ -30,6 +31,7 @@ export interface CreateNoteRequest {
   reminder_minutes?: number;
   done?: boolean;
   state_id?: number;
+  order?: number;
 }
 
 export interface UpdateNoteRequest {
@@ -42,6 +44,7 @@ export interface UpdateNoteRequest {
   reminder_minutes?: number;
   done?: boolean;
   state_id?: number;
+  order?: number;
 }
 
 export interface NoteResponse {
@@ -114,6 +117,11 @@ export interface BulkUpdateStateRequest {
 export interface BulkUpdateDoneRequest {
   note_ids: number[];
   done: boolean;
+}
+
+export interface BulkUpdateOrderRequest {
+  note_ids: number[];
+  orders: number[];
 }
 
 export interface BulkOperationResponse {

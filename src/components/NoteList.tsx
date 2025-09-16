@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { NoteItem } from "./NoteItem/";
 import { LabelFilter } from "./LabelFilter";
 import { PriorityFilter } from "./PriorityFilter";
@@ -7,6 +7,21 @@ import { InlineCreate } from "./InlineCreate";
 
 import { useMultiselect } from "../hooks/useMultiselect";
 import type { Note, CreateNoteRequest } from "../types/note";
+import {
+  DndContext,
+  rectIntersection,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 interface NoteListProps {
   notes: Note[];
@@ -18,18 +33,23 @@ interface NoteListProps {
   onLabelsChange: (labels: string[]) => void;
   selectedPriority: number | null;
   onPriorityChange: (priority: number | null) => void;
-  sortBy: "created" | "updated" | "priority" | "title";
-  onSortChange: (sort: "created" | "updated" | "priority" | "title") => void;
+  sortBy: "created" | "updated" | "priority" | "title" | "custom";
+  onSortChange: (
+    sort: "created" | "updated" | "priority" | "title" | "custom"
+  ) => void;
   sortOrder: "asc" | "desc";
   onSortOrderChange: (order: "asc" | "desc") => void;
   showInlineCreate?: boolean;
   onCancelInlineCreate?: () => void;
   onSaveNote?: (request: CreateNoteRequest) => Promise<void>;
-  onSelectionChange?: (
-    count: number,
-    total: number,
-    selectedIds?: Set<number>
-  ) => void;
+  setSelectionState?: React.Dispatch<
+    React.SetStateAction<{
+      count: number;
+      total: number;
+      selectedIds?: Set<number>;
+    }>
+  >;
+  onReorderNotes?: (notes: Note[]) => void;
 }
 
 export const NoteList = React.memo(function NoteList({
@@ -49,16 +69,30 @@ export const NoteList = React.memo(function NoteList({
   showInlineCreate = false,
   onCancelInlineCreate,
   onSaveNote,
-  onSelectionChange,
+  setSelectionState,
+  onReorderNotes,
 }: NoteListProps) {
-  const {
-    selectedIds,
-    selectedCount,
-    isSelected,
-    clearAll,
-    toggleAll,
-    handleItemClick,
-  } = useMultiselect();
+  const { isSelected, clearAll, toggleAll, handleItemClick } = useMultiselect(
+    undefined, // Remove onSelectionChange callback
+    () => filteredAndSortedNotes.length + doneNotes.length,
+    setSelectionState // Pass the state setter directly
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+      },
+      // Don't activate drag if cmd/ctrl is pressed
+      shouldActivate: ({ event }: { event: Event }) => {
+        const e = event as PointerEvent;
+        return !(e.metaKey || e.ctrlKey);
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Get all available labels from notes
   const availableLabels = useMemo(() => {
@@ -108,6 +142,9 @@ export const NoteList = React.memo(function NoteList({
         case "title":
           comparison = (a.title || "").localeCompare(b.title || "");
           break;
+        case "custom":
+          comparison = (a.order || 0) - (b.order || 0);
+          break;
         default:
           comparison = 0;
       }
@@ -116,6 +153,68 @@ export const NoteList = React.memo(function NoteList({
 
     return sorted;
   }, [notes, selectedLabels, selectedPriority, sortBy, sortOrder]);
+
+  // Handle drag end for reordering
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (over && active.id !== over.id) {
+        // Find the indices of the dragged and target items in the filtered notes
+        const oldIndex = filteredAndSortedNotes.findIndex(
+          note => note.id?.toString() === active.id
+        );
+        const newIndex = filteredAndSortedNotes.findIndex(
+          note => note.id?.toString() === over.id
+        );
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          // For non-custom sort modes, switch to custom sort mode first
+          if (sortBy !== "custom" && onSortChange) {
+            onSortChange("custom");
+          }
+
+          // Create the reordered notes array
+          const reorderedFilteredNotes = arrayMove(
+            filteredAndSortedNotes,
+            oldIndex,
+            newIndex
+          );
+
+          // Create a map of note IDs to their new order values
+          const orderMap = new Map<string, number>();
+          reorderedFilteredNotes.forEach((note, index) => {
+            if (note.id) {
+              orderMap.set(note.id.toString(), index);
+            }
+          });
+
+          // Update order values for ALL notes based on the new positions
+          let nextOrder = reorderedFilteredNotes.length;
+          const updatedAllNotes = notes.map(note => {
+            if (note.id && orderMap.has(note.id.toString())) {
+              return {
+                ...note,
+                order: orderMap.get(note.id.toString())!,
+              };
+            } else {
+              // Non-visible note, assign order after visible notes
+              return {
+                ...note,
+                order: nextOrder++,
+              };
+            }
+          });
+
+          // Call the reorder function with all notes
+          if (onReorderNotes) {
+            onReorderNotes(updatedAllNotes);
+          }
+        }
+      }
+    },
+    [filteredAndSortedNotes, notes, sortBy, onSortChange, onReorderNotes]
+  );
 
   // Get done/archived notes
   const doneNotes = useMemo(() => {
@@ -140,23 +239,6 @@ export const NoteList = React.memo(function NoteList({
       document.removeEventListener("clearNoteSelection", handleClearSelection);
     };
   }, [toggleAll, clearAll, filteredAndSortedNotes]);
-
-  // Notify parent component of selection changes
-  React.useEffect(() => {
-    if (onSelectionChange) {
-      onSelectionChange(
-        selectedCount,
-        filteredAndSortedNotes.length + doneNotes.length,
-        selectedIds
-      );
-    }
-  }, [
-    selectedCount,
-    filteredAndSortedNotes.length,
-    doneNotes.length,
-    selectedIds,
-    onSelectionChange,
-  ]);
 
   if (loading && notes.length === 0) {
     return (
@@ -240,26 +322,40 @@ export const NoteList = React.memo(function NoteList({
               defaultPriority={selectedPriority || 0}
             />
           )}
-          {filteredAndSortedNotes.map((note, index) => (
-            <NoteItem
-              key={note.id}
-              note={note}
-              onEdit={onEdit}
-              onComplete={onComplete}
-              onDelete={onDelete}
-              onLabelClick={label => {
-                if (!selectedLabels.includes(label)) {
-                  onLabelsChange([...selectedLabels, label]);
-                }
-              }}
-              isSelected={note.id ? isSelected(note.id) : false}
-              onItemClick={(id, index, event) =>
-                handleItemClick(id, index, event, filteredAndSortedNotes)
-              }
-              showSelection={true}
-              itemIndex={index}
-            />
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={rectIntersection}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={filteredAndSortedNotes.map(
+                note => note.id?.toString() || ""
+              )}
+              strategy={verticalListSortingStrategy}
+            >
+              {filteredAndSortedNotes.map((note, index) => (
+                <NoteItem
+                  key={note.id}
+                  note={note}
+                  onEdit={onEdit}
+                  onComplete={onComplete}
+                  onDelete={onDelete}
+                  onLabelClick={label => {
+                    if (!selectedLabels.includes(label)) {
+                      onLabelsChange([...selectedLabels, label]);
+                    }
+                  }}
+                  isSelected={note.id ? isSelected(note.id) : false}
+                  onItemClick={(id, index, event) =>
+                    handleItemClick(id, index, event, filteredAndSortedNotes)
+                  }
+                  showSelection={true}
+                  itemIndex={index}
+                  isDraggable={true}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
