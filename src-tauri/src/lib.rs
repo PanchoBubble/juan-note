@@ -28,7 +28,10 @@ pub fn run() {
             create_state,
             update_state,
             delete_state,
-            migrate_notes_to_states
+            migrate_notes_to_states,
+            bulk_delete_notes,
+            bulk_update_notes_priority,
+            bulk_update_notes_state
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

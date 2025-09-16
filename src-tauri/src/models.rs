@@ -112,6 +112,33 @@ pub struct UpdateNoteDoneRequest {
     pub done: bool,
 }
 
+// Bulk Operations Types
+#[derive(serde::Deserialize)]
+pub struct BulkDeleteRequest {
+    pub note_ids: Vec<i64>,
+}
+
+#[derive(serde::Deserialize)]
+pub struct BulkUpdatePriorityRequest {
+    pub note_ids: Vec<i64>,
+    pub priority: i32,
+}
+
+#[derive(serde::Deserialize)]
+pub struct BulkUpdateStateRequest {
+    pub note_ids: Vec<i64>,
+    pub state_id: i64,
+}
+
+#[derive(serde::Serialize)]
+pub struct BulkOperationResponse {
+    pub success: bool,
+    pub successful_count: usize,
+    pub failed_count: usize,
+    pub errors: Option<Vec<String>>,
+    pub error: Option<String>,
+}
+
 impl Note {
     pub fn new(title: String, content: String) -> Self {
         Self {
