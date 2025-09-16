@@ -50,8 +50,8 @@ export const NoteItem = React.memo(function NoteItem({
         '.interactive-element, button, input, textarea, select, a, [role="button"]'
       );
 
-      // But allow shift+click even on interactive elements for range selection
-      if (isInteractive && !e.shiftKey) {
+      // But allow shift+click and cmd+click even on interactive elements for selection
+      if (isInteractive && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
         return;
       }
 
