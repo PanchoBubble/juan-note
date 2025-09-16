@@ -15,6 +15,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -74,6 +76,7 @@ export const NoteList = React.memo(function NoteList({
   setSelectionState,
   onReorderNotes,
 }: NoteListProps) {
+  const [activeId, setActiveId] = React.useState<string | null>(null);
   const { isSelected, clearAll, toggleAll, handleItemClick } = useMultiselect(
     undefined, // Remove onSelectionChange callback
     () => filteredAndSortedNotes.length + doneNotes.length,
@@ -157,10 +160,16 @@ export const NoteList = React.memo(function NoteList({
     return sorted;
   }, [notes, selectedLabels, selectedPriority, sortBy, sortOrder]);
 
+  // Handle drag start
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  }, []);
+
   // Handle drag end for reordering
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
+      setActiveId(null);
 
       if (over && active.id !== over.id) {
         // Find the indices of the dragged and target items in the filtered notes
@@ -328,6 +337,7 @@ export const NoteList = React.memo(function NoteList({
           <DndContext
             sensors={sensors}
             collisionDetection={rectIntersection}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
@@ -360,6 +370,23 @@ export const NoteList = React.memo(function NoteList({
               ))}
             </SortableContext>
           </DndContext>
+          <DragOverlay>
+            {activeId ? (
+              <NoteItem
+                note={
+                  filteredAndSortedNotes.find(
+                    note => note.id?.toString() === activeId
+                  )!
+                }
+                onEdit={() => {}}
+                onComplete={() => {}}
+                onDelete={() => {}}
+                showSelection={false}
+                isDraggable={false}
+                isDragOverlay={true}
+              />
+            ) : null}
+          </DragOverlay>
         </div>
       )}
 

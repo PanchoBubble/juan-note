@@ -3,6 +3,7 @@ import type { Note } from "../../types/note";
 
 interface NoteItemActionsProps {
   note: Note;
+  isEditing?: boolean;
   onComplete: (note: Note) => void;
   onEdit: (note: Note) => void;
   onDelete: (note: Note) => void;
@@ -13,8 +14,10 @@ export const NoteItemActions = React.memo(function NoteItemActions({
   onComplete,
   onEdit,
   onDelete,
+  isEditing = false,
 }: NoteItemActionsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  if (isEditing) return;
 
   return (
     <>

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Note, UpdateNoteRequest } from "../../types/note";
@@ -8,6 +8,7 @@ import {
   NoteItemTitle,
   NoteItemContent,
   NoteItemMetadata,
+  InlineNoteEditor,
 } from "./";
 
 interface NoteItemProps {
@@ -22,6 +23,7 @@ interface NoteItemProps {
   itemIndex?: number;
   isDraggable?: boolean;
   onUpdate?: (note: Note) => void;
+  isDragOverlay?: boolean;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -36,6 +38,7 @@ export const NoteItem = React.memo(function NoteItem({
   itemIndex = 0,
   isDraggable = false,
   onUpdate,
+  isDragOverlay = false,
 }: NoteItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
@@ -46,7 +49,7 @@ export const NoteItem = React.memo(function NoteItem({
 
   const style = transform
     ? {
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Translate.toString(transform),
         transition: "none", // Disable transitions during transform
       }
     : undefined;
@@ -61,6 +64,11 @@ export const NoteItem = React.memo(function NoteItem({
 
       // But allow shift+click and cmd+click even on interactive elements for selection
       if (isInteractive && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+        return;
+      }
+
+      // Don't handle cmd/ctrl+click here - it's handled in onPointerDown to prevent double triggering
+      if (e.metaKey || e.ctrlKey) {
         return;
       }
 
@@ -100,28 +108,12 @@ export const NoteItem = React.memo(function NoteItem({
     [showSelection, note.id, onItemClick, itemIndex, isDraggable, isEditing]
   );
 
-  const handleTitleSave = useCallback(
-    async (newTitle: string) => {
+  const handleNoteSave = useCallback(
+    async (newTitle: string, newContent: string) => {
       if (note.id) {
         const updateRequest: UpdateNoteRequest = {
           id: note.id,
           title: newTitle,
-        };
-        const response = await NoteService.updateNote(updateRequest);
-        if (response.success && response.data) {
-          onUpdate?.(response.data);
-        }
-      }
-      setIsEditing(false);
-    },
-    [note.id, onUpdate]
-  );
-
-  const handleContentSave = useCallback(
-    async (newContent: string) => {
-      if (note.id) {
-        const updateRequest: UpdateNoteRequest = {
-          id: note.id,
           content: newContent,
         };
         const response = await NoteService.updateNote(updateRequest);
@@ -138,35 +130,6 @@ export const NoteItem = React.memo(function NoteItem({
     setIsEditing(false);
   }, []);
 
-  // Handle global events when editing
-  useEffect(() => {
-    if (!isEditing) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        handleEditCancel();
-      } else if (e.key === "Enter" && !e.ctrlKey && !e.metaKey) {
-        // Let the inline editors handle Enter key
-        return;
-      }
-    };
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
-        handleEditCancel();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isEditing, handleEditCancel]);
-
   return (
     <article
       ref={el => {
@@ -176,9 +139,9 @@ export const NoteItem = React.memo(function NoteItem({
       style={style}
       {...(isDraggable ? attributes : {})}
       {...(isDraggable ? listeners : {})}
-      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange group flex-1 min-w-80 max-h-80 overflow-visible ${isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} select-none ${
-        isDragging ? "opacity-50 shadow-2xl scale-105 z-50" : ""
-      } ${isSelected ? "ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue" : ""}`}
+      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange group flex-1 min-w-80 max-h-80 overflow-visible ${isDraggable && !isDragOverlay ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} select-none ${
+        isDragging && !isDragOverlay ? "opacity-50 shadow-2xl z-50" : ""
+      } ${isDragOverlay ? "shadow-2xl z-50 rotate-3 scale-105" : ""} ${isSelected ? "ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue" : ""}`}
       role={showSelection ? "button" : "article"}
       aria-labelledby={`note-title-${note.id}`}
       aria-describedby={`note-content-${note.id}`}
@@ -215,6 +178,7 @@ export const NoteItem = React.memo(function NoteItem({
 
       <NoteItemActions
         note={note}
+        isEditing={isEditing}
         onComplete={onComplete}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -244,20 +208,21 @@ export const NoteItem = React.memo(function NoteItem({
         }}
         onKeyDown={handleKeyDown}
       >
-        <NoteItemTitle
-          note={note}
-          isEditing={isEditing}
-          onTitleSave={handleTitleSave}
-          onTitleCancel={handleEditCancel}
-        />
-
-        <NoteItemContent
-          note={note}
-          onLabelClick={onLabelClick}
-          isEditing={isEditing}
-          onContentSave={handleContentSave}
-          onContentCancel={handleEditCancel}
-        />
+        {isEditing ? (
+          <div className="mb-3">
+            <InlineNoteEditor
+              title={note.title || ""}
+              content={note.content || ""}
+              onSave={handleNoteSave}
+              onCancel={handleEditCancel}
+            />
+          </div>
+        ) : (
+          <>
+            <NoteItemTitle note={note} />
+            <NoteItemContent note={note} onLabelClick={onLabelClick} />
+          </>
+        )}
 
         <NoteItemMetadata note={note} />
       </div>

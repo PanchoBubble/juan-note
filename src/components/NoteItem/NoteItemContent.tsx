@@ -1,21 +1,14 @@
 import React from "react";
 import type { Note } from "../../types/note";
-import { InlineContentEditor } from "./InlineContentEditor";
 
 interface NoteItemContentProps {
   note: Note;
   onLabelClick?: (label: string) => void;
-  isEditing?: boolean;
-  onContentSave?: (newContent: string) => void;
-  onContentCancel?: () => void;
 }
 
 export const NoteItemContent = React.memo(function NoteItemContent({
   note,
   onLabelClick,
-  isEditing = false,
-  onContentSave,
-  onContentCancel,
 }: NoteItemContentProps) {
   const getPriorityColor = (priority: number) => {
     switch (priority) {
@@ -44,55 +37,6 @@ export const NoteItemContent = React.memo(function NoteItemContent({
         return "Normal";
     }
   };
-
-  if (isEditing && onContentSave && onContentCancel) {
-    return (
-      <div className="text-yellow-300 text-sm leading-relaxed flex-1 min-h-0 flex flex-col">
-        <div className="grid grid-cols-[1fr_auto] gap-3 flex-1">
-          <div className="bg-surface-tertiary rounded-lg p-2 border-l-4 border-monokai-blue flex flex-col">
-            <InlineContentEditor
-              value={note.content || ""}
-              onSave={onContentSave}
-              onCancel={onContentCancel}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 flex-shrink-0">
-            {/* Priority badge - filled style for prominence */}
-            <div
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${getPriorityColor(note.priority)} flex-shrink-0 min-w-fit`}
-            >
-              <span className="flex items-center space-x-1.5">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full bg-monokai-bg opacity-80`}
-                ></span>
-                <span className="whitespace-nowrap font-bold">
-                  {getPriorityLabel(note.priority)}
-                </span>
-              </span>
-            </div>
-            {/* Label badges - outline style for secondary info */}
-            {note.labels &&
-              note.labels.map((label: string, index: number) => (
-                <button
-                  key={index}
-                  onClick={e => {
-                    e.stopPropagation();
-                    onLabelClick?.(label);
-                  }}
-                  className="px-2.5 py-1 text-xs font-medium rounded-full border-2 border-monokai-green text-monokai-green bg-transparent transition-all duration-200 cursor-pointer hover:bg-monokai-green hover:bg-opacity-15 hover:shadow-sm truncate max-w-32 min-w-fit shadow-sm"
-                  title={`Click to filter by "${label}"`}
-                >
-                  <span className="flex items-center space-x-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-monokai-green flex-shrink-0"></span>
-                    <span className="truncate font-medium">{label}</span>
-                  </span>
-                </button>
-              ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="text-yellow-300 text-sm leading-relaxed flex-1 min-h-0 flex flex-col">

@@ -331,7 +331,7 @@ function App() {
   return (
     <div className="min-h-screen bg-monokai-bg select-none">
       {/* Fixed height header container to prevent content shift */}
-      <div className="relative" style={{ minHeight: "120px" }}>
+      <div className="relative h-32">
         {isSelectionMode ? (
           <SelectionMenu
             selectedCount={selectionState.count}
@@ -382,10 +382,10 @@ function App() {
           />
         ) : (
           <header
-            className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment absolute inset-0"
+            className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment absolute inset-0 h-32 flex items-center"
             role="banner"
           >
-            <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="max-w-4xl mx-auto px-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-surface-secondary bg-opacity-80 rounded-lg flex items-center justify-center border border-monokai-comment border-opacity-30">
@@ -401,28 +401,15 @@ function App() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="hidden md:flex bg-surface-secondary rounded-lg p-1 shadow-sm">
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                        viewMode === "list"
-                          ? "bg-monokai-green text-monokai-bg"
-                          : "text-monokai-fg hover:bg-surface-tertiary"
-                      }`}
-                    >
-                      📋 List
-                    </button>
-                    <button
-                      onClick={() => setViewMode("kanban")}
-                      className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                        viewMode === "kanban"
-                          ? "bg-monokai-green text-monokai-bg"
-                          : "text-monokai-fg hover:bg-surface-tertiary"
-                      }`}
-                    >
-                      📊 Kanban
-                    </button>
-                  </div>
+                  <button
+                    onClick={() =>
+                      setViewMode(viewMode === "list" ? "kanban" : "list")
+                    }
+                    className="hidden md:flex items-center px-4 py-2 bg-surface-secondary rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm text-monokai-fg"
+                    title={`Switch to ${viewMode === "list" ? "Kanban" : "List"} view`}
+                  >
+                    {viewMode === "list" ? "📊 Kanban" : "📋 List"}
+                  </button>
                   <button
                     onClick={handleCreateNote}
                     className="hidden md:flex items-center px-4 py-2 bg-surface-secondary text-monokai-blue rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm"

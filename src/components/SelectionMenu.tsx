@@ -27,10 +27,10 @@ export const SelectionMenu = React.memo(function SelectionMenu({
 
   return (
     <header
-      className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment"
+      className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment h-32 flex items-center"
       role="banner"
     >
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-surface-secondary bg-opacity-80 rounded-lg flex items-center justify-center border border-monokai-comment border-opacity-30">
@@ -110,23 +110,18 @@ export const SelectionMenu = React.memo(function SelectionMenu({
               </div>
             )}
 
-            {/* Mark as Done/Undone Buttons */}
-            {onMarkAsDone && (
+            {/* Mark as Done/Undone Toggle Button */}
+            {(onMarkAsDone || onMarkAsUndone) && (
               <button
-                onClick={onMarkAsDone}
-                className="px-3 py-1 text-sm text-monokai-green bg-surface-secondary border border-monokai-green rounded-md hover:bg-monokai-green hover:bg-opacity-20 transition-colors"
+                onClick={onMarkAsDone || onMarkAsUndone}
+                className={`px-3 py-1 text-sm bg-surface-secondary border rounded-md hover:bg-opacity-20 transition-colors ${
+                  onMarkAsDone
+                    ? "text-monokai-green border-monokai-green hover:bg-monokai-green"
+                    : "text-monokai-orange border-monokai-orange hover:bg-monokai-orange"
+                }`}
                 disabled={isLoading}
               >
-                ✅ Done
-              </button>
-            )}
-            {onMarkAsUndone && (
-              <button
-                onClick={onMarkAsUndone}
-                className="px-3 py-1 text-sm text-monokai-orange bg-surface-secondary border border-monokai-orange rounded-md hover:bg-monokai-orange hover:bg-opacity-20 transition-colors"
-                disabled={isLoading}
-              >
-                ↩️ Undone
+                {onMarkAsDone ? "✅ Mark Done" : "↩️ Mark Undone"}
               </button>
             )}
 

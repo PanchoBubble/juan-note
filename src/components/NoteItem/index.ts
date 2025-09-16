@@ -5,3 +5,4 @@ export { NoteItemContent } from "./NoteItemContent";
 export { NoteItemMetadata } from "./NoteItemMetadata";
 export { InlineTitleEditor } from "./InlineTitleEditor";
 export { InlineContentEditor } from "./InlineContentEditor";
+export { InlineNoteEditor } from "./InlineNoteEditor";

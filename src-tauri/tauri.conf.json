@@ -9,19 +9,23 @@
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
   },
-   "app": {
-     "windows": [
-       {
-         "title": "juan-note",
-         "width": 800,
-         "height": 600,
-         "transparent": false
-       }
-     ],
-     "security": {
-       "csp": null
-     }
-   },
+    "app": {
+      "windows": [
+        {
+          "title": "juan-note",
+          "width": 800,
+          "height": 600,
+          "transparent": false
+        }
+      ],
+      "security": {
+        "csp": null
+      }
+    },
+    "capabilities": [
+      "src-tauri/capabilities/default.json",
+      "src-tauri/capabilities/mcp-integration.json"
+    ],
    "bundle": {
      "active": true,
      "targets": "all",
