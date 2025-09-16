@@ -45,11 +45,13 @@ export const NoteItem = React.memo(function NoteItem({
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       // Prevent selection when clicking on interactive elements
-      if (
-        (e.target as HTMLElement).closest(
-          '.interactive-element, button, input, textarea, select, a, [role="button"]'
-        )
-      ) {
+      const target = e.target as HTMLElement;
+      const isInteractive = target.closest(
+        '.interactive-element, button, input, textarea, select, a, [role="button"]'
+      );
+
+      // But allow shift+click even on interactive elements for range selection
+      if (isInteractive && !e.shiftKey) {
         return;
       }
 
@@ -128,8 +130,20 @@ export const NoteItem = React.memo(function NoteItem({
         {...listeners}
         {...attributes}
         className="cursor-move flex-1 flex flex-col"
+        onMouseDown={e => {
+          // Prevent drag start if shift or cmd key is pressed for selection
+          if ((e.shiftKey || e.metaKey || e.ctrlKey) && showSelection) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
         onClick={e => {
-          // Only prevent selection when actually dragging or when clicking interactive elements
+          // Allow modifier key clicks to bubble up for selection
+          if ((e.shiftKey || e.metaKey || e.ctrlKey) && showSelection) {
+            return; // Let the event bubble up to the card's click handler
+          }
+
+          // Only prevent selection when actually dragging
           if (isDragging) {
             e.stopPropagation();
           }
