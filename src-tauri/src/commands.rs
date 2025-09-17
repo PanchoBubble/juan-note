@@ -1137,29 +1137,62 @@ pub fn query_mcp_functions() -> Result<McpFunctionQueryResponse, String> {
 }
 
 #[tauri::command]
-pub fn add_juan_note_mcp_server(app: tauri::AppHandle, config_path: String) -> Result<McpScanResponse, String> {
+pub fn add_juan_note_mcp_server(app: tauri::AppHandle) -> Result<McpScanResponse, String> {
     use std::fs;
 
-    // Read the existing config file
-    let content = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read config file: {}", e))?;
+    // First scan for all MCP config files
+    let scan_result = scan_mcp_configs()?;
+    let config_results = scan_result.data.unwrap_or_default();
 
-    let mut json: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse config file: {}", e))?;
-
-    // Get the bundled MCP server path from Tauri resources
+    // Try to find the MCP server - first check bundled version, then local installation
     let resource_path = app
         .path()
         .resource_dir()
         .map_err(|e| format!("Failed to get resource directory: {}", e))?
         .join("index.js");
 
-    let mcp_server_path = resource_path.to_string_lossy().to_string();
+    // Try bundled version first, then local installation
+    let mcp_server_path = if resource_path.exists() {
+        // Use bundled version
+        resource_path.to_string_lossy().to_string()
+    } else {
+        // Try to find locally installed version
+        // Check if we're in a Node.js project with local installation
+        let app_dir = app
+            .path()
+            .app_data_dir()
+            .map_err(|e| format!("Failed to get app data directory: {}", e))?;
 
-    // Check if the bundled MCP server exists
-    if !resource_path.exists() {
-        return Err(format!("Bundled Juan Note MCP server not found at: {}. The application may not be properly installed.", mcp_server_path));
-    }
+        // Look for mcp-server in the project root (where package.json is)
+        let project_root = app_dir
+            .parent()
+            .and_then(|p| p.parent())
+            .unwrap_or(&app_dir);
+
+        let local_mcp_path = project_root.join("mcp-server").join("dist").join("index.js");
+
+        if local_mcp_path.exists() {
+            local_mcp_path.to_string_lossy().to_string()
+        } else {
+            // Try global npm installation
+            #[cfg(target_os = "windows")]
+            let global_mcp_path = std::path::PathBuf::from("C:\\Users\\").join(
+                std::env::var("USERNAME").unwrap_or_default()
+            ).join("AppData\\Roaming\\npm\\node_modules\\juan-note-mcp-server\\dist\\index.js");
+
+            #[cfg(target_os = "macos")]
+            let global_mcp_path = std::path::PathBuf::from("/usr/local/lib/node_modules/juan-note-mcp-server/dist/index.js");
+
+            #[cfg(target_os = "linux")]
+            let global_mcp_path = std::path::PathBuf::from("/usr/lib/node_modules/juan-note-mcp-server/dist/index.js");
+
+            if global_mcp_path.exists() {
+                global_mcp_path.to_string_lossy().to_string()
+            } else {
+                return Err("Juan Note MCP server not found. Please ensure it's either:\n1. Bundled with the application (check installation)\n2. Installed locally: run 'npm install' in the project root\n3. Installed globally: run 'npm install -g juan-note-mcp-server'\n4. Built locally: run 'cd mcp-server && npm run build'".to_string());
+            }
+        }
+    };
 
     // Get the resource directory for other resources
     let resource_dir = app
@@ -1177,27 +1210,56 @@ pub fn add_juan_note_mcp_server(app: tauri::AppHandle, config_path: String) -> R
         }
     });
 
-    // Add to the config based on the format
-    let added = add_server_to_config(&mut json, "juan-note-mcp-server", juan_note_config);
+    let mut updated_results = Vec::new();
 
-    if !added {
-        return Ok(McpScanResponse {
-            success: false,
-            data: None,
-            error: Some("Could not add Juan Note MCP server to this config format".to_string()),
-        });
+    // Try to add Juan Note MCP server to each config file found
+    for config_result in config_results {
+        let mut updated_config = config_result.clone();
+
+        match fs::read_to_string(&config_result.config_path) {
+            Ok(content) => {
+                match serde_json::from_str::<serde_json::Value>(&content) {
+                    Ok(mut json) => {
+                        // Try to add the server to this config
+                        let added = add_server_to_config(&mut json, "juan-note-mcp-server", juan_note_config.clone());
+
+                        if added {
+                            // Write back to file
+                            match serde_json::to_string_pretty(&json) {
+                                Ok(updated_content) => {
+                                    match fs::write(&config_result.config_path, updated_content) {
+                                        Ok(_) => {
+                                            updated_config.error = Some("Successfully added Juan Note MCP server".to_string());
+                                        }
+                                        Err(e) => {
+                                            updated_config.error = Some(format!("Failed to write config file: {}", e));
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    updated_config.error = Some(format!("Failed to serialize config: {}", e));
+                                }
+                            }
+                        } else {
+                            updated_config.error = Some("Could not add Juan Note MCP server to this config format".to_string());
+                        }
+                    }
+                    Err(e) => {
+                        updated_config.error = Some(format!("Failed to parse config file: {}", e));
+                    }
+                }
+            }
+            Err(e) => {
+                updated_config.error = Some(format!("Failed to read config file: {}", e));
+            }
+        }
+
+        updated_results.push(updated_config);
     }
-
-    // Write back to file
-    let updated_content = serde_json::to_string_pretty(&json)
-        .map_err(|e| format!("Failed to serialize config: {}", e))?;
-
-    fs::write(&config_path, updated_content)
-        .map_err(|e| format!("Failed to write config file: {}", e))?;
 
     Ok(McpScanResponse {
         success: true,
-        data: None,
+        data: Some(updated_results),
         error: None,
     })
 }

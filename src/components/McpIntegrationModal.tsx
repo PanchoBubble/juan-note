@@ -50,16 +50,31 @@ export function McpIntegrationModal({
     }
   };
 
-  const handleAddJuanNoteMcp = async (result: McpConfigResult) => {
+  const handleAddJuanNoteMcp = async () => {
     try {
       setIsScanning(true);
-      const response = await NoteService.addJuanNoteMcpServer(
-        result.config_path
-      );
-      if (response.success) {
+      const response = await NoteService.addJuanNoteMcpServer();
+      if (response.success && response.data) {
+        // Show results for each config file
+        const successful = response.data.filter(r =>
+          r.error?.includes("Successfully added")
+        );
+        const failed = response.data.filter(
+          r => !r.error?.includes("Successfully added")
+        );
+
+        if (successful.length > 0) {
+          alert(
+            `Juan Note MCP server added to ${successful.length} config file(s) successfully!`
+          );
+        }
+        if (failed.length > 0) {
+          alert(
+            `Failed to add to ${failed.length} config file(s). Check console for details.`
+          );
+        }
         // Refresh the scan results
         await handleScanConfigs();
-        alert("Juan Note MCP server added successfully!");
       } else {
         alert(`Failed to add Juan Note MCP server: ${response.error}`);
       }
@@ -174,7 +189,7 @@ export function McpIntegrationModal({
                       </div>
                       {result.mcp_servers.length > 0 && (
                         <button
-                          onClick={() => handleAddJuanNoteMcp(result)}
+                          onClick={() => handleAddJuanNoteMcp()}
                           disabled={isScanning}
                           className="px-4 py-2 bg-monokai-green text-monokai-bg rounded hover:bg-monokai-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                         >

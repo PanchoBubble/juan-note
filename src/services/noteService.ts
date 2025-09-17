@@ -297,11 +297,9 @@ export class NoteService {
     }
   }
 
-  static async addJuanNoteMcpServer(
-    configPath: string
-  ): Promise<McpScanResponse> {
+  static async addJuanNoteMcpServer(): Promise<McpScanResponse> {
     try {
-      return await invoke("add_juan_note_mcp_server", { configPath });
+      return await invoke("add_juan_note_mcp_server");
     } catch (error) {
       console.error("Failed to add Juan Note MCP server:", error);
       return {

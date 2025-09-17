@@ -211,7 +211,7 @@ impl Note {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct McpServerConfig {
     pub name: String,
     pub command: String,
@@ -219,7 +219,7 @@ pub struct McpServerConfig {
     pub env: Option<serde_json::Value>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct McpConfigResult {
     pub provider: String,
     pub config_path: String,

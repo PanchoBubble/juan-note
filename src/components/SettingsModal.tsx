@@ -50,15 +50,32 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
 
   const handleAddMcp = async () => {
-    // Add Juan Note MCP to all discovered configs
-    for (const config of mcpConfigs) {
-      if (config.mcp_servers.length > 0) {
-        try {
-          await NoteService.addJuanNoteMcpServer(config.config_path);
-        } catch (error) {
-          console.error(`Failed to add MCP to ${config.provider}:`, error);
+    try {
+      const response = await NoteService.addJuanNoteMcpServer();
+      if (response.success && response.data) {
+        const successful = response.data.filter(r =>
+          r.error?.includes("Successfully added")
+        );
+        const failed = response.data.filter(
+          r => !r.error?.includes("Successfully added")
+        );
+
+        if (successful.length > 0) {
+          alert(
+            `Juan Note MCP server added to ${successful.length} config file(s) successfully!`
+          );
         }
+        if (failed.length > 0) {
+          alert(
+            `Failed to add to ${failed.length} config file(s). Check console for details.`
+          );
+        }
+      } else {
+        alert(`Failed to add Juan Note MCP server: ${response.error}`);
       }
+    } catch (error) {
+      console.error("Failed to add Juan Note MCP server:", error);
+      alert("Failed to add Juan Note MCP server");
     }
     // Refresh the list
     await scanMcpConfigs();

@@ -1,6 +1,4 @@
-import { spawn } from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
+
 
 interface Note {
   id?: number;
@@ -29,80 +27,20 @@ interface State {
 
 
 export class NoteManager {
-  private juanNoteProcess: any = null;
   private projectRoot: string;
 
   constructor() {
     this.projectRoot = process.cwd().replace('/mcp-server', '');
   }
 
-  private async ensureJuanNoteRunning(): Promise<void> {
-    // Check if Juan Note is already running
-    // For now, we'll assume it's running or start it
-    // In a real implementation, you'd check for running processes
-    if (!this.juanNoteProcess) {
-      // Try to start Juan Note if not running
-      await this.startJuanNote();
-    }
-  }
-
-  private async startJuanNote(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        // Path to the Juan Note executable
-        const juanNotePath = this.findJuanNoteExecutable();
-
-        if (!juanNotePath) {
-          reject(new Error('Juan Note executable not found. Please ensure Juan Note is installed and accessible.'));
-          return;
-        }
-
-        // Start Juan Note in headless mode if possible
-        this.juanNoteProcess = spawn(juanNotePath, ['--headless'], {
-          stdio: ['pipe', 'pipe', 'pipe'],
-          cwd: this.projectRoot
-        });
-
-        // Wait a bit for the app to start
-        setTimeout(() => {
-          resolve();
-        }, 2000);
-
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
-
-  private findJuanNoteExecutable(): string | null {
-    // Try common locations for Juan Note executable
-    const possiblePaths = [
-      path.join(this.projectRoot, 'src-tauri', 'target', 'release', 'juan-note'),
-      path.join(this.projectRoot, 'src-tauri', 'target', 'debug', 'juan-note'),
-      '/Applications/Juan Note.app/Contents/MacOS/juan-note', // macOS
-      'C:\\Program Files\\Juan Note\\juan-note.exe', // Windows
-    ];
-
-    for (const exePath of possiblePaths) {
-      if (fs.existsSync(exePath)) {
-        return exePath;
-      }
-    }
-
-    return null;
-  }
-
   private async invokeTauriCommand(command: string, args: any = {}): Promise<any> {
-    await this.ensureJuanNoteRunning();
-
-    // For now, we'll simulate the Tauri invoke by making HTTP requests
-    // In a real implementation, you'd need to set up an HTTP bridge or IPC
+    // Make HTTP request to Juan Note's local server
+    // Juan Note must be running for this to work
     try {
       const response = await this.makeHttpRequest('POST', `http://localhost:1420/invoke/${command}`, args);
       return response;
     } catch (error) {
-      // Fallback: try to communicate via stdin/stdout if HTTP fails
-      return this.invokeViaStdio(command, args);
+      throw new Error(`Failed to communicate with Juan Note. Please ensure Juan Note is running. ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -148,40 +86,7 @@ export class NoteManager {
     });
   }
 
-  private async invokeViaStdio(command: string, args: any): Promise<any> {
-    // Fallback method using stdin/stdout
-    // This would require Juan Note to support command-line interface
-    return new Promise((resolve, reject) => {
-      if (!this.juanNoteProcess) {
-        reject(new Error('Juan Note process not available'));
-        return;
-      }
 
-      const commandData = JSON.stringify({ command, args });
-      this.juanNoteProcess.stdin.write(commandData + '\n');
-
-      // Listen for response (simplified)
-      let responseData = '';
-      const onData = (data: Buffer) => {
-        responseData += data.toString();
-        try {
-          const response = JSON.parse(responseData);
-          this.juanNoteProcess.stdout.removeListener('data', onData);
-          resolve(response);
-        } catch (e) {
-          // Wait for more data
-        }
-      };
-
-      this.juanNoteProcess.stdout.on('data', onData);
-
-      // Timeout after 10 seconds
-      setTimeout(() => {
-        this.juanNoteProcess.stdout.removeListener('data', onData);
-        reject(new Error('Command timeout'));
-      }, 10000);
-    });
-  }
 
 
 
