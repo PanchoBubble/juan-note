@@ -45,45 +45,28 @@ export class NoteManager {
   }
 
   private async makeHttpRequest(method: string, url: string, data?: any): Promise<any> {
-    // Simple HTTP request implementation
-    // In a real scenario, you'd use a proper HTTP client
-    return new Promise((resolve, reject) => {
-      const http = require('http');
-      const urlObj = new URL(url);
+    // Use node-fetch for HTTP requests
+    const fetch = (await import('node-fetch')).default;
 
-      const options = {
-        hostname: urlObj.hostname,
-        port: urlObj.port,
-        path: urlObj.pathname,
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      };
-
-      const req = http.request(options, (res: any) => {
-        let body = '';
-        res.on('data', (chunk: any) => {
-          body += chunk;
-        });
-        res.on('end', () => {
-          try {
-            resolve(JSON.parse(body));
-          } catch (e) {
-            resolve(body);
-          }
-        });
-      });
-
-      req.on('error', (err: any) => {
-        reject(err);
-      });
-
-      if (data) {
-        req.write(JSON.stringify(data));
+    const options: any = {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
       }
-      req.end();
-    });
+    };
+
+    if (data) {
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(url, options);
+    const body = await response.text();
+
+    try {
+      return JSON.parse(body);
+    } catch (e) {
+      return body;
+    }
   }
 
 
