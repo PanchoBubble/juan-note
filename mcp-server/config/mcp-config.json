@@ -2,7 +2,7 @@
   "projectRoot": "/Users/juanfranciscodeluca/workdir/personal/juan-note",
   "watchPaths": [
     "src/services",
-    "src-tauri/src", 
+    "src-tauri/src",
     "src/types"
   ],
   "outputPath": "api-validation-report.md",
@@ -14,5 +14,45 @@
     "**/dist/**",
     "**/.git/**",
     "**/notes.db*"
-  ]
+  ],
+  "deployment": {
+    "environments": {
+      "development": {
+        "juanNoteHost": "localhost",
+        "juanNotePort": 1420,
+        "security": {
+          "rateLimitingEnabled": false,
+          "strictValidation": false
+        }
+      },
+      "production": {
+        "juanNoteHost": "localhost",
+        "juanNotePort": 1420,
+        "security": {
+          "rateLimitingEnabled": true,
+          "strictValidation": true
+        }
+      },
+      "docker": {
+        "juanNoteHost": "host.docker.internal",
+        "juanNotePort": 1420,
+        "security": {
+          "rateLimitingEnabled": true,
+          "strictValidation": true
+        }
+      }
+    },
+    "currentEnvironment": "development"
+  },
+  "security": {
+    "maxBulkOperationSize": 50,
+    "rateLimitWindowMs": 60000,
+    "enableAccessLogging": false,
+    "allowedOrigins": ["localhost"]
+  },
+  "features": {
+    "streamingResponses": false,
+    "realTimeUpdates": false,
+    "caching": false
+  }
 }

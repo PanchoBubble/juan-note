@@ -3,6 +3,8 @@
  * Provides operation-level permissions and input validation
  */
 
+import { configLoader } from '../config/configLoader.js';
+
 export interface AccessControl {
   operation: string;
   requiresAuth: boolean;
@@ -64,6 +66,11 @@ export class AccessController {
    * Check rate limiting for an operation
    */
   checkRateLimit(operation: string, clientId: string = 'default'): { allowed: boolean; reason?: string } {
+    // Skip rate limiting if disabled in configuration
+    if (!configLoader.isRateLimitingEnabled()) {
+      return { allowed: true };
+    }
+
     const control = OPERATION_CONTROLS[operation];
     if (!control) {
       return { allowed: false, reason: `Unknown operation: ${operation}` };
@@ -71,7 +78,7 @@ export class AccessController {
 
     const key = `${clientId}:${operation}`;
     const now = Date.now();
-    const windowMs = 60 * 1000; // 1 minute
+    const windowMs = configLoader.getConfig().security.rateLimitWindowMs;
 
     const record = rateLimitStore.get(key);
     if (!record || now > record.resetTime) {

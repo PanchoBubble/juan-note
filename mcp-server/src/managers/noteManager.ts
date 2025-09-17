@@ -26,6 +26,8 @@ interface State {
 
 
 
+import { configLoader } from '../config/configLoader.js';
+
 export class NoteManager {
   private projectRoot: string;
 
@@ -37,7 +39,9 @@ export class NoteManager {
     // Make HTTP request to Juan Note's local server
     // Juan Note must be running for this to work
     try {
-      const response = await this.makeHttpRequest('POST', `http://localhost:1420/invoke/${command}`, args);
+      const host = configLoader.getJuanNoteHost();
+      const port = configLoader.getJuanNotePort();
+      const response = await this.makeHttpRequest('POST', `http://${host}:${port}/invoke/${command}`, args);
       return response;
     } catch (error) {
       throw new Error(`Failed to communicate with Juan Note. Please ensure Juan Note is running. ${error instanceof Error ? error.message : String(error)}`);
