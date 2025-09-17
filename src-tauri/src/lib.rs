@@ -38,6 +38,7 @@ pub fn run() {
             scan_mcp_configs,
             query_mcp_functions,
             add_juan_note_mcp_server,
+            remove_juan_note_mcp_server,
             get_mcp_server_config
         ])
         .run(tauri::generate_context!())

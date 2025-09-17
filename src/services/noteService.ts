@@ -309,6 +309,18 @@ export class NoteService {
     }
   }
 
+  static async removeJuanNoteMcpServer(): Promise<McpScanResponse> {
+    try {
+      return await invoke("remove_juan_note_mcp_server");
+    } catch (error) {
+      console.error("Failed to remove Juan Note MCP server:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
   static async getMcpServerConfig(): Promise<string> {
     try {
       return await invoke("get_mcp_server_config");

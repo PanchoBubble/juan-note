@@ -82,8 +82,35 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
 
   const handleRemoveMcp = async () => {
-    // This would need a new backend command to remove Juan Note MCP from configs
-    alert("Remove MCP functionality not yet implemented");
+    try {
+      const response = await NoteService.removeJuanNoteMcpServer();
+      if (response.success && response.data) {
+        const successful = response.data.filter(r =>
+          r.error?.includes("Successfully removed")
+        );
+        const failed = response.data.filter(
+          r => !r.error?.includes("Successfully removed")
+        );
+
+        if (successful.length > 0) {
+          alert(
+            `Juan Note MCP server removed from ${successful.length} config file(s) successfully!`
+          );
+        }
+        if (failed.length > 0) {
+          alert(
+            `Failed to remove from ${failed.length} config file(s). Check console for details.`
+          );
+        }
+      } else {
+        alert(`Failed to remove Juan Note MCP server: ${response.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to remove Juan Note MCP server:", error);
+      alert("Failed to remove Juan Note MCP server");
+    }
+    // Refresh the list
+    await scanMcpConfigs();
   };
 
   const getProviderIcon = (provider: string) => {

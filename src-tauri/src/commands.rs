@@ -1265,6 +1265,68 @@ pub fn add_juan_note_mcp_server(app: tauri::AppHandle) -> Result<McpScanResponse
 }
 
 #[tauri::command]
+pub fn remove_juan_note_mcp_server() -> Result<McpScanResponse, String> {
+    use std::fs;
+
+    // First scan for all MCP config files
+    let scan_result = scan_mcp_configs()?;
+    let config_results = scan_result.data.unwrap_or_default();
+
+    let mut updated_results = Vec::new();
+
+    // Try to remove Juan Note MCP server from each config file found
+    for config_result in config_results {
+        let mut updated_config = config_result.clone();
+
+        match fs::read_to_string(&config_result.config_path) {
+            Ok(content) => {
+                match serde_json::from_str::<serde_json::Value>(&content) {
+                    Ok(mut json) => {
+                        // Try to remove the server from this config
+                        let removed = remove_server_from_config(&mut json, "juan-note-mcp-server");
+
+                        if removed {
+                            // Write back to file
+                            match serde_json::to_string_pretty(&json) {
+                                Ok(updated_content) => {
+                                    match fs::write(&config_result.config_path, updated_content) {
+                                        Ok(_) => {
+                                            updated_config.error = Some("Successfully removed Juan Note MCP server".to_string());
+                                        }
+                                        Err(e) => {
+                                            updated_config.error = Some(format!("Failed to write config file: {}", e));
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    updated_config.error = Some(format!("Failed to serialize config: {}", e));
+                                }
+                            }
+                        } else {
+                            updated_config.error = Some("Juan Note MCP server not found in this config".to_string());
+                        }
+                    }
+                    Err(e) => {
+                        updated_config.error = Some(format!("Failed to parse config file: {}", e));
+                    }
+                }
+            }
+            Err(e) => {
+                updated_config.error = Some(format!("Failed to read config file: {}", e));
+            }
+        }
+
+        updated_results.push(updated_config);
+    }
+
+    Ok(McpScanResponse {
+        success: true,
+        data: Some(updated_results),
+        error: None,
+    })
+}
+
+#[tauri::command]
 pub fn get_mcp_server_config(app: tauri::AppHandle) -> Result<String, String> {
     let resource_path = app
         .path()
@@ -1295,6 +1357,82 @@ pub fn get_mcp_server_config(app: tauri::AppHandle) -> Result<String, String> {
     });
 
     Ok(serde_json::to_string_pretty(&config).unwrap())
+}
+
+fn remove_server_from_config(json: &mut serde_json::Value, server_name: &str) -> bool {
+    // Try different MCP config formats
+
+    // OpenCode format: mcp
+    if let Some(mcp) = json.get_mut("mcp") {
+        if let Some(obj) = mcp.as_object_mut() {
+            if obj.remove(server_name).is_some() {
+                // If the mcp object becomes empty, remove it entirely
+                if obj.is_empty() {
+                    if let Some(parent) = json.as_object_mut() {
+                        parent.remove("mcp");
+                    }
+                }
+                return true;
+            }
+        }
+    }
+
+    // Standard MCP format: mcpServers
+    if let Some(mcp_servers) = json.get_mut("mcpServers") {
+        if let Some(obj) = mcp_servers.as_object_mut() {
+            if obj.remove(server_name).is_some() {
+                // If the mcpServers object becomes empty, remove it entirely
+                if obj.is_empty() {
+                    if let Some(parent) = json.as_object_mut() {
+                        parent.remove("mcpServers");
+                    }
+                }
+                return true;
+            }
+        }
+    }
+
+    // Claude Desktop format: claude_desktop.mcp.servers
+    if let Some(claude_desktop) = json.get_mut("claude_desktop") {
+        if let Some(mcp) = claude_desktop.get_mut("mcp") {
+            if let Some(servers) = mcp.get_mut("servers") {
+                if let Some(obj) = servers.as_object_mut() {
+                    if obj.remove(server_name).is_some() {
+                        // If the servers object becomes empty, remove it entirely
+                        if obj.is_empty() {
+                            if let Some(mcp_obj) = mcp.as_object_mut() {
+                                mcp_obj.remove("servers");
+                            }
+                            // If mcp also becomes empty, remove it
+                            if mcp.as_object().map_or(false, |o| o.is_empty()) {
+                                if let Some(claude_obj) = claude_desktop.as_object_mut() {
+                                    claude_obj.remove("mcp");
+                                }
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    // Generic servers object
+    if let Some(servers) = json.get_mut("servers") {
+        if let Some(obj) = servers.as_object_mut() {
+            if obj.remove(server_name).is_some() {
+                // If the servers object becomes empty, remove it entirely
+                if obj.is_empty() {
+                    if let Some(parent) = json.as_object_mut() {
+                        parent.remove("servers");
+                    }
+                }
+                return true;
+            }
+        }
+    }
+
+    false
 }
 
 fn add_server_to_config(json: &mut serde_json::Value, server_name: &str, server_config: serde_json::Value) -> bool {
