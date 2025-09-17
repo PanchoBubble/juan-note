@@ -27,6 +27,8 @@ interface State {
 
 
 import { configLoader } from '../config/configLoader.js';
+import { streamHandler } from '../streaming/streamHandler.js';
+import { noteWatcher } from '../realtime/noteWatcher.js';
 
 export class NoteManager {
   private projectRoot: string;
@@ -340,21 +342,33 @@ export class NoteManager {
 
   // Bulk Operations
   async bulkDeleteNotes(args: any): Promise<any> {
+    const operationId = `bulk_delete_${Date.now()}`;
+
     try {
-      const result = await this.invokeTauriCommand('bulk_delete_notes', args);
-      if (result.success) {
-        return {
-          content: [{
-            type: 'text',
-            text: `Bulk delete completed: ${result.successful_count} successful, ${result.failed_count} failed`
-          }]
-        };
-      } else {
-        return {
-          content: [{ type: 'text', text: `Bulk delete failed: ${result.error}` }],
-          isError: true
-        };
-      }
+      const result = await streamHandler.executeBulkOperation(
+        operationId,
+        args.note_ids,
+        async (noteId, index) => {
+          // Delete each note individually for progress tracking
+          const deleteResult = await this.invokeTauriCommand('delete_note', { id: noteId });
+          if (!deleteResult.success) {
+            throw new Error(`Failed to delete note ${noteId}: ${deleteResult.error}`);
+          }
+          return { id: noteId, success: true };
+        },
+        (results) => {
+          const successful = results.filter(r => r.success).length;
+          const failed = results.length - successful;
+          return {
+            content: [{
+              type: 'text',
+              text: `Bulk delete completed: ${successful} successful, ${failed} failed`
+            }]
+          };
+        }
+      );
+
+      return result;
     } catch (error) {
       return {
         content: [{ type: 'text', text: `Error in bulk delete: ${error instanceof Error ? error.message : String(error)}` }],
