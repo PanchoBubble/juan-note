@@ -37,13 +37,14 @@ export class NoteManager {
     this.projectRoot = process.cwd().replace('/mcp-server', '');
   }
 
-  private async invokeTauriCommand(command: string, args: any = {}): Promise<any> {
-    // Make HTTP request to Juan Note's local server
+  private async makeApiRequest(method: string, endpoint: string, data?: any): Promise<any> {
+    // Make HTTP request to Juan Note's REST API
     // Juan Note must be running for this to work
     try {
       const host = configLoader.getJuanNoteHost();
       const port = configLoader.getJuanNotePort();
-      const response = await this.makeHttpRequest('POST', `http://${host}:${port}/invoke/${command}`, args);
+      const url = `http://${host}:${port}${endpoint}`;
+      const response = await this.makeHttpRequest(method, url, data);
       return response;
     } catch (error) {
       throw new Error(`Failed to communicate with Juan Note. Please ensure Juan Note is running. ${error instanceof Error ? error.message : String(error)}`);
@@ -65,14 +66,63 @@ export class NoteManager {
       options.body = JSON.stringify(data);
     }
 
-    const response = await fetch(url, options);
-    const body = await response.text();
-
+    console.error(`Making ${method} request to ${url}`);
+    
     try {
-      return JSON.parse(body);
-    } catch (e) {
-      return body;
+      const response = await fetch(url, options);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const body = await response.text();
+      console.error(`Response received: ${body.substring(0, 200)}...`);
+
+      try {
+        return JSON.parse(body);
+      } catch (e) {
+        return body;
+      }
+    } catch (error) {
+      console.error(`HTTP request failed:`, error);
+      throw error;
     }
+  }
+
+  private async invokeTauriCommand(command: string, args?: any): Promise<any> {
+    // For MCP server running outside of Tauri, we need to use HTTP API
+    // This method provides compatibility with Tauri command names
+    const endpointMap: { [key: string]: { method: string; path: string } } = {
+      'update_note_done': { method: 'PUT', path: '/notes/done' },
+      'get_all_states': { method: 'GET', path: '/states' },
+      'create_state': { method: 'POST', path: '/states' },
+      'update_state': { method: 'PUT', path: '/states' },
+      'delete_state': { method: 'DELETE', path: '/states' },
+      'delete_note': { method: 'DELETE', path: '/notes' },
+      'bulk_update_notes_priority': { method: 'PUT', path: '/notes/bulk/priority' },
+      'bulk_update_notes_done': { method: 'PUT', path: '/notes/bulk/done' },
+      'bulk_update_notes_state': { method: 'PUT', path: '/notes/bulk/state' },
+      'bulk_update_notes_order': { method: 'PUT', path: '/notes/bulk/order' },
+    };
+
+    const endpoint = endpointMap[command];
+    if (!endpoint) {
+      throw new Error(`Unknown Tauri command: ${command}`);
+    }
+
+    let url = endpoint.path;
+    let data = args;
+
+    // Handle commands that need ID in URL
+    if (command === 'delete_note' && args?.id) {
+      url = `${endpoint.path}/${args.id}`;
+      data = undefined;
+    } else if (command === 'delete_state' && typeof args === 'number') {
+      url = `${endpoint.path}/${args}`;
+      data = undefined;
+    }
+
+    return this.makeApiRequest(endpoint.method, url, data);
   }
 
 
@@ -82,7 +132,7 @@ export class NoteManager {
   // Note Management
   async createNote(args: any): Promise<any> {
     try {
-      const result = await this.invokeTauriCommand('create_note', args);
+      const result = await this.makeApiRequest('POST', '/notes', args);
       if (result.success) {
         return {
           content: [{ type: 'text', text: `Note created successfully with ID: ${result.data?.id}` }]
@@ -103,7 +153,7 @@ export class NoteManager {
 
   async getNote(id: number): Promise<any> {
     try {
-      const result = await this.invokeTauriCommand('get_note', id);
+      const result = await this.makeApiRequest('GET', `/notes/${id}`);
       if (result.success && result.data) {
         const note = result.data;
         return {
@@ -128,7 +178,7 @@ export class NoteManager {
 
   async getAllNotes(): Promise<any> {
     try {
-      const result = await this.invokeTauriCommand('get_all_notes');
+      const result = await this.makeApiRequest('GET', '/notes');
       if (result.success) {
         const notes = result.data || [];
         const summary = notes.map((note: Note) =>
@@ -136,10 +186,15 @@ export class NoteManager {
         ).join('\n');
 
         return {
-          content: [{
-            type: 'text',
-            text: `Found ${notes.length} notes:\n${summary}`
-          }]
+          content: [
+            {
+              type: 'text',
+              text: `Found ${notes.length} notes:\n${summary}`
+            }
+          ],
+          _meta: {
+            notes: notes
+          }
         };
       } else {
         return {
@@ -157,7 +212,7 @@ export class NoteManager {
 
   async updateNote(args: any): Promise<any> {
     try {
-      const result = await this.invokeTauriCommand('update_note', args);
+      const result = await this.makeApiRequest('PUT', `/notes/${args.id}`, args);
       if (result.success) {
         return {
           content: [{ type: 'text', text: `Note ${args.id} updated successfully` }]
@@ -178,7 +233,7 @@ export class NoteManager {
 
   async deleteNote(id: number): Promise<any> {
     try {
-      const result = await this.invokeTauriCommand('delete_note', { id });
+      const result = await this.makeApiRequest('DELETE', `/notes/${id}`);
       if (result.success) {
         return {
           content: [{ type: 'text', text: `Note ${id} deleted successfully` }]
@@ -199,7 +254,7 @@ export class NoteManager {
 
   async searchNotes(args: any): Promise<any> {
     try {
-      const result = await this.invokeTauriCommand('search_notes', args);
+      const result = await this.makeApiRequest('POST', '/notes/search', args);
       if (result.success) {
         const notes = result.data || [];
         const summary = notes.map((note: Note) =>

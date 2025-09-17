@@ -321,10 +321,62 @@ All API endpoints are properly synchronized between frontend and backend. ✅
 1. ✅ Create MCP server implementation
 2. ✅ Update Tauri backend to handle opencode MCP configuration format
 3. ✅ Simplify MCP server to focus on note management (16 tools)
-4. Test MCP server integration with opencode
+4. ✅ Test MCP server integration with opencode - **PASSED**
 5. Implement proper error handling and connection management in NoteManager
 6. Add support for streaming responses and real-time updates
 7. Consider adding note templates and advanced search features
+
+### Remote HTTP Server Mode
+
+For remote MCP server access that follows the Model Context Protocol JSON-RPC 2.0 specification, run the server in HTTP mode:
+
+```bash
+cd mcp-server
+npm run start:http  # Runs on port 27182 (weird port to avoid conflicts)
+```
+
+Then configure opencode for remote access:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "juan-note-mcp-server": {
+      "type": "remote",
+      "url": "http://localhost:27182",
+      "enabled": true
+    }
+  }
+}
+```
+
+For Server-Sent Events (SSE) transport with real-time capabilities (currently experimental):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "juan-note-api-validator": {
+      "type": "remote",
+      "url": "http://localhost:27182/sse",
+      "enabled": true
+    }
+  }
+}
+```
+
+**✅ Status: MCP Server is fully compliant and ready for opencode integration**
+
+The MCP server has been tested and verified to work correctly with opencode:
+
+- ✅ All 16 tools are MCP-compliant with required `title` fields
+- ✅ JSON-RPC 2.0 protocol implementation is correct
+- ✅ opencode can successfully connect and list available tools
+- ✅ Tools include: Create Note, Get Note, Update Note, Delete Note, Search Notes, and bulk operations
+
+**Note**: SSE mode has been deprecated. Use HTTP mode for stable, production-ready operation.
+
+The server implements proper JSON-RPC 2.0 responses with `jsonrpc`, `id`, and `result`/`error` fields as required by opencode. HTTP mode provides reliable communication for all MCP operations.
 
 ---
 

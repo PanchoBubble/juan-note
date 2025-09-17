@@ -50,11 +50,37 @@ npm install
 npm run dev
 ```
 
-### Production Mode
+### HTTP Server Mode (Remote MCP)
+For remote MCP server access, run in HTTP mode:
 ```bash
+# Development
+npm run dev:http
+
+# Production
 npm run build
-npm start
+npm run start:http
 ```
+
+The HTTP server runs on port 27182 by default (configurable via MCP_PORT environment variable).
+
+### SSE Server Mode (Server-Sent Events) - Experimental
+For real-time MCP server access with Server-Sent Events (currently experimental):
+```bash
+# Development
+npm run dev:sse
+
+# Production
+npm run build
+npm run start:sse
+```
+
+**Note**: SSE mode is currently experimental and may have compatibility issues with some MCP clients. Use HTTP mode for stable operation.
+
+SSE mode provides:
+- Real-time bidirectional communication
+- Automatic reconnection handling
+- Better performance for long-running operations
+- Compatible with opencode clients that support SSE transport
 
 ### Type Checking
 ```bash
@@ -63,7 +89,7 @@ npm run type-check
 
 ### LLM Integration
 
-#### With opencode
+#### With opencode (Local Mode)
 Add to your `opencode.json`:
 ```json
 {
@@ -71,6 +97,34 @@ Add to your `opencode.json`:
     "juan-note": {
       "type": "local",
       "command": ["node", "/path/to/juan-note/mcp-server/dist/index.js"],
+      "enabled": true
+    }
+  }
+}
+```
+
+#### With opencode (Remote HTTP Mode) - Recommended
+For remote MCP server access, configure opencode to connect to the HTTP endpoint:
+```json
+{
+  "mcp": {
+    "juan-note": {
+      "type": "remote",
+      "url": "http://localhost:27182",
+      "enabled": true
+    }
+  }
+}
+```
+
+#### With opencode (Remote SSE Mode) - Experimental
+For Server-Sent Events transport (currently experimental):
+```json
+{
+  "mcp": {
+    "juan-note": {
+      "type": "remote",
+      "url": "http://localhost:27182/sse",
       "enabled": true
     }
   }
@@ -105,14 +159,34 @@ Edit `config/mcp-config.json` to customize:
   "projectRoot": "/path/to/juan-note",
   "watchPaths": [
     "src/services",
-    "src-tauri/src", 
+    "src-tauri/src",
     "src/types"
   ],
   "outputPath": "api-validation-report.md",
   "validateOnChange": true,
-  "generateDocs": true
+  "generateDocs": true,
+  "server": {
+    "modes": {
+      "stdio": {
+        "enabled": true,
+        "description": "Local MCP server using stdio transport"
+      },
+      "http": {
+        "enabled": true,
+        "port": 27182,
+        "host": "localhost",
+        "description": "Remote MCP server using HTTP transport"
+      }
+    },
+    "defaultMode": "stdio"
+  }
 }
 ```
+
+### Environment Variables
+
+- `MCP_MODE`: Set to "http" to run in HTTP server mode (default: "stdio")
+- `MCP_PORT`: HTTP server port (default: 27182)
 
 ## Monitored Files
 

@@ -11,6 +11,7 @@
     "mcp": "cd mcp-server && npm run dev",
     "mcp:install": "cd mcp-server && npm install",
     "mcp:build": "cd mcp-server && npm install && npm run build",
+    "mcp:install-user": "node install-mcp-server.js",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
     "format": "prettier --write .",

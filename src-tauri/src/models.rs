@@ -204,12 +204,7 @@ impl Default for Note {
     }
 }
 
-impl Note {
-    pub fn with_order(mut self, order: i32) -> Self {
-        self.order = order;
-        self
-    }
-}
+
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct McpServerConfig {

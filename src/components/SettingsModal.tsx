@@ -37,7 +37,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         const configsWithStatus = response.data.map(config => ({
           ...config,
           has_juan_note: config.mcp_servers.some(
-            (server: any) => server.name === "juan-note-mcp-server"
+            (server: any) =>
+              server.name === "juan-note-api" ||
+              server.name === "juan-note-mcp-server"
           ),
         }));
         setMcpConfigs(configsWithStatus);

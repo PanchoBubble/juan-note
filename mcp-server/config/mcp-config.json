@@ -19,7 +19,7 @@
     "environments": {
       "development": {
         "juanNoteHost": "localhost",
-        "juanNotePort": 1420,
+        "juanNotePort": 3001,
         "security": {
           "rateLimitingEnabled": false,
           "strictValidation": false
@@ -27,7 +27,7 @@
       },
       "production": {
         "juanNoteHost": "localhost",
-        "juanNotePort": 1420,
+        "juanNotePort": 3001,
         "security": {
           "rateLimitingEnabled": true,
           "strictValidation": true
@@ -35,7 +35,7 @@
       },
       "docker": {
         "juanNoteHost": "host.docker.internal",
-        "juanNotePort": 1420,
+        "juanNotePort": 3001,
         "security": {
           "rateLimitingEnabled": true,
           "strictValidation": true
@@ -54,5 +54,26 @@
     "streamingResponses": false,
     "realTimeUpdates": false,
     "caching": false
+  },
+  "server": {
+    "modes": {
+      "stdio": {
+        "enabled": true,
+        "description": "Local MCP server using stdio transport"
+      },
+      "http": {
+        "enabled": true,
+        "port": 27182,
+        "host": "localhost",
+        "description": "Remote MCP server using HTTP transport"
+      },
+      "sse": {
+        "enabled": true,
+        "port": 27182,
+        "host": "localhost",
+        "description": "Remote MCP server using Server-Sent Events transport"
+      }
+    },
+    "defaultMode": "http"
   }
 }

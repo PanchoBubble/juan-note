@@ -1,6 +1,7 @@
-mod database;
-mod models;
 mod commands;
+mod database;
+mod http_server;
+mod models;
 
 use commands::*;
 
@@ -39,8 +40,25 @@ pub fn run() {
             query_mcp_functions,
             add_juan_note_mcp_server,
             remove_juan_note_mcp_server,
-            get_mcp_server_config
+            get_mcp_server_config,
+            check_http_server_status,
+            get_server_port,
+            get_launch_info
         ])
+        .setup(|app| {
+            // Initialize database on startup
+            let _ = initialize_db();
+
+            // Start HTTP server in background
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = http_server::start_http_server().await {
+                    eprintln!("Failed to start HTTP server: {}", e);
+                }
+            });
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
