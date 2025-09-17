@@ -4,19 +4,37 @@ Model Context Protocol (MCP) server for monitoring and validating API connection
 
 ## Purpose
 
-This MCP server ensures that:
+This MCP server serves two main purposes:
+
+### API Monitoring & Validation
+Ensures that:
 - Every frontend API call has a corresponding Tauri backend command
 - Every Tauri command has a corresponding frontend service method
 - Request/response types are consistent between frontend and backend
 - API documentation stays up-to-date automatically
 
+### LLM Integration
+Provides standardized access to Juan Note functionality for Large Language Models:
+- 16 MCP tools for comprehensive note management
+- Secure access controls and rate limiting
+- Configurable deployment options
+- Support for multiple LLM clients (opencode, Claude Desktop, etc.)
+
 ## Features
 
+### API Monitoring & Validation
 - **Real-time Monitoring**: Watches for changes in API-related files
 - **Automatic Validation**: Validates API consistency on file changes
 - **Documentation Generation**: Auto-updates AGENTS.md with validation results
 - **Type Safety**: Checks for type mismatches between frontend and backend
 - **Developer Notifications**: Alerts when API inconsistencies are detected
+
+### LLM Integration
+- **16 MCP Tools**: Comprehensive note and state management
+- **Security Controls**: Access control, rate limiting, input validation
+- **Multi-Client Support**: Compatible with opencode, Claude Desktop, and other MCP clients
+- **Deployment Options**: Docker support with environment-specific configurations
+- **Bulk Operations**: Efficient handling of multiple notes at once
 
 ## Installation
 
@@ -41,6 +59,41 @@ npm start
 ### Type Checking
 ```bash
 npm run type-check
+```
+
+### LLM Integration
+
+#### With opencode
+Add to your `opencode.json`:
+```json
+{
+  "mcp": {
+    "juan-note": {
+      "type": "local",
+      "command": ["node", "/path/to/juan-note/mcp-server/dist/index.js"],
+      "enabled": true
+    }
+  }
+}
+```
+
+#### With Claude Desktop
+Add to `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "juan-note": {
+      "command": "node",
+      "args": ["/path/to/juan-note/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+#### Docker Deployment
+```bash
+# Build and run with Docker
+docker-compose -f mcp-server/docker/docker-compose.yml up -d
 ```
 
 ## Configuration
