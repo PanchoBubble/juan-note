@@ -4,6 +4,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { NoteManager } from './managers/noteManager.js';
+import { accessController } from './security/accessControl.js';
 
 class JuanNoteMCPServer {
   private server: Server;
@@ -248,44 +249,74 @@ class JuanNoteMCPServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       const { name, arguments: args } = request.params;
 
+      // Check access control
+      const accessCheck = accessController.checkAccess(name);
+      if (!accessCheck.allowed) {
+        return {
+          content: [{ type: 'text', text: `Access denied: ${accessCheck.reason}` }],
+          isError: true
+        };
+      }
+
+      // Check rate limiting
+      const rateCheck = accessController.checkRateLimit(name);
+      if (!rateCheck.allowed) {
+        return {
+          content: [{ type: 'text', text: `Rate limit exceeded: ${rateCheck.reason}` }],
+          isError: true
+        };
+      }
+
+      // Validate input
+      const validation = accessController.validateInput(name, args || {});
+      if (!validation.valid) {
+        return {
+          content: [{ type: 'text', text: `Invalid input: ${validation.errors.join(', ')}` }],
+          isError: true
+        };
+      }
+
+      // Sanitize input
+      const sanitizedArgs = accessController.sanitizeInput(args || {});
+
       switch (name) {
         // Note Management
         case 'create_note':
-          return await this.noteManager.createNote(args);
+          return await this.noteManager.createNote(sanitizedArgs);
         case 'get_note':
-          return await this.noteManager.getNote(args?.id);
+          return await this.noteManager.getNote(sanitizedArgs?.id);
         case 'get_all_notes':
           return await this.noteManager.getAllNotes();
         case 'update_note':
-          return await this.noteManager.updateNote(args);
+          return await this.noteManager.updateNote(sanitizedArgs);
         case 'delete_note':
-          return await this.noteManager.deleteNote(args?.id);
+          return await this.noteManager.deleteNote(sanitizedArgs?.id);
         case 'search_notes':
-          return await this.noteManager.searchNotes(args);
+          return await this.noteManager.searchNotes(sanitizedArgs);
         case 'update_note_done':
-          return await this.noteManager.updateNoteDone(args);
+          return await this.noteManager.updateNoteDone(sanitizedArgs);
 
         // State Management
         case 'get_all_states':
           return await this.noteManager.getAllStates();
         case 'create_state':
-          return await this.noteManager.createState(args);
+          return await this.noteManager.createState(sanitizedArgs);
         case 'update_state':
-          return await this.noteManager.updateState(args);
+          return await this.noteManager.updateState(sanitizedArgs);
         case 'delete_state':
-          return await this.noteManager.deleteState(args?.id);
+          return await this.noteManager.deleteState(sanitizedArgs?.id);
 
         // Bulk Operations
         case 'bulk_delete_notes':
-          return await this.noteManager.bulkDeleteNotes(args);
+          return await this.noteManager.bulkDeleteNotes(sanitizedArgs);
         case 'bulk_update_notes_priority':
-          return await this.noteManager.bulkUpdateNotesPriority(args);
+          return await this.noteManager.bulkUpdateNotesPriority(sanitizedArgs);
         case 'bulk_update_notes_done':
-          return await this.noteManager.bulkUpdateNotesDone(args);
+          return await this.noteManager.bulkUpdateNotesDone(sanitizedArgs);
         case 'bulk_update_notes_state':
-          return await this.noteManager.bulkUpdateNotesState(args);
+          return await this.noteManager.bulkUpdateNotesState(sanitizedArgs);
         case 'bulk_update_notes_order':
-          return await this.noteManager.bulkUpdateNotesOrder(args);
+          return await this.noteManager.bulkUpdateNotesOrder(sanitizedArgs);
 
         default:
           throw new Error(`Unknown tool: ${name}`);
