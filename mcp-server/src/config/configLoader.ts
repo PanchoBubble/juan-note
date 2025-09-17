@@ -3,7 +3,7 @@
  * Supports environment-specific settings and deployment configurations
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -59,20 +59,33 @@ export class ConfigLoader {
   }
 
   private loadConfig(): McpConfig {
-    try {
-      const configPath = join(__dirname, '../../config/mcp-config.json');
-      const configData = readFileSync(configPath, 'utf-8');
-      const config = JSON.parse(configData);
+    // Try multiple possible config locations
+    const possiblePaths = [
+      join(__dirname, '../../config/mcp-config.json'), // Development path
+      join(__dirname, '../config/mcp-config.json'),    // Installed path
+      join(process.cwd(), 'config/mcp-config.json'),   // Current working directory
+    ];
 
-      // Validate required fields
-      this.validateConfig(config);
+    for (const configPath of possiblePaths) {
+      try {
+        if (existsSync(configPath)) {
+          const configData = readFileSync(configPath, 'utf-8');
+          const config = JSON.parse(configData);
 
-      return config;
-    } catch (error) {
-      console.error('Failed to load MCP configuration:', error);
-      // Return default configuration
-      return this.getDefaultConfig();
+          // Validate required fields
+          this.validateConfig(config);
+
+          return config;
+        }
+      } catch (error) {
+        // Continue to next path
+        continue;
+      }
     }
+
+    console.error('Failed to load MCP configuration from any known location');
+    // Return default configuration
+    return this.getDefaultConfig();
   }
 
   private validateConfig(config: any): void {

@@ -1144,30 +1144,42 @@ pub fn add_juan_note_mcp_server(app: tauri::AppHandle) -> Result<McpScanResponse
     let scan_result = scan_mcp_configs()?;
     let config_results = scan_result.data.unwrap_or_default();
 
-    // Try to find the MCP server - first check bundled version, then local installation
-    let resource_path = app
+    // Try to find the MCP server - check user-accessible installation first
+    let app_data_dir = app
         .path()
-        .resource_dir()
-        .map_err(|e| format!("Failed to get resource directory: {}", e))?
-        .join("index.js");
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data directory: {}", e))?;
 
-    // Try bundled version first, then local installation
-    let mcp_server_path = if resource_path.exists() {
-        // Use bundled version
-        resource_path.to_string_lossy().to_string()
-    } else {
-        // Try to find locally installed version
-        // Check if we're in a Node.js project with local installation
-        let app_dir = app
-            .path()
-            .app_data_dir()
-            .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+    // Determine platform-specific MCP server installation path
+    let mcp_server_path = {
+        let platform = std::env::consts::OS;
+        let home_dir = dirs::home_dir()
+            .ok_or("Could not determine home directory")?;
 
-        // Look for mcp-server in the project root (where package.json is)
-        let project_root = app_dir
-            .parent()
-            .and_then(|p| p.parent())
-            .unwrap_or(&app_dir);
+        let install_path = match platform {
+            "windows" => home_dir.join("AppData\\Local\\JuanNote\\mcp-server\\index.js"),
+            "macos" => home_dir.join("Library/Application Support/JuanNote/mcp-server/index.js"),
+            _ => home_dir.join(".juan-note/mcp-server/index.js"), // Linux and others
+        };
+
+        if install_path.exists() {
+            // Use user-installed version
+            install_path.to_string_lossy().to_string()
+        } else {
+            // Fallback to bundled version
+            let resource_path = app
+                .path()
+                .resource_dir()
+                .map_err(|e| format!("Failed to get resource directory: {}", e))?
+                .join("index.js");
+
+                resource_path.to_string_lossy().to_string()
+            }
+        }
+    };
+
+    // Verify the MCP server exists
+    if !std::path::Path::new(&mcp_server_path).exists() {
 
         let local_mcp_path = project_root.join("mcp-server").join("dist").join("index.js");
 
