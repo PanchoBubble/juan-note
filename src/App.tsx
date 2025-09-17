@@ -10,6 +10,8 @@ import { QuickCreateModal } from "./components/QuickCreateModal";
 import { SelectionMenu } from "./components/SelectionMenu";
 import { McpIntegrationModal } from "./components/McpIntegrationModal";
 import { McpFunctionBrowserModal } from "./components/McpFunctionBrowserModal";
+import { SettingsModal } from "./components/SettingsModal";
+import { AppHeader } from "./components/AppHeader";
 import { useNotes } from "./hooks/useNotes";
 import { useStates } from "./hooks/useStates";
 
@@ -38,6 +40,7 @@ function App() {
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showMcpIntegration, setShowMcpIntegration] = useState(false);
   const [showMcpFunctionBrowser, setShowMcpFunctionBrowser] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
@@ -385,99 +388,13 @@ function App() {
             isLoading={loading}
           />
         ) : (
-          <header
-            className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment absolute inset-0 h-32 flex items-center"
-            role="banner"
-          >
-            <div className="max-w-4xl mx-auto px-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-surface-secondary bg-opacity-80 rounded-lg flex items-center justify-center border border-monokai-comment border-opacity-30">
-                    <span className="text-monokai-fg text-xl">📝</span>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-monokai-fg">
-                      Juan Notes
-                    </h1>
-                    <p className="text-monokai-fg opacity-80 text-sm">
-                      Organize your thoughts
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() =>
-                      setViewMode(viewMode === "list" ? "kanban" : "list")
-                    }
-                    className="hidden md:flex items-center px-4 py-2 bg-surface-secondary rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm text-monokai-fg"
-                    title={`Switch to ${viewMode === "list" ? "Kanban" : "List"} view`}
-                  >
-                    {viewMode === "list" ? "📊 Kanban" : "📋 List"}
-                  </button>
-                  <button
-                    onClick={() => setShowMcpIntegration(true)}
-                    className="hidden md:flex items-center px-4 py-2 bg-surface-secondary text-monokai-green rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm"
-                    title="Integrate MCP servers"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                      />
-                    </svg>
-                    MCP
-                  </button>
-                  <button
-                    onClick={() => setShowMcpFunctionBrowser(true)}
-                    className="hidden md:flex items-center px-4 py-2 bg-surface-secondary text-monokai-cyan rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm"
-                    title="Browse MCP functions"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Functions
-                  </button>
-                  <button
-                    onClick={handleCreateNote}
-                    className="hidden md:flex items-center px-4 py-2 bg-surface-secondary text-monokai-blue rounded-lg hover:bg-surface-tertiary transition-colors font-medium shadow-sm"
-                    disabled={loading}
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    New Note
-                  </button>
-                </div>
-              </div>
-            </div>
-          </header>
+          <AppHeader
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onCreateNote={handleCreateNote}
+            onOpenSettings={() => setShowSettings(true)}
+            loading={loading}
+          />
         )}
       </div>
 
@@ -621,6 +538,11 @@ function App() {
         <McpFunctionBrowserModal
           isOpen={showMcpFunctionBrowser}
           onClose={() => setShowMcpFunctionBrowser(false)}
+        />
+
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
         />
       </main>
     </div>

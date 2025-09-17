@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "./Modal";
 import { NoteService } from "../services/noteService";
-import type { McpFunction, McpFunctionParameter } from "../types/note";
+import type { McpFunction } from "../types/note";
 
 interface McpFunctionBrowserModalProps {
   isOpen: boolean;
@@ -60,21 +60,19 @@ export function McpFunctionBrowserModal({
 
   const getProviderColor = (provider: string) => {
     const colors: Record<string, string> = {
-      claude: "bg-purple-100 text-purple-800",
-      opencode: "bg-blue-100 text-blue-800",
-      continue: "bg-green-100 text-green-800",
-      cline: "bg-orange-100 text-orange-800",
-      gemini: "bg-red-100 text-red-800",
-      amp: "bg-yellow-100 text-yellow-800",
+      "juan-note": "bg-monokai-blue bg-opacity-20 text-monokai-blue",
     };
-    return colors[provider] || "bg-gray-100 text-gray-800";
+    return (
+      colors[provider] ||
+      "bg-monokai-comment bg-opacity-20 text-monokai-comment"
+    );
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="MCP Function Browser"
+      title="Juan Note MCP Functions"
       size="xl"
     >
       <div className="space-y-6">
@@ -127,8 +125,12 @@ export function McpFunctionBrowserModal({
           {/* Function List */}
           <div className="space-y-2">
             <h3 className="text-lg font-medium text-monokai-fg">
-              Available Functions ({filteredFunctions.length})
+              Juan Note MCP Functions ({filteredFunctions.length})
             </h3>
+            <p className="text-sm text-monokai-comment">
+              These functions provide API validation and monitoring capabilities
+              for the Juan Note application.
+            </p>
             <div className="max-h-96 overflow-y-auto space-y-2">
               {filteredFunctions.map((func, index) => (
                 <div

@@ -202,30 +202,106 @@ When adding new APIs:
 4. **No Export/Import**: No data portability features
 5. **No Attachments**: Text-only notes
 
-## MCP Server Specification
+## MCP Server Integration
 
-### Proposed MCP Server Structure
+The Juan Note application includes MCP server integration that allows it to be added as an MCP server to opencode and other MCP clients.
+
+### MCP Server Implementation
+
+The MCP server is implemented as a Node.js application that provides comprehensive access to all Juan Note functionality through MCP tools. It focuses exclusively on note management, state management, and bulk operations.
+
+#### Available MCP Tools
+
+**Note Management:**
+
+1. **create_note**: Create a new note with title, content, priority, labels, deadline, etc.
+2. **get_note**: Get a specific note by ID
+3. **get_all_notes**: Get all notes from Juan Note
+4. **update_note**: Update an existing note (partial updates supported)
+5. **delete_note**: Delete a note by ID
+6. **search_notes**: Search notes using full-text search with query, limit, and offset
+7. **update_note_done**: Update the done status of a note
+
+**State Management:** 8. **get_all_states**: Get all available states 9. **create_state**: Create a new state with name, position, and color 10. **update_state**: Update an existing state 11. **delete_state**: Delete a state by ID
+
+**Bulk Operations:** 12. **bulk_delete_notes**: Delete multiple notes at once 13. **bulk_update_notes_priority**: Update priority for multiple notes 14. **bulk_update_notes_done**: Update done status for multiple notes 15. **bulk_update_notes_state**: Update state for multiple notes 16. **bulk_update_notes_order**: Update display order for multiple notes
+
+#### MCP Server Structure
 
 ```
 mcp-server/
-├── package.json
+├── package.json          # Node.js dependencies and scripts
 ├── src/
-│   ├── index.ts          # Main server entry
-│   ├── watchers/         # File watching logic
-│   ├── validators/       # API validation logic
-│   ├── generators/       # Documentation generators
-│   └── types/           # MCP server types
+│   ├── index.ts          # MCP protocol implementation
+│   ├── managers/         # Note management and communication logic
+│   │   └── noteManager.ts # Handles communication with Juan Note app
+│   └── types/           # TypeScript type definitions
 └── config/
     └── mcp-config.json  # Server configuration
 ```
 
-### Key Features to Implement
+### Configuration in opencode
 
-1. **Real-time Monitoring**: Watch for file changes using `chokidar`
-2. **AST Parsing**: Parse TypeScript and Rust files to extract API definitions
-3. **Validation Engine**: Compare frontend and backend API definitions
-4. **Documentation Generator**: Auto-update documentation files
-5. **Integration Alerts**: Notify developers of API inconsistencies
+To use the Juan Note MCP server with opencode, you need to add it to your `opencode.json` configuration file. You can either:
+
+#### Option 1: Manual Configuration
+
+Create or update your `opencode.json` file with the following configuration:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "juan-note-api-validator": {
+      "type": "local",
+      "command": ["node", "mcp-server/dist/index.js"],
+      "enabled": true,
+      "environment": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
+```
+
+#### Option 2: Automatic Configuration via Juan Note App
+
+The Juan Note desktop application can automatically add the MCP server to your opencode configuration:
+
+1. Launch the Juan Note application
+2. Use the MCP integration feature to scan for and add the server to your opencode.json
+3. The app will automatically detect your opencode configuration and add the proper MCP server entry
+
+### Tauri Backend Integration
+
+The Tauri backend provides the core note management functionality that the MCP server interfaces with. The MCP server communicates with the running Juan Note application to execute note operations through Tauri's command system.
+
+### Usage in opencode
+
+Once configured, you can use all MCP tools directly in opencode to manage your notes:
+
+**Note Management:**
+
+- Create notes: `create_note` with title, content, priority, labels, etc.
+- Read notes: `get_note` by ID or `get_all_notes` for all notes
+- Update notes: `update_note` with partial updates
+- Delete notes: `delete_note` by ID
+- Search notes: `search_notes` with full-text search
+- Mark as done: `update_note_done`
+
+**State Management:**
+
+- View states: `get_all_states`
+- Create states: `create_state` with name, position, color
+- Update/delete states: `update_state`, `delete_state`
+
+**Bulk Operations:**
+
+- Bulk delete: `bulk_delete_notes` with array of IDs
+- Bulk update priority: `bulk_update_notes_priority`
+- Bulk update done status: `bulk_update_notes_done`
+- Bulk update state: `bulk_update_notes_state`
+- Bulk reorder: `bulk_update_notes_order`
 
 ## Summary
 
@@ -242,11 +318,13 @@ All API endpoints are properly synchronized between frontend and backend. ✅
 
 ## Next Steps
 
-1. Create MCP server implementation
-2. Set up file watchers for the key API files
-3. Implement validation logic for API consistency
-4. Create automated documentation generation
-5. Integrate MCP server into development workflow
+1. ✅ Create MCP server implementation
+2. ✅ Update Tauri backend to handle opencode MCP configuration format
+3. ✅ Simplify MCP server to focus on note management (16 tools)
+4. Test MCP server integration with opencode
+5. Implement proper error handling and connection management in NoteManager
+6. Add support for streaming responses and real-time updates
+7. Consider adding note templates and advanced search features
 
 ---
 

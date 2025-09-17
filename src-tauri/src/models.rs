@@ -234,7 +234,7 @@ pub struct McpScanResponse {
     pub error: Option<String>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct McpFunctionParameter {
     pub name: String,
     pub r#type: String,
@@ -242,7 +242,7 @@ pub struct McpFunctionParameter {
     pub required: bool,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct McpFunction {
     pub name: String,
     pub description: Option<String>,
@@ -251,9 +251,9 @@ pub struct McpFunction {
     pub server_provider: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct McpFunctionQueryResponse {
-    pub success: bool;
-    pub data: Option<Vec<McpFunction>>;
-    pub error: Option<String>;
+    pub success: bool,
+    pub data: Option<Vec<McpFunction>>,
+    pub error: Option<String>,
 }

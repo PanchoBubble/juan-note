@@ -50,14 +50,43 @@ export function McpIntegrationModal({
     }
   };
 
-  const handleIntegrate = (result: McpConfigResult) => {
-    // TODO: Integrate with mcp-server configuration
-    console.log("Integrating MCP config:", result);
-    onClose();
+  const handleAddJuanNoteMcp = async (result: McpConfigResult) => {
+    try {
+      setIsScanning(true);
+      const response = await NoteService.addJuanNoteMcpServer(
+        result.config_path
+      );
+      if (response.success) {
+        // Refresh the scan results
+        await handleScanConfigs();
+        alert("Juan Note MCP server added successfully!");
+      } else {
+        alert(`Failed to add Juan Note MCP server: ${response.error}`);
+      }
+    } catch (error) {
+      alert(`Error adding Juan Note MCP server: ${error}`);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleCopyMcpConfig = async () => {
+    try {
+      const config = await NoteService.getMcpServerConfig();
+      await navigator.clipboard.writeText(config);
+      alert("MCP server configuration copied to clipboard!");
+    } catch (error) {
+      alert(`Failed to copy config: ${error}`);
+    }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="MCP Integration" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Add Juan Note MCP to CLI LLMs"
+      size="lg"
+    >
       <div className="space-y-6">
         {!hasPermission ? (
           <div className="text-center space-y-4">
@@ -65,8 +94,8 @@ export function McpIntegrationModal({
               🔐 Permission Required
             </div>
             <p className="text-monokai-fg">
-              This feature needs access to your config files to discover MCP
-              server configurations.
+              This feature needs access to your config files to add the Juan
+              Note MCP server to your CLI LLM configurations.
             </p>
             <p className="text-monokai-comment text-sm">
               We'll scan{" "}
@@ -74,7 +103,11 @@ export function McpIntegrationModal({
                 ~/.config
               </code>{" "}
               and <code className="bg-monokai-bg px-1 py-0.5 rounded">~/</code>{" "}
-              for config files from opencode, gemini, claude, and amp.
+              for config files (including{" "}
+              <code className="bg-monokai-bg px-1 py-0.5 rounded">
+                settings.json
+              </code>
+              ) from Claude, OpenCode, Gemini, AMP, and other MCP clients.
             </p>
             <button
               onClick={handleRequestPermission}
@@ -112,10 +145,11 @@ export function McpIntegrationModal({
                   Configuration Scan Results
                 </h3>
                 <div className="text-sm text-monokai-comment mb-4">
-                  Found {results.length} configuration file
+                  Found {results.length} MCP client configuration file
                   {results.length !== 1 ? "s" : ""} (
                   {results.filter(r => r.mcp_servers.length > 0).length} with
-                  MCP servers)
+                  existing MCP servers). Click "Add Juan Note MCP" to integrate
+                  the Juan Note API validation server.
                 </div>
                 {results.map((result, index) => (
                   <div
@@ -140,10 +174,11 @@ export function McpIntegrationModal({
                       </div>
                       {result.mcp_servers.length > 0 && (
                         <button
-                          onClick={() => handleIntegrate(result)}
-                          className="px-4 py-2 bg-monokai-blue text-monokai-bg rounded hover:bg-monokai-blue-hover transition-colors text-sm font-medium"
+                          onClick={() => handleAddJuanNoteMcp(result)}
+                          disabled={isScanning}
+                          className="px-4 py-2 bg-monokai-green text-monokai-bg rounded hover:bg-monokai-green-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                         >
-                          Integrate
+                          {isScanning ? "Adding..." : "Add Juan Note MCP"}
                         </button>
                       )}
                     </div>
@@ -196,14 +231,22 @@ export function McpIntegrationModal({
 
         {/* Action Buttons */}
         <div className="flex justify-between items-center pt-4 border-t border-monokai-comment border-opacity-30">
-          {onOpenFunctionBrowser && (
+          <div className="flex space-x-3">
             <button
-              onClick={onOpenFunctionBrowser}
-              className="px-4 py-2 bg-monokai-cyan text-monokai-bg rounded-lg hover:bg-monokai-blue transition-colors"
+              onClick={handleCopyMcpConfig}
+              className="px-4 py-2 bg-monokai-green text-monokai-bg rounded-lg hover:bg-monokai-green-hover transition-colors"
             >
-              🔍 Browse Functions
+              📋 Copy MCP Config
             </button>
-          )}
+            {onOpenFunctionBrowser && (
+              <button
+                onClick={onOpenFunctionBrowser}
+                className="px-4 py-2 bg-monokai-cyan text-monokai-bg rounded-lg hover:bg-monokai-blue transition-colors"
+              >
+                🔍 Browse Functions
+              </button>
+            )}
+          </div>
           <div className="flex space-x-3">
             <button
               onClick={handleScanConfigs}

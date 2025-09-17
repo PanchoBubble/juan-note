@@ -4,6 +4,8 @@ use rusqlite::Result;
 use std::sync::OnceLock;
 use chrono::{DateTime, Utc};
 use std::path::Path;
+use serde_json;
+use tauri::Manager;
 
 static DB_CONNECTION: OnceLock<DbConnection> = OnceLock::new();
 
@@ -917,6 +919,12 @@ pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
     #[cfg(target_os = "macos")] {
         config_dirs.push(home_dir.join("Library/Application Support"));
         config_dirs.push(home_dir.join("Library/Preferences"));
+        // Add specific mac paths mentioned by user
+        config_dirs.push(home_dir.join(".config/amp"));
+        config_dirs.push(home_dir.join(".config/.claude"));
+        config_dirs.push(home_dir.join(".config/opencode"));
+        config_dirs.push(home_dir.join(".claude"));
+        config_dirs.push(home_dir.join(".config/gemini"));
     }
     #[cfg(target_os = "windows")] {
         if let Some(appdata) = std::env::var_os("APPDATA") {
@@ -936,27 +944,40 @@ pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
         ("claude", ".claude.json"),
         ("claude", "claude_desktop_config.json"),
         ("claude", "claude.json"),
+        ("claude", "settings.json"),
 
         // OpenCode
         ("opencode", ".opencode.json"),
         ("opencode", "opencode.json"),
+        ("opencode", "settings.json"),
 
         // Gemini
         ("gemini", "gemini.json"),
         ("gemini", ".gemini.json"),
+        ("gemini", "settings.json"),
 
         // AMP
         ("amp", "amp.json"),
         ("amp", ".amp.json"),
+        ("amp", "settings.json"),
 
         // Continue
         ("continue", "continue.json"),
         ("continue", ".continue.json"),
         ("continue", "config.json"),
+        ("continue", "settings.json"),
 
         // Cline
         ("cline", "cline.json"),
         ("cline", ".cline.json"),
+        ("cline", "settings.json"),
+
+        // Specific mac paths mentioned by user
+        ("amp", ".config/amp/settings.json"),
+        ("claude", ".config/.claude/settings.local.json"),
+        ("opencode", ".config/opencode/opencode.json"),
+        ("claude", ".claude.json"),
+        ("gemini", ".config/gemini/settings.json"),
 
         // Other MCP clients
         ("mcp", "mcp.json"),
@@ -1006,118 +1027,264 @@ pub fn scan_mcp_configs() -> Result<McpScanResponse, String> {
 
 #[tauri::command]
 pub fn query_mcp_functions() -> Result<McpFunctionQueryResponse, String> {
-    // For now, return mock data showing what this would look like
-    // In a real implementation, this would query actual MCP servers
-    // for their available tools/functions
+    // Return functions from the Juan Note MCP server
+    // These are API validation and monitoring functions
 
-    let mock_functions = vec![
+    let juan_note_functions = vec![
         McpFunction {
-            name: "get_weather".to_string(),
-            description: Some("Get current weather for a location".to_string()),
+            name: "validate_api_endpoints".to_string(),
+            description: Some("Validate that all frontend service methods have corresponding backend Tauri commands".to_string()),
             parameters: vec![
                 McpFunctionParameter {
-                    name: "location".to_string(),
+                    name: "project_root".to_string(),
                     r#type: "string".to_string(),
-                    description: Some("City name or coordinates".to_string()),
-                    required: true,
-                },
-                McpFunctionParameter {
-                    name: "units".to_string(),
-                    r#type: "string".to_string(),
-                    description: Some("Temperature units (celsius/fahrenheit)".to_string()),
+                    description: Some("Path to the project root directory".to_string()),
                     required: false,
                 },
             ],
-            server_name: "weather-api".to_string(),
-            server_provider: "claude".to_string(),
+            server_name: "juan-note-mcp-server".to_string(),
+            server_provider: "juan-note".to_string(),
         },
         McpFunction {
-            name: "search_web".to_string(),
-            description: Some("Search the web for information".to_string()),
+            name: "generate_api_report".to_string(),
+            description: Some("Generate a comprehensive API validation report".to_string()),
             parameters: vec![
                 McpFunctionParameter {
-                    name: "query".to_string(),
+                    name: "output_path".to_string(),
                     r#type: "string".to_string(),
-                    description: Some("Search query".to_string()),
-                    required: true,
+                    description: Some("Path where to save the report (optional)".to_string()),
+                    required: false,
                 },
                 McpFunctionParameter {
-                    name: "limit".to_string(),
+                    name: "include_details".to_string(),
+                    r#type: "boolean".to_string(),
+                    description: Some("Include detailed type mismatch information".to_string()),
+                    required: false,
+                },
+            ],
+            server_name: "juan-note-mcp-server".to_string(),
+            server_provider: "juan-note".to_string(),
+        },
+        McpFunction {
+            name: "check_file_changes".to_string(),
+            description: Some("Check for recent changes in API-related files".to_string()),
+            parameters: vec![
+                McpFunctionParameter {
+                    name: "since_minutes".to_string(),
                     r#type: "number".to_string(),
-                    description: Some("Maximum number of results".to_string()),
+                    description: Some("Check changes within the last N minutes".to_string()),
                     required: false,
                 },
             ],
-            server_name: "web-search".to_string(),
-            server_provider: "claude".to_string(),
+            server_name: "juan-note-mcp-server".to_string(),
+            server_provider: "juan-note".to_string(),
         },
         McpFunction {
-            name: "calculate".to_string(),
-            description: Some("Perform mathematical calculations".to_string()),
+            name: "update_api_documentation".to_string(),
+            description: Some("Update the AGENTS.md file with current API information".to_string()),
             parameters: vec![
                 McpFunctionParameter {
-                    name: "expression".to_string(),
-                    r#type: "string".to_string(),
-                    description: Some("Mathematical expression to evaluate".to_string()),
-                    required: true,
-                },
-            ],
-            server_name: "calculator".to_string(),
-            server_provider: "opencode".to_string(),
-        },
-        McpFunction {
-            name: "read_file".to_string(),
-            description: Some("Read contents of a file".to_string()),
-            parameters: vec![
-                McpFunctionParameter {
-                    name: "path".to_string(),
-                    r#type: "string".to_string(),
-                    description: Some("File path to read".to_string()),
-                    required: true,
-                },
-                McpFunctionParameter {
-                    name: "encoding".to_string(),
-                    r#type: "string".to_string(),
-                    description: Some("File encoding (utf8, ascii, etc.)".to_string()),
+                    name: "force_update".to_string(),
+                    r#type: "boolean".to_string(),
+                    description: Some("Force update even if no changes detected".to_string()),
                     required: false,
                 },
             ],
-            server_name: "filesystem".to_string(),
-            server_provider: "cline".to_string(),
+            server_name: "juan-note-mcp-server".to_string(),
+            server_provider: "juan-note".to_string(),
         },
         McpFunction {
-            name: "send_email".to_string(),
-            description: Some("Send an email message".to_string()),
+            name: "analyze_code_patterns".to_string(),
+            description: Some("Analyze code patterns and suggest improvements".to_string()),
             parameters: vec![
                 McpFunctionParameter {
-                    name: "to".to_string(),
+                    name: "file_pattern".to_string(),
                     r#type: "string".to_string(),
-                    description: Some("Recipient email address".to_string()),
-                    required: true,
+                    description: Some("File pattern to analyze (e.g., *.ts, *.rs)".to_string()),
+                    required: false,
                 },
                 McpFunctionParameter {
-                    name: "subject".to_string(),
+                    name: "analysis_type".to_string(),
                     r#type: "string".to_string(),
-                    description: Some("Email subject line".to_string()),
-                    required: true,
-                },
-                McpFunctionParameter {
-                    name: "body".to_string(),
-                    r#type: "string".to_string(),
-                    description: Some("Email message body".to_string()),
-                    required: true,
+                    description: Some("Type of analysis (consistency, performance, security)".to_string()),
+                    required: false,
                 },
             ],
-            server_name: "email-service".to_string(),
-            server_provider: "continue".to_string(),
+            server_name: "juan-note-mcp-server".to_string(),
+            server_provider: "juan-note".to_string(),
+        },
+        McpFunction {
+            name: "validate_type_safety".to_string(),
+            description: Some("Validate TypeScript and Rust type consistency".to_string()),
+            parameters: vec![
+                McpFunctionParameter {
+                    name: "strict_mode".to_string(),
+                    r#type: "boolean".to_string(),
+                    description: Some("Enable strict type checking mode".to_string()),
+                    required: false,
+                },
+            ],
+            server_name: "juan-note-mcp-server".to_string(),
+            server_provider: "juan-note".to_string(),
         },
     ];
 
     Ok(McpFunctionQueryResponse {
         success: true,
-        data: Some(mock_functions),
+        data: Some(juan_note_functions),
         error: None,
     })
+}
+
+#[tauri::command]
+pub fn add_juan_note_mcp_server(app: tauri::AppHandle, config_path: String) -> Result<McpScanResponse, String> {
+    use std::fs;
+
+    // Read the existing config file
+    let content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read config file: {}", e))?;
+
+    let mut json: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse config file: {}", e))?;
+
+    // Get the bundled MCP server path from Tauri resources
+    let resource_path = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?
+        .join("index.js");
+
+    let mcp_server_path = resource_path.to_string_lossy().to_string();
+
+    // Check if the bundled MCP server exists
+    if !resource_path.exists() {
+        return Err(format!("Bundled Juan Note MCP server not found at: {}. The application may not be properly installed.", mcp_server_path));
+    }
+
+    // Get the resource directory for other resources
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?;
+
+    // Juan Note MCP server configuration for OpenCode
+    let juan_note_config = serde_json::json!({
+        "type": "local",
+        "command": ["node", mcp_server_path],
+        "enabled": true,
+        "environment": {
+            "PROJECT_ROOT": resource_dir.parent().unwrap_or(&resource_dir).to_string_lossy()
+        }
+    });
+
+    // Add to the config based on the format
+    let added = add_server_to_config(&mut json, "juan-note-mcp-server", juan_note_config);
+
+    if !added {
+        return Ok(McpScanResponse {
+            success: false,
+            data: None,
+            error: Some("Could not add Juan Note MCP server to this config format".to_string()),
+        });
+    }
+
+    // Write back to file
+    let updated_content = serde_json::to_string_pretty(&json)
+        .map_err(|e| format!("Failed to serialize config: {}", e))?;
+
+    fs::write(&config_path, updated_content)
+        .map_err(|e| format!("Failed to write config file: {}", e))?;
+
+    Ok(McpScanResponse {
+        success: true,
+        data: None,
+        error: None,
+    })
+}
+
+#[tauri::command]
+pub fn get_mcp_server_config(app: tauri::AppHandle) -> Result<String, String> {
+    let resource_path = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?
+        .join("index.js");
+
+    let mcp_server_path = resource_path.to_string_lossy();
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?;
+
+    let project_root = resource_dir.parent().unwrap_or(&resource_dir).to_string_lossy();
+
+    // Create the MCP server configuration for OpenCode
+    let config = serde_json::json!({
+        "mcp": {
+            "juan-note-mcp-server": {
+                "type": "local",
+                "command": ["node", mcp_server_path],
+                "enabled": true,
+                "environment": {
+                    "PROJECT_ROOT": project_root
+                }
+            }
+        }
+    });
+
+    Ok(serde_json::to_string_pretty(&config).unwrap())
+}
+
+fn add_server_to_config(json: &mut serde_json::Value, server_name: &str, server_config: serde_json::Value) -> bool {
+    // Try different MCP config formats
+
+    // OpenCode format: mcp
+    if let Some(mcp) = json.get_mut("mcp") {
+        if let Some(obj) = mcp.as_object_mut() {
+            obj.insert(server_name.to_string(), server_config);
+            return true;
+        }
+    }
+
+    // Standard MCP format: mcpServers
+    if let Some(mcp_servers) = json.get_mut("mcpServers") {
+        if let Some(obj) = mcp_servers.as_object_mut() {
+            obj.insert(server_name.to_string(), server_config);
+            return true;
+        }
+    }
+
+    // Claude Desktop format: claude_desktop.mcp.servers
+    if let Some(claude_desktop) = json.get_mut("claude_desktop") {
+        if let Some(mcp) = claude_desktop.get_mut("mcp") {
+            if let Some(servers) = mcp.get_mut("servers") {
+                if let Some(obj) = servers.as_object_mut() {
+                    obj.insert(server_name.to_string(), server_config);
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Generic servers object
+    if let Some(servers) = json.get_mut("servers") {
+        if let Some(obj) = servers.as_object_mut() {
+            obj.insert(server_name.to_string(), server_config);
+            return true;
+        }
+    }
+
+    // If no existing servers section, try to detect the format from filename or create mcp for OpenCode
+    if json.is_object() {
+        let mut servers_obj = serde_json::Map::new();
+        servers_obj.insert(server_name.to_string(), server_config);
+
+        // Default to mcp format for OpenCode compatibility
+        json.as_object_mut().unwrap().insert("mcp".to_string(), serde_json::Value::Object(servers_obj));
+        return true;
+    }
+
+    false
 }
 
 fn process_config_file(config_path: &Path, provider: &str, results: &mut Vec<McpConfigResult>) {

@@ -36,7 +36,9 @@ pub fn run() {
             bulk_update_notes_state,
             bulk_update_notes_order,
             scan_mcp_configs,
-            query_mcp_functions
+            query_mcp_functions,
+            add_juan_note_mcp_server,
+            get_mcp_server_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

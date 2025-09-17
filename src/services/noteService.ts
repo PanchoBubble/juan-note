@@ -296,4 +296,27 @@ export class NoteService {
       };
     }
   }
+
+  static async addJuanNoteMcpServer(
+    configPath: string
+  ): Promise<McpScanResponse> {
+    try {
+      return await invoke("add_juan_note_mcp_server", { configPath });
+    } catch (error) {
+      console.error("Failed to add Juan Note MCP server:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  static async getMcpServerConfig(): Promise<string> {
+    try {
+      return await invoke("get_mcp_server_config");
+    } catch (error) {
+      console.error("Failed to get MCP server config:", error);
+      throw error;
+    }
+  }
 }

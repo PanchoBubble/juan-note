@@ -22,11 +22,15 @@
         "csp": null
       }
     },
-   "bundle": {
-     "active": true,
-     "targets": "all",
-     "icon": [
-       "icons/simple_rgba_icon.png"
-     ]
-   }
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "icon": [
+        "icons/simple_rgba_icon.png"
+      ],
+      "resources": [
+        "../mcp-server/dist/index.js",
+        "../mcp-server/package.json"
+      ]
+    }
 }

@@ -6,7 +6,7 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "fullscreen";
   showCloseButton?: boolean;
 }
 
@@ -55,13 +55,16 @@ export function Modal({
     md: "max-w-lg",
     lg: "max-w-2xl",
     xl: "max-w-4xl",
+    fullscreen: "max-w-full h-full",
   };
 
   if (!isOpen) return null;
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-monokai-bg bg-opacity-90"
+      className={`fixed inset-0 z-50 bg-monokai-bg bg-opacity-90 ${
+        size === "fullscreen" ? "" : "flex items-center justify-center p-4"
+      }`}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -69,7 +72,11 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className={`w-full ${sizeClasses[size]} bg-surface-secondary rounded-xl shadow-2xl max-h-[90vh] overflow-hidden border-2 border-monokai-blue border-opacity-50`}
+        className={`w-full ${sizeClasses[size]} bg-surface-secondary ${
+          size === "fullscreen"
+            ? "h-full rounded-none"
+            : "rounded-xl shadow-2xl max-h-[90vh]"
+        } overflow-hidden border-2 border-monokai-blue border-opacity-50`}
         tabIndex={-1}
       >
         {(title || showCloseButton) && (

@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# OpenCode configuration
+opencode.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
