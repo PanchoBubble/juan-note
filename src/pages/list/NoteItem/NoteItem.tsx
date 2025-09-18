@@ -139,7 +139,7 @@ export const NoteItem = React.memo(function NoteItem({
       style={style}
       {...(isDraggable ? attributes : {})}
       {...(isDraggable ? listeners : {})}
-      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange group flex-1 min-w-72 max-w-80 max-h-80 overflow-visible ${isDraggable && !isDragOverlay ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} select-none ${
+      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange group flex-1 overflow-visible ${isDraggable && !isDragOverlay ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} select-none ${
         isDragging && !isDragOverlay ? "opacity-50 shadow-2xl z-50" : ""
       } ${isDragOverlay ? "shadow-2xl z-50 rotate-3" : ""} ${isSelected ? "ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue" : ""}`}
       role={showSelection ? "button" : "article"}

@@ -232,22 +232,15 @@ export function useStates() {
   const reorderStates = useCallback(
     async (stateId: number, newPosition: number) => {
       setError(null);
-      console.log("🔄 Starting reorderStates:", { stateId, newPosition });
 
       try {
         // Store the final reordered states for database update
         let reorderedStates: State[] = [];
 
         setStates(prev => {
-          console.log(
-            "📊 Current states before reorder:",
-            prev.map(s => ({ id: s.id, name: s.name, position: s.position }))
-          );
-
           const newStates = [...prev];
           const stateIndex = newStates.findIndex(s => s.id === stateId);
           if (stateIndex === -1) {
-            console.warn("❌ State not found for reordering:", stateId);
             return prev;
           }
 
@@ -262,14 +255,6 @@ export function useStates() {
           // Store the reordered states for database update
           reorderedStates = [...newStates];
 
-          console.log(
-            "✅ States after reorder:",
-            reorderedStates.map(s => ({
-              id: s.id,
-              name: s.name,
-              position: s.position,
-            }))
-          );
           return newStates;
         });
 
@@ -278,11 +263,8 @@ export function useStates() {
           NoteService.updateState({ id: state.id!, position: state.position })
         );
 
-        console.log("💾 Updating database with new positions...");
         await Promise.all(updatePromises);
-        console.log("✅ Database update complete");
       } catch (err) {
-        console.error("❌ Error in reorderStates:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
         // Reload states to revert optimistic update
         const response = await NoteService.getAllStates();

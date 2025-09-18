@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { NoteList } from "./pages/list";
 import { KanbanBoard } from "./pages/kanban";
+import { CreateColumnModal } from "./pages/kanban";
 import { NoteEditor } from "./components/NoteEditor";
 import { SearchBar } from "./components/SearchBar";
 import { Modal } from "./components/Modal";
@@ -31,7 +32,14 @@ function App() {
     reorderNotes,
     clearError,
   } = useNotes();
-  const { states } = useStates();
+  const {
+    states,
+    createState,
+    updateState,
+    deleteState,
+    reorderStates,
+    error: statesError,
+  } = useStates();
 
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -41,6 +49,7 @@ function App() {
   const [showMcpIntegration, setShowMcpIntegration] = useState(false);
   const [showMcpFunctionBrowser, setShowMcpFunctionBrowser] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCreateColumnModal, setShowCreateColumnModal] = useState(false);
 
   // Filter and sort state
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
@@ -427,6 +436,12 @@ function App() {
             };
             handleSaveNote(request);
           }}
+          onAddColumn={
+            viewMode === "kanban"
+              ? () => setShowCreateColumnModal(true)
+              : undefined
+          }
+          showAddColumn={viewMode === "kanban"}
         />
       </div>
 
@@ -472,6 +487,11 @@ function App() {
                 setSelectedLabels([...selectedLabels, label]);
               }
             }}
+            createState={createState}
+            updateState={updateState}
+            deleteState={deleteState}
+            reorderStates={reorderStates}
+            statesError={statesError}
           />
         )}
 
@@ -550,6 +570,17 @@ function App() {
         <SettingsModal
           isOpen={showSettings}
           onClose={() => setShowSettings(false)}
+        />
+
+        <CreateColumnModal
+          isOpen={showCreateColumnModal}
+          onClose={() => setShowCreateColumnModal(false)}
+          onCreate={async request => {
+            const result = await createState(request);
+            setShowCreateColumnModal(false);
+            return result;
+          }}
+          existingStates={states}
         />
       </main>
     </div>

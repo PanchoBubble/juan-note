@@ -13,6 +13,7 @@ interface KanbanColumnProps {
   title: string;
   notes: KanbanNote[];
   colorClass: string;
+  borderColor?: string;
   state?: State;
   onEdit: (note: Note) => void;
   onComplete: (note: Note) => void;
@@ -32,6 +33,7 @@ export const KanbanColumn = memo(function KanbanColumn({
   title,
   notes,
   colorClass,
+  borderColor,
   state,
   onEdit,
   onComplete,
@@ -85,9 +87,12 @@ export const KanbanColumn = memo(function KanbanColumn({
   return (
     <div
       ref={combineRefs}
-      style={style}
+      style={{
+        ...style,
+        ...(borderColor ? { borderColor } : {}),
+      }}
       {...(isColumnDraggable ? attributes : {})}
-      className={`flex-none w-80 sm:w-96 lg:flex-1 lg:min-w-80 ${isUnassigned ? "lg:max-w-80" : "lg:max-w-96"} ${colorClass} rounded-lg p-4 transition-all duration-200 ${
+      className={`flex-none w-80 ${colorClass} rounded-lg p-4 transition-all duration-200 ${
         isDragOver ? "ring-2 ring-[#66d9ef]/50" : ""
       } ${isDragging ? "opacity-50 z-50" : ""}`}
     >
@@ -140,7 +145,7 @@ export const KanbanColumn = memo(function KanbanColumn({
           </div>
         ) : (
           notes.map(note => (
-            <div key={note.id} className="cursor-move">
+            <div key={note.id} className="cursor-move w-full">
               <NoteItem
                 note={note}
                 onEdit={onEdit}

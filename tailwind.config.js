@@ -139,6 +139,60 @@ export default {
         '.scrollbar-monokai::-webkit-scrollbar-corner': {
           'background': '#272822',
         },
+        // Kanban scroll fade effects using box-shadow
+        '.kanban-scroll-fade-left': {
+          'position': 'relative',
+        },
+        '.kanban-scroll-fade-left::before': {
+          'content': '""',
+          'position': 'absolute',
+          'top': '0',
+          'left': '0',
+          'bottom': '0',
+          'width': '20px',
+          'background': 'linear-gradient(to right, rgba(39, 34, 34, 0.8) 0%, transparent 100%)',
+          'pointer-events': 'none',
+          'z-index': '1',
+        },
+        '.kanban-scroll-fade-right': {
+          'position': 'relative',
+        },
+        '.kanban-scroll-fade-right::after': {
+          'content': '""',
+          'position': 'absolute',
+          'top': '0',
+          'right': '0',
+          'bottom': '0',
+          'width': '20px',
+          'background': 'linear-gradient(to left, rgba(39, 34, 34, 0.8) 0%, transparent 100%)',
+          'pointer-events': 'none',
+          'z-index': '1',
+        },
+        '.kanban-scroll-fade-both': {
+          'position': 'relative',
+        },
+        '.kanban-scroll-fade-both::before': {
+          'content': '""',
+          'position': 'absolute',
+          'top': '0',
+          'left': '0',
+          'bottom': '0',
+          'width': '20px',
+          'background': 'linear-gradient(to right, rgba(39, 34, 34, 0.8) 0%, transparent 100%)',
+          'pointer-events': 'none',
+          'z-index': '1',
+        },
+        '.kanban-scroll-fade-both::after': {
+          'content': '""',
+          'position': 'absolute',
+          'top': '0',
+          'right': '0',
+          'bottom': '0',
+          'width': '20px',
+          'background': 'linear-gradient(to left, rgba(39, 34, 34, 0.8) 0%, transparent 100%)',
+          'pointer-events': 'none',
+          'z-index': '1',
+        },
       }
       addUtilities(scrollbarUtilities)
     }

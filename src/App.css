@@ -440,7 +440,7 @@ button:focus {
 /* Scroll shadows for visual feedback */
 .kanban-scroll-container::before,
 .kanban-scroll-container::after {
-  content: "";
+  content: " ";
   position: absolute;
   top: 0;
   bottom: 1rem;

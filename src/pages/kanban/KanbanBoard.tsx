@@ -324,44 +324,28 @@ export function KanbanBoard({
       const activeColumnId = parseInt(activeIdStr.replace("column-", ""));
       const overColumnId = parseInt(overIdStr.replace("column-", ""));
 
-      console.log("🎯 Column drag detected:", {
-        activeIdStr,
-        overIdStr,
-        activeColumnId,
-        overColumnId,
-      });
-
       // Validate that both states exist
       const activeState = states.find(state => state.id === activeColumnId);
       const overState = states.find(state => state.id === overColumnId);
 
       if (!activeState || !overState) {
-        console.warn(
-          "❌ Cannot reorder columns: one or both states not found",
-          {
-            activeColumnId,
-            overColumnId,
-            activeState,
-            overState,
-            availableStates: states.map(s => ({ id: s.id, name: s.name })),
-          }
-        );
+        console.warn("Cannot reorder columns: one or both states not found", {
+          activeColumnId,
+          overColumnId,
+          activeState,
+          overState,
+        });
         return;
       }
 
       const oldIndex = states.findIndex(state => state.id === activeColumnId);
       const newIndex = states.findIndex(state => state.id === overColumnId);
 
-      console.log("📍 Column indices:", { oldIndex, newIndex });
-
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        console.log("✅ Calling reorderStates...");
         // Use the reorderStates function with optimistic updates
         reorderStates(activeColumnId, newIndex).catch(error => {
-          console.error("❌ Error reordering states:", error);
+          console.error("Error reordering states:", error);
         });
-      } else {
-        console.log("⏭️ Skipping reorder - indices invalid or same position");
       }
       return;
     }
@@ -398,6 +382,7 @@ export function KanbanBoard({
     notes: any[];
   }> = states
     .filter(state => state.id != null) // Filter out states without valid IDs
+    .sort((a, b) => a.position - b.position) // Ensure columns are sorted by position
     .map(state => ({
       id: state.id!,
       title: state.name,

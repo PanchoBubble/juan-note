@@ -50,6 +50,9 @@ export function getPriorityColor(priority: number): PriorityColor {
 }
 
 // Get column color class for a state
+// NOTE: Tailwind CSS has limitations with arbitrary values like border-[${color}]
+// This can cause border colors to not render properly. For dynamic colors,
+// we use inline styles instead of Tailwind classes to ensure reliability.
 export function getColumnColorClass(color?: string): string {
   if (!color) {
     return "bg-[#2f2f2a] border-[#75715e]/30";
@@ -57,11 +60,12 @@ export function getColumnColorClass(color?: string): string {
 
   // If it's a CSS custom property, use it directly
   if (color.startsWith("--")) {
-    return `bg-[var(${color})]/10 border-[var(${color})] border-2`;
+    return `bg-[var(${color})]/10 border-[var(${color})]/50 border-2`;
   }
 
   // If it's a hex color, apply it with more visible border
-  return `bg-[${color}]/10 border-[${color}] border-2`;
+  // Use a more reliable approach with inline styles for dynamic colors
+  return `bg-[${color}]/10 border-2`;
 }
 
 // Validate hex color format

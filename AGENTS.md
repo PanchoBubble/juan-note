@@ -194,6 +194,14 @@ When adding new APIs:
 - Sanitize user content before storage
 - Implement proper access controls if adding authentication
 
+#### UI/UX Conventions
+
+- **NO HOVER SCALE EFFECTS**: Do not add `hover:scale-*` classes or any scaling animations on hover. Keep interactions subtle and professional.
+- **Monokai Theme Consistency**: Always use the predefined monokai color palette from `tailwind.config.js`. Do not introduce new colors unless absolutely necessary.
+- **Consistent Hover States**: Use opacity changes (`hover:opacity-*`) and background color changes instead of scaling effects.
+- **Professional Interactions**: Focus on color transitions and opacity changes for hover states rather than transform effects.
+- **Fixed Column Widths**: Kanban columns should maintain consistent widths (`w-80` = 320px) across all viewport sizes. Do not use responsive width classes like `lg:flex-1` that cause columns to resize based on viewport width.
+
 ## Current Limitations & Improvement Areas
 
 1. **No Authentication**: All notes are accessible to all users
