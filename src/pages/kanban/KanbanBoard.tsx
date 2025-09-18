@@ -378,9 +378,8 @@ export function KanbanBoard({
       return;
     }
 
-    // Handle note dragging
+    // Handle note dragging (cross-column only)
     const noteId = parseInt(activeIdStr);
-    const overNoteId = parseInt(overIdStr);
 
     // Check if this is a note being dragged (numeric activeId)
     if (!isNaN(noteId)) {
@@ -390,32 +389,14 @@ export function KanbanBoard({
         return;
       }
 
-      // Check if dropped on another note (reordering within same column)
-      if (!isNaN(overNoteId) && overNoteId !== noteId) {
-        const targetNote = notes.find(note => note.id === overNoteId);
-        if (targetNote && targetNote.state_id === draggedNote.state_id) {
-          // Reordering within the same column - this would need order field implementation
-          console.log("Note reordering within column not yet implemented");
-          return;
-        }
-      }
-
-      // Parse the drop target - could be a column ID or state ID
+      // Parse the drop target - determine target state ID
       let targetStateId: number;
 
       if (overIdStr.startsWith("column-")) {
         // Dropped on a column - extract state ID from column ID
         targetStateId = parseInt(overIdStr.replace("column-", ""));
-      } else if (!isNaN(overNoteId)) {
-        // Dropped on another note - move to that note's state
-        const targetNote = notes.find(note => note.id === overNoteId);
-        if (targetNote) {
-          targetStateId = targetNote.state_id || -1;
-        } else {
-          return;
-        }
       } else {
-        // Dropped directly on a state/column area - parse as state ID
+        // Dropped directly on a column area - parse as state ID
         const parsedStateId = parseInt(overIdStr);
         targetStateId = isNaN(parsedStateId) ? -1 : parsedStateId;
       }
