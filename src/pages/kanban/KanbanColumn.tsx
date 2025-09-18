@@ -1,7 +1,11 @@
 import { memo } from "react";
 import { NoteItem } from "../list/NoteItem/";
 import { useDroppable } from "@dnd-kit/core";
-import { useSortable } from "@dnd-kit/sortable";
+import {
+  useSortable,
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ColumnManagementMenu } from "./ColumnManagementMenu";
 import { useKeyboardNavigation } from "../../hooks/useKeyboardNavigation";
@@ -141,26 +145,32 @@ export const KanbanColumn = memo(function KanbanColumn({
             </p>
           </div>
         ) : (
-          notes.map(note => (
-            <div
-              key={note.id}
-              className="w-full"
-              style={{
-                pointerEvents:
-                  isColumnDraggable && isDragging ? "none" : "auto",
-              }}
-            >
-              <NoteItem
-                note={note}
-                onEdit={onEdit}
-                onComplete={onComplete}
-                onDelete={onDelete}
-                onUpdate={onUpdate}
-                onLabelClick={onLabelClick}
-                isDraggable={true}
-              />
-            </div>
-          ))
+          <SortableContext
+            items={notes.map(note => note.id?.toString() || "")}
+            strategy={verticalListSortingStrategy}
+          >
+            {notes.map(note => (
+              <div
+                key={note.id}
+                className="w-full"
+                style={{
+                  pointerEvents:
+                    isColumnDraggable && isDragging ? "none" : "auto",
+                }}
+              >
+                <NoteItem
+                  note={note}
+                  onEdit={onEdit}
+                  onComplete={onComplete}
+                  onDelete={onDelete}
+                  onUpdate={onUpdate}
+                  onLabelClick={onLabelClick}
+                  isDraggable={true}
+                  dragMode="kanban"
+                />
+              </div>
+            ))}
+          </SortableContext>
         )}
       </div>
     </div>
