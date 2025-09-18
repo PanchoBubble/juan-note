@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { NoteItem } from "./NoteItem/";
 import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
@@ -25,7 +26,7 @@ interface KanbanColumnProps {
   onColumnDuplicate?: (state: State) => void;
 }
 
-export function KanbanColumn({
+export const KanbanColumn = memo(function KanbanColumn({
   id,
   title,
   notes,
@@ -150,4 +151,4 @@ export function KanbanColumn({
       </div>
     </div>
   );
-}
+});

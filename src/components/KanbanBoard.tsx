@@ -16,6 +16,7 @@ import { CreateColumnModal } from "./CreateColumnModal";
 import { ColumnSettingsModal } from "./ColumnSettingsModal";
 import { useKanbanView } from "../hooks/useKanbanView";
 import { useStates } from "../hooks/useStates";
+import { useDragOptimization } from "../hooks/useDragOptimization";
 import { getColumnColorClass } from "../utils/colorUtils";
 import type {
   Note,
@@ -66,6 +67,15 @@ export function KanbanBoard({
     reorderStates,
     error: statesError,
   } = useStates();
+
+  // Drag optimization for performance
+  const {
+    handleDragStart: optimizedDragStart,
+    handleDragEnd: optimizedDragEnd,
+  } = useDragOptimization(notes, {
+    maxItems: 200,
+    enableVirtualization: notes.length > 200,
+  });
 
   // Handle column creation
   const handleCreateColumn = async (request: CreateStateRequest) => {
@@ -120,6 +130,7 @@ export function KanbanBoard({
     // Check if dragging a column
     if (activeIdStr.startsWith("column-")) {
       setIsColumnDragMode(true);
+      optimizedDragStart(activeIdStr, "column");
       return;
     }
 
@@ -127,6 +138,7 @@ export function KanbanBoard({
     const noteId = parseInt(activeIdStr);
     const note = notes.find(n => n.id === noteId);
     if (note) {
+      optimizedDragStart(activeIdStr, "note");
       handleDragStart({
         ...note,
         stateId: note.state_id,
@@ -142,6 +154,7 @@ export function KanbanBoard({
     setActiveId(null);
     setIsColumnDragMode(false);
     handleDragEnd();
+    optimizedDragEnd();
 
     const { active, over } = event;
     if (!over) return;

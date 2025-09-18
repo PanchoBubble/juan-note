@@ -485,3 +485,55 @@ button:focus {
 .kanban-scroll-container {
   scroll-behavior: smooth;
 }
+
+/* Drag performance optimizations */
+.dragging-active * {
+  pointer-events: none;
+}
+
+.dragging-active [data-draggable="true"] {
+  pointer-events: auto;
+}
+
+.drag-element {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.drag-container {
+  contain: layout style paint;
+  isolation: isolate;
+}
+
+/* Drag overlay improvements */
+.drag-overlay {
+  opacity: 0.9;
+  transform: rotate(2deg) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--monokai-blue);
+  z-index: 1000;
+}
+
+/* Drag preview note styling */
+.drag-preview-note {
+  background: linear-gradient(
+    135deg,
+    var(--color-bg-secondary) 0%,
+    var(--color-bg-tertiary) 100%
+  );
+  border: 2px solid var(--monokai-purple);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(174, 129, 255, 0.3);
+}
+
+/* Drag preview column styling */
+.drag-preview-column {
+  background: var(--color-bg-secondary);
+  border: 2px solid var(--monokai-green);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(166, 226, 46, 0.2);
+  min-width: 20rem;
+}
