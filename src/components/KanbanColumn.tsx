@@ -22,7 +22,7 @@ interface KanbanColumnProps {
   isDragOver: boolean;
   isColumnDraggable?: boolean;
   onColumnEdit?: (state: State) => void;
-  onColumnDelete?: (stateId: number) => void;
+  onColumnDelete?: (stateId: number) => Promise<boolean>;
   onColumnDuplicate?: (state: State) => void;
 }
 

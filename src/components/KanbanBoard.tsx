@@ -4,6 +4,7 @@ import {
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
+  DragOverlay,
   closestCenter,
 } from "@dnd-kit/core";
 import {
@@ -17,6 +18,12 @@ import { ColumnSettingsModal } from "./ColumnSettingsModal";
 import { useKanbanView } from "../hooks/useKanbanView";
 import { useStates } from "../hooks/useStates";
 import { useDragOptimization } from "../hooks/useDragOptimization";
+import { DragPreview } from "./DragPreview";
+import {
+  createDragData,
+  extractDragData,
+  announceDragAction,
+} from "../utils/dragUtils";
 import { getColumnColorClass } from "../utils/colorUtils";
 import type {
   Note,
@@ -47,6 +54,7 @@ export function KanbanBoard({
   onStatesChange,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeDragData, setActiveDragData] = useState<any>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingState, setEditingState] = useState<State | undefined>();
@@ -129,8 +137,15 @@ export function KanbanBoard({
 
     // Check if dragging a column
     if (activeIdStr.startsWith("column-")) {
-      setIsColumnDragMode(true);
-      optimizedDragStart(activeIdStr, "column");
+      const columnId = parseInt(activeIdStr.replace("column-", ""));
+      const state = states.find(s => s.id === columnId);
+      if (state) {
+        const dragData = createDragData(state, "column", activeIdStr);
+        setActiveDragData(dragData);
+        setIsColumnDragMode(true);
+        optimizedDragStart(activeIdStr, "column");
+        announceDragAction("start", "column", state.name);
+      }
       return;
     }
 
@@ -138,11 +153,14 @@ export function KanbanBoard({
     const noteId = parseInt(activeIdStr);
     const note = notes.find(n => n.id === noteId);
     if (note) {
+      const dragData = createDragData(note, "note", activeIdStr);
+      setActiveDragData(dragData);
       optimizedDragStart(activeIdStr, "note");
       handleDragStart({
         ...note,
         stateId: note.state_id,
       });
+      announceDragAction("start", "note", note.title || "Untitled Note");
     }
   };
 
@@ -151,13 +169,24 @@ export function KanbanBoard({
   };
 
   const handleDragEndEvent = (event: DragEndEvent) => {
+    const dragData = extractDragData(activeDragData);
     setActiveId(null);
+    setActiveDragData(null);
     setIsColumnDragMode(false);
     handleDragEnd();
     optimizedDragEnd();
 
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      if (dragData) {
+        const itemName =
+          dragData.type === "note"
+            ? (dragData.item as any).title || "Untitled Note"
+            : (dragData.item as any).name;
+        announceDragAction("cancel", dragData.type, itemName);
+      }
+      return;
+    }
 
     const activeIdStr = active.id as string;
     const overIdStr = over.id as string;
@@ -258,6 +287,16 @@ export function KanbanBoard({
             />
           </div>
         </SortableContext>
+
+        {/* Enhanced Drag Overlay */}
+        <DragOverlay dropAnimation={null}>
+          {activeDragData && (
+            <DragPreview
+              item={activeDragData.item}
+              type={activeDragData.type}
+            />
+          )}
+        </DragOverlay>
       </DndContext>
 
       {/* Create Column Modal */}
