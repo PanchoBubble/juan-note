@@ -303,7 +303,7 @@ export const NoteList = React.memo(function NoteList({
       {/* Notes List */}
       {filteredAndSortedNotes.length === 0 && !showInlineCreate ? (
         <div className="text-center py-16">
-          <div className="w-24 h-24 bg-gradient-to-br from-monokai-blue to-monokai-purple bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-monokai-yellow">
+          <div className="w-24 h-24 bg-surface-secondary bg-opacity-80 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-monokai-yellow">
             <span className="text-4xl">🔍</span>
           </div>
           <h3 className="text-2xl font-bold text-monokai-fg mb-3">

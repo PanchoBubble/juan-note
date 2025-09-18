@@ -2,21 +2,21 @@ use rusqlite::Connection;
 
 pub fn up(conn: &Connection) -> rusqlite::Result<()> {
     // Convert TEXT timestamps to INTEGER timestamps for notes table
-    // First, create temporary columns
-    conn.execute(
+    // First, create temporary columns (only if they don't exist)
+    let _ = conn.execute(
         "ALTER TABLE notes ADD COLUMN created_at_temp INTEGER",
         [],
-    )?;
+    ); // Ignore error if column already exists
 
-    conn.execute(
+    let _ = conn.execute(
         "ALTER TABLE notes ADD COLUMN updated_at_temp INTEGER",
         [],
-    )?;
+    ); // Ignore error if column already exists
 
-    conn.execute(
+    let _ = conn.execute(
         "ALTER TABLE notes ADD COLUMN deadline_temp INTEGER",
         [],
-    )?;
+    ); // Ignore error if column already exists
 
     // Convert TEXT timestamps to INTEGER timestamps
     // For notes that have TEXT timestamps, convert them
@@ -39,26 +39,26 @@ pub fn up(conn: &Connection) -> rusqlite::Result<()> {
         [],
     )?;
 
-    // Drop old columns and rename temp columns
-    conn.execute("ALTER TABLE notes DROP COLUMN created_at", [])?;
-    conn.execute("ALTER TABLE notes DROP COLUMN updated_at", [])?;
-    conn.execute("ALTER TABLE notes DROP COLUMN deadline", [])?;
+    // Drop old columns and rename temp columns (only if they exist)
+    let _ = conn.execute("ALTER TABLE notes DROP COLUMN created_at", []); // Ignore error if column doesn't exist
+    let _ = conn.execute("ALTER TABLE notes DROP COLUMN updated_at", []); // Ignore error if column doesn't exist
+    let _ = conn.execute("ALTER TABLE notes DROP COLUMN deadline", []); // Ignore error if column doesn't exist
 
-    conn.execute("ALTER TABLE notes RENAME COLUMN created_at_temp TO created_at", [])?;
-    conn.execute("ALTER TABLE notes RENAME COLUMN updated_at_temp TO updated_at", [])?;
-    conn.execute("ALTER TABLE notes RENAME COLUMN deadline_temp TO deadline", [])?;
+    let _ = conn.execute("ALTER TABLE notes RENAME COLUMN created_at_temp TO created_at", []); // Ignore error if column doesn't exist
+    let _ = conn.execute("ALTER TABLE notes RENAME COLUMN updated_at_temp TO updated_at", []); // Ignore error if column doesn't exist
+    let _ = conn.execute("ALTER TABLE notes RENAME COLUMN deadline_temp TO deadline", []); // Ignore error if column doesn't exist
 
     // Convert TEXT timestamps to INTEGER timestamps for states table
-    // First, create temporary columns
-    conn.execute(
+    // First, create temporary columns (only if they don't exist)
+    let _ = conn.execute(
         "ALTER TABLE states ADD COLUMN created_at_temp INTEGER",
         [],
-    )?;
+    ); // Ignore error if column already exists
 
-    conn.execute(
+    let _ = conn.execute(
         "ALTER TABLE states ADD COLUMN updated_at_temp INTEGER",
         [],
-    )?;
+    ); // Ignore error if column already exists
 
     // Convert TEXT timestamps to INTEGER timestamps
     conn.execute(
@@ -76,12 +76,12 @@ pub fn up(conn: &Connection) -> rusqlite::Result<()> {
         [],
     )?;
 
-    // Drop old columns and rename temp columns
-    conn.execute("ALTER TABLE states DROP COLUMN created_at", [])?;
-    conn.execute("ALTER TABLE states DROP COLUMN updated_at", [])?;
+    // Drop old columns and rename temp columns (only if they exist)
+    let _ = conn.execute("ALTER TABLE states DROP COLUMN created_at", []); // Ignore error if column doesn't exist
+    let _ = conn.execute("ALTER TABLE states DROP COLUMN updated_at", []); // Ignore error if column doesn't exist
 
-    conn.execute("ALTER TABLE states RENAME COLUMN created_at_temp TO created_at", [])?;
-    conn.execute("ALTER TABLE states RENAME COLUMN updated_at_temp TO updated_at", [])?;
+    let _ = conn.execute("ALTER TABLE states RENAME COLUMN created_at_temp TO created_at", []); // Ignore error if column doesn't exist
+    let _ = conn.execute("ALTER TABLE states RENAME COLUMN updated_at_temp TO updated_at", []); // Ignore error if column doesn't exist
 
     Ok(())
 }

@@ -25,13 +25,44 @@ pub fn get_all_states() -> Result<StatesListResponse, String> {
 
     let states_iter = stmt
         .query_map([], |row| {
+            // Handle both INTEGER and TEXT timestamps
+            let created_at: Option<DateTime<Utc>> = match row.get::<_, Option<i64>>(4)? {
+                Some(ts) => Some(DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+                None => match row.get::<_, Option<String>>(4)? {
+                    Some(ts_str) => DateTime::parse_from_rfc3339(&ts_str)
+                        .map(|dt| dt.with_timezone(&Utc))
+                        .ok()
+                        .or_else(|| {
+                            // Try parsing as unix timestamp string
+                            ts_str.parse::<i64>().ok()
+                                .and_then(|ts| DateTime::from_timestamp(ts, 0))
+                        }),
+                    None => None,
+                },
+            };
+
+            let updated_at: Option<DateTime<Utc>> = match row.get::<_, Option<i64>>(5)? {
+                Some(ts) => Some(DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+                None => match row.get::<_, Option<String>>(5)? {
+                    Some(ts_str) => DateTime::parse_from_rfc3339(&ts_str)
+                        .map(|dt| dt.with_timezone(&Utc))
+                        .ok()
+                        .or_else(|| {
+                            // Try parsing as unix timestamp string
+                            ts_str.parse::<i64>().ok()
+                                .and_then(|ts| DateTime::from_timestamp(ts, 0))
+                        }),
+                    None => None,
+                },
+            };
+
             Ok(State {
                 id: Some(row.get(0)?),
                 name: row.get(1)?,
                 position: row.get(2)?,
                 color: row.get(3)?,
-                created_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
-                updated_at: Some(DateTime::from_timestamp(row.get(5)?, 0).unwrap_or_default()),
+                created_at,
+                updated_at,
             })
         })
         .map_err(|e| format!("Failed to query states: {}", e))?;
@@ -164,13 +195,44 @@ fn get_state_sync(id: i64, conn: &rusqlite::Connection) -> Result<StateResponse,
         .map_err(|e| format!("Failed to prepare query: {}", e))?;
 
     let state = stmt.query_row([id], |row| {
+        // Handle both INTEGER and TEXT timestamps
+        let created_at: Option<DateTime<Utc>> = match row.get::<_, Option<i64>>(4)? {
+            Some(ts) => Some(DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+            None => match row.get::<_, Option<String>>(4)? {
+                Some(ts_str) => DateTime::parse_from_rfc3339(&ts_str)
+                    .map(|dt| dt.with_timezone(&Utc))
+                    .ok()
+                    .or_else(|| {
+                        // Try parsing as unix timestamp string
+                        ts_str.parse::<i64>().ok()
+                            .and_then(|ts| DateTime::from_timestamp(ts, 0))
+                    }),
+                None => None,
+            },
+        };
+
+        let updated_at: Option<DateTime<Utc>> = match row.get::<_, Option<i64>>(5)? {
+            Some(ts) => Some(DateTime::from_timestamp(ts, 0).unwrap_or_default()),
+            None => match row.get::<_, Option<String>>(5)? {
+                Some(ts_str) => DateTime::parse_from_rfc3339(&ts_str)
+                    .map(|dt| dt.with_timezone(&Utc))
+                    .ok()
+                    .or_else(|| {
+                        // Try parsing as unix timestamp string
+                        ts_str.parse::<i64>().ok()
+                            .and_then(|ts| DateTime::from_timestamp(ts, 0))
+                    }),
+                None => None,
+            },
+        };
+
         Ok(State {
             id: Some(row.get(0)?),
             name: row.get(1)?,
             position: row.get(2)?,
             color: row.get(3)?,
-            created_at: Some(DateTime::from_timestamp(row.get(4)?, 0).unwrap_or_default()),
-            updated_at: Some(DateTime::from_timestamp(row.get(5)?, 0).unwrap_or_default()),
+            created_at,
+            updated_at,
         })
     });
 

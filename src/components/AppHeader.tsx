@@ -17,7 +17,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   return (
     <header
-      className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment absolute inset-0 h-32 flex items-center"
+      className="bg-surface shadow-lg border-b border-monokai-comment absolute inset-0 h-32 flex items-center"
       role="banner"
     >
       <div className="max-w-4xl mx-auto px-4 w-full">

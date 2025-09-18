@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@theme {
+  --color-monokai: #75715e;
+  --color-monokai-blue: #66d9ef;
+  --color-monokai-yellow: #e6db74;
+  --color-monokai-green: #a6e22e;
+  --color-monokai-purple: #ae81ff;
+  --color-monokai-pink: #f92672;
+  --color-monokai-red: #f92672;
+  --color-monokai-orange: #fd971f;
+  --color-monokai-comment: #75715e;
+}
+
 /* Monokai Color Theme - Single Dark Mode */
 :root {
   /* Monokai base colors */
@@ -320,7 +332,7 @@ button:focus {
 }
 
 .color-picker-button {
-  @apply w-full h-10 rounded-lg border-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 border-[#75715e]/30 hover:border-[#75715e]/50;
+  @apply w-full h-10 rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 border-[#75715e]/30 hover:border-[#75715e]/50;
 }
 
 .color-picker-button.selected {
@@ -329,7 +341,7 @@ button:focus {
 
 /* Column drag preview styles */
 .column-drag-overlay {
-  @apply opacity-50 z-50 rotate-1 scale-105;
+  @apply opacity-50 z-50 rotate-1;
 }
 
 /* Smooth transitions for column operations */

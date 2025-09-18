@@ -85,7 +85,7 @@ export function KanbanColumn({
       style={style}
       {...(isColumnDraggable ? attributes : {})}
       className={`flex-1 min-w-80 max-w-96 ${colorClass} rounded-lg p-4 transition-all duration-200 ${
-        isDragOver ? "ring-2 ring-[#66d9ef]/50 scale-105" : ""
+        isDragOver ? "ring-2 ring-[#66d9ef]/50" : ""
       } ${isDragging ? "opacity-50 z-50" : ""}`}
     >
       <div className="flex items-center justify-between mb-4">

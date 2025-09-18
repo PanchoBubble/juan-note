@@ -136,7 +136,7 @@ export function ColumnSettingsModal({
                 key={color}
                 type="button"
                 onClick={() => handleColorSelect(color)}
-                className={`w-full h-10 rounded-lg border-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 ${
+                className={`w-full h-10 rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 ${
                   selectedColor === color
                     ? "border-[#66d9ef]/70 ring-2 ring-[#66d9ef]/30"
                     : "border-[#75715e]/30 hover:border-[#75715e]/50"

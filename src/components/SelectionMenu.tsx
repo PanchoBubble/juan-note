@@ -27,7 +27,7 @@ export const SelectionMenu = React.memo(function SelectionMenu({
 
   return (
     <header
-      className="bg-gradient-to-r from-monokai-blue to-monokai-purple shadow-lg border-b border-monokai-comment h-32 flex items-center"
+      className="bg-surface shadow-lg border-b border-monokai-comment h-32 flex items-center"
       role="banner"
     >
       <div className="max-w-4xl mx-auto px-4">

@@ -9,7 +9,6 @@ import {
 import {
   SortableContext,
   horizontalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { KanbanColumn } from "./KanbanColumn";
 import { AddColumnButton } from "./AddColumnButton";
@@ -64,6 +63,7 @@ export function KanbanBoard({
     createState,
     updateState,
     deleteState,
+    reorderStates,
     error: statesError,
   } = useStates();
 
@@ -97,6 +97,7 @@ export function KanbanBoard({
     if (success && onStatesChange) {
       onStatesChange();
     }
+    return success;
   };
 
   // Handle column duplication
@@ -157,14 +158,8 @@ export function KanbanBoard({
       const newIndex = states.findIndex(state => state.id === overColumnId);
 
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        // Optimistically update the order in the parent component
-        const newStates = arrayMove(states, oldIndex, newIndex);
-        // Update positions for all affected states
-        const updatePromises = newStates.map((state, index) =>
-          updateState({ id: state.id!, position: index })
-        );
-
-        Promise.all(updatePromises).then(() => {
+        // Use the reorderStates function from the hook
+        reorderStates(activeColumnId, newIndex).then(() => {
           if (onStatesChange) onStatesChange();
         });
       }
@@ -221,7 +216,7 @@ export function KanbanBoard({
           items={columnIds}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="flex gap-6 overflow-x-auto pb-6">
+          <div className="flex gap-6 overflow-x-auto pb-6 w-full">
             {columns.map(column => (
               <KanbanColumn
                 key={column.id}

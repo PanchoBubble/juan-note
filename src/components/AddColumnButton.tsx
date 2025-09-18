@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 interface AddColumnButtonProps {
   onClick: () => void;
   disabled?: boolean;
@@ -9,22 +7,16 @@ export function AddColumnButton({
   onClick,
   disabled = false,
 }: AddColumnButtonProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
     <div className="flex-shrink-0 min-w-80 max-w-96">
       <button
         type="button"
         onClick={onClick}
         disabled={disabled}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         className={`w-full h-32 border-2 border-dashed rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-50 ${
           disabled
             ? "border-monokai border-opacity-20 text-monokai-comment cursor-not-allowed"
-            : `border-monokai-blue border-opacity-40 text-monokai-blue hover:border-opacity-60 hover:bg-monokai-blue hover:bg-opacity-5 ${
-                isHovered ? "scale-102" : "scale-100"
-              }`
+            : "border-monokai-blue border-opacity-40 text-monokai-blue hover:border-opacity-60 hover:bg-monokai-blue hover:bg-opacity-5"
         }`}
         aria-label="Add new column"
       >
@@ -37,9 +29,7 @@ export function AddColumnButton({
             }`}
           >
             <svg
-              className={`w-6 h-6 transition-transform ${
-                isHovered && !disabled ? "scale-110" : "scale-100"
-              }`}
+              className="w-6 h-6 transition-transform"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
