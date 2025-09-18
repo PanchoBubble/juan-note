@@ -254,21 +254,35 @@ export function KanbanBoard({
   };
 
   const handleDragStartEvent = (event: DragStartEvent) => {
+    console.log("🚀 Drag start event:", {
+      activeId: event.active.id,
+      activeType: typeof event.active.id,
+      activeString: String(event.active.id),
+    });
+
     setActiveId(event.active.id as string);
     const activeIdStr = event.active.id as string;
 
     // Check if dragging a column
     if (activeIdStr.startsWith("column-")) {
+      console.log("🎯 Column drag detected!");
       const columnId = parseInt(activeIdStr.replace("column-", ""));
       const state = states.find(s => s.id === columnId);
+      console.log("📊 Column drag data:", {
+        columnId,
+        state: state ? { id: state.id, name: state.name } : null,
+        allStates: states.map(s => ({ id: s.id, name: s.name })),
+      });
+
       if (state && state.id != null) {
         const dragData = createDragData(state, "column", activeIdStr);
         setActiveDragData(dragData);
         setIsColumnDragMode(true);
         optimizedDragStart(activeIdStr, "column");
         announceDragAction("start", "column", state.name);
+        console.log("✅ Column drag started successfully");
       } else {
-        console.warn("Cannot drag column: state not found", {
+        console.warn("❌ Cannot drag column: state not found", {
           columnId,
           activeIdStr,
           availableStates: states.map(s => ({ id: s.id, name: s.name })),
@@ -297,6 +311,13 @@ export function KanbanBoard({
   };
 
   const handleDragEndEvent = (event: DragEndEvent) => {
+    console.log("🏁 Drag end event:", {
+      activeId: event.active.id,
+      overId: event.over?.id,
+      activeString: String(event.active.id),
+      overString: event.over ? String(event.over.id) : null,
+    });
+
     const dragData = extractDragData(activeDragData);
     setActiveId(null);
     setActiveDragData(null);
@@ -306,6 +327,7 @@ export function KanbanBoard({
 
     const { active, over } = event;
     if (!over) {
+      console.log("❌ No drop target found");
       if (dragData) {
         const itemName =
           dragData.type === "note"
@@ -318,6 +340,8 @@ export function KanbanBoard({
 
     const activeIdStr = active.id as string;
     const overIdStr = over.id as string;
+
+    console.log("🎯 Drop detected:", { activeIdStr, overIdStr });
 
     // Handle column reordering
     if (activeIdStr.startsWith("column-") && overIdStr.startsWith("column-")) {
