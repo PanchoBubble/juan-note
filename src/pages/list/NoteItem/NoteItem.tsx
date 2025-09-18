@@ -55,19 +55,17 @@ export const NoteItem = React.memo(function NoteItem({
     isDragging: isSortableDragging,
   } = useSortable({
     id: note.id?.toString() || "",
-    disabled: !isDraggable || dragMode === "kanban",
+    disabled: !isDraggable, // Always enable sortable when draggable is enabled
   });
 
   // Use draggable for cross-column kanban moves
   const {
-    attributes: draggableAttributes,
-    listeners: draggableListeners,
     setNodeRef: setDraggableRef,
     transform: draggableTransform,
     isDragging: isDraggableDragging,
   } = useDraggable({
     id: note.id?.toString() || "",
-    disabled: !isDraggable || dragMode === "list",
+    disabled: !isDraggable || dragMode === "list", // Only enable draggable in kanban mode
     data: {
       type: "note",
       note: note,
@@ -75,13 +73,26 @@ export const NoteItem = React.memo(function NoteItem({
     },
   });
 
-  // Determine which drag system to use based on mode
-  const isListMode = dragMode === "list";
-  const activeTransform = isListMode ? sortableTransform : draggableTransform;
-  const isDragging = isListMode ? isSortableDragging : isDraggableDragging;
-  const attributes = isListMode ? sortableAttributes : draggableAttributes;
-  const listeners = isListMode ? sortableListeners : draggableListeners;
-  const setNodeRef = isListMode ? setSortableRef : setDraggableRef;
+  // In kanban mode, we use sortable primarily but need both systems active
+  // The collision detection will determine which operation to perform
+  const isDragging = isSortableDragging || isDraggableDragging;
+
+  // For kanban mode, combine both ref setters
+  const combineRefs = useCallback(
+    (element: HTMLElement | null) => {
+      setSortableRef(element);
+      if (dragMode === "kanban") {
+        setDraggableRef(element);
+      }
+    },
+    [setSortableRef, setDraggableRef, dragMode]
+  );
+
+  // Use sortable attributes and listeners for both modes (sortable handles the primary interaction)
+  const attributes = sortableAttributes;
+  const listeners = sortableListeners;
+  const activeTransform = sortableTransform || draggableTransform;
+  const setNodeRef = combineRefs;
 
   const style = activeTransform
     ? {

@@ -73,7 +73,16 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
     (stateId: number) => {
       return kanbanNotes
         .filter(note => note.stateId === stateId)
-        .sort((a, b) => a.order - b.order); // Sort by order within column
+        .sort((a, b) => {
+          // Handle cases where order might be undefined/null
+          const orderA = a.order ?? 0;
+          const orderB = b.order ?? 0;
+          // If orders are the same, fall back to creation date or id
+          if (orderA === orderB) {
+            return (a.id ?? 0) - (b.id ?? 0);
+          }
+          return orderA - orderB;
+        });
     },
     [kanbanNotes]
   );
@@ -81,7 +90,16 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
   const getNotesWithoutState = useCallback(() => {
     return kanbanNotes
       .filter(note => !note.stateId)
-      .sort((a, b) => a.order - b.order); // Sort by order within unassigned
+      .sort((a, b) => {
+        // Handle cases where order might be undefined/null
+        const orderA = a.order ?? 0;
+        const orderB = b.order ?? 0;
+        // If orders are the same, fall back to creation date or id
+        if (orderA === orderB) {
+          return (a.id ?? 0) - (b.id ?? 0);
+        }
+        return orderA - orderB;
+      });
   }, [kanbanNotes]);
 
   // Create status labels and colors from states
