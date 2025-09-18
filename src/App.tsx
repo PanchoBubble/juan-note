@@ -399,7 +399,9 @@ function App() {
       </div>
 
       <main
-        className="max-w-4xl mx-auto px-4 py-8"
+        className={`${
+          viewMode === "kanban" ? "w-full py-8" : "max-w-4xl mx-auto px-4 py-8"
+        }`}
         role="main"
         aria-label="Notes management"
       >

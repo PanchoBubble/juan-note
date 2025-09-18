@@ -216,7 +216,7 @@ export function KanbanBoard({
           items={columnIds}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="flex gap-6 overflow-x-auto pb-6 w-full">
+          <div className="flex gap-6 overflow-x-auto pb-6 w-full px-4 sm:px-6 lg:px-8">
             {columns.map(column => (
               <KanbanColumn
                 key={column.id}

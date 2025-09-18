@@ -84,7 +84,7 @@ export function KanbanColumn({
       ref={combineRefs}
       style={style}
       {...(isColumnDraggable ? attributes : {})}
-      className={`flex-1 min-w-80 max-w-96 ${colorClass} rounded-lg p-4 transition-all duration-200 ${
+      className={`flex-none w-80 sm:w-96 lg:flex-1 lg:min-w-80 lg:max-w-none ${colorClass} rounded-lg p-4 transition-all duration-200 ${
         isDragOver ? "ring-2 ring-[#66d9ef]/50" : ""
       } ${isDragging ? "opacity-50 z-50" : ""}`}
     >

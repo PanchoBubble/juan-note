@@ -8,7 +8,7 @@ export function AddColumnButton({
   disabled = false,
 }: AddColumnButtonProps) {
   return (
-    <div className="flex-shrink-0 min-w-80 max-w-96">
+    <div className="flex-none w-80 sm:w-96">
       <button
         type="button"
         onClick={onClick}
