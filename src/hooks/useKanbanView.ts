@@ -71,13 +71,17 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
 
   const getNotesByState = useCallback(
     (stateId: number) => {
-      return kanbanNotes.filter(note => note.stateId === stateId);
+      return kanbanNotes
+        .filter(note => note.stateId === stateId)
+        .sort((a, b) => a.order - b.order); // Sort by order within column
     },
     [kanbanNotes]
   );
 
   const getNotesWithoutState = useCallback(() => {
-    return kanbanNotes.filter(note => !note.stateId);
+    return kanbanNotes
+      .filter(note => !note.stateId)
+      .sort((a, b) => a.order - b.order); // Sort by order within unassigned
   }, [kanbanNotes]);
 
   // Create status labels and colors from states

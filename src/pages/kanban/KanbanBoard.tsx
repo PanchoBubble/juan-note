@@ -6,7 +6,9 @@ import {
   DragStartEvent,
   DragOverlay,
   closestCenter,
+  closestCorners,
   rectIntersection,
+  pointerWithin,
   CollisionDetection,
 } from "@dnd-kit/core";
 import {
@@ -140,7 +142,7 @@ export function KanbanBoard({
     );
   }
 
-  // Custom collision detection that prioritizes columns when dragging columns
+  // Enhanced collision detection for both column and note operations
   const customCollisionDetection: CollisionDetection = args => {
     const { active, droppableContainers } = args;
     const activeId = active.id as string;
@@ -162,7 +164,30 @@ export function KanbanBoard({
       }
     }
 
-    // For notes or when no column intersections, use default collision detection
+    // For notes, use progressive collision detection
+    if (!isNaN(parseInt(activeId))) {
+      // First try sortable collisions (within-column reordering)
+      const sortableCollisions = closestCorners(args);
+
+      // Filter out column containers for sortable detection
+      const noteContainers = Array.from(droppableContainers.values()).filter(
+        container => !String(container.id).startsWith("column-")
+      );
+
+      if (sortableCollisions.length > 0 && noteContainers.length > 0) {
+        // Check if the collision is with another note (within-column)
+        const collision = sortableCollisions[0];
+        const collisionId = String(collision.id);
+        if (!isNaN(parseInt(collisionId))) {
+          return sortableCollisions;
+        }
+      }
+
+      // Fall back to droppable collisions (cross-column moves)
+      return pointerWithin(args);
+    }
+
+    // Default fallback
     return closestCenter(args);
   };
 
@@ -378,10 +403,8 @@ export function KanbanBoard({
       return;
     }
 
-    // Handle note dragging (cross-column only)
+    // Handle note operations
     const noteId = parseInt(activeIdStr);
-
-    // Check if this is a note being dragged (numeric activeId)
     if (!isNaN(noteId)) {
       const draggedNote = notes.find(note => note.id === noteId);
       if (!draggedNote) {
@@ -389,12 +412,51 @@ export function KanbanBoard({
         return;
       }
 
-      // Parse the drop target - determine target state ID
+      const overNoteId = parseInt(overIdStr);
+
+      // Check if dropped on another note (within-column reordering)
+      if (!isNaN(overNoteId) && overNoteId !== noteId) {
+        const targetNote = notes.find(note => note.id === overNoteId);
+        if (targetNote && targetNote.state_id === draggedNote.state_id) {
+          // Within-column reordering - calculate new order based on target note
+          const newOrder = targetNote.order;
+
+          if (draggedNote.order !== newOrder) {
+            // Update note order within the same column
+            const updateRequest = {
+              ...draggedNote,
+              order: newOrder,
+            };
+            onUpdate?.(updateRequest);
+          }
+          return;
+        }
+      }
+
+      // Handle cross-column moves
       let targetStateId: number;
 
       if (overIdStr.startsWith("column-")) {
         // Dropped on a column - extract state ID from column ID
         targetStateId = parseInt(overIdStr.replace("column-", ""));
+      } else if (!isNaN(overNoteId)) {
+        // Dropped on a note in different column - use that note's state
+        const targetNote = notes.find(note => note.id === overNoteId);
+        if (targetNote && targetNote.state_id !== draggedNote.state_id) {
+          targetStateId = targetNote.state_id || -1;
+
+          // Position before the target note
+          const newOrder = targetNote.order;
+          const updatedNote = {
+            ...draggedNote,
+            state_id: targetStateId === -1 ? undefined : targetStateId,
+            order: newOrder,
+          };
+          onUpdate?.(updatedNote);
+          return;
+        } else {
+          return; // Same column, already handled above
+        }
       } else {
         // Dropped directly on a column area - parse as state ID
         const parsedStateId = parseInt(overIdStr);
@@ -417,14 +479,22 @@ export function KanbanBoard({
 
       // Only update if the state is changing
       if (draggedNote.state_id !== targetStateId) {
-        // Update the note's state
-        if (onUpdate) {
-          const updatedNote = {
-            ...draggedNote,
-            state_id: targetStateId === -1 ? undefined : targetStateId,
-          };
-          onUpdate(updatedNote);
-        }
+        // Cross-column move - place at end of target column
+        const targetColumnNotes = notes.filter(
+          note =>
+            note.state_id === (targetStateId === -1 ? undefined : targetStateId)
+        );
+        const maxOrder =
+          targetColumnNotes.length > 0
+            ? Math.max(...targetColumnNotes.map(note => note.order))
+            : 0;
+
+        const updatedNote = {
+          ...draggedNote,
+          state_id: targetStateId === -1 ? undefined : targetStateId,
+          order: maxOrder + 1,
+        };
+        onUpdate?.(updatedNote);
       }
     }
   };
