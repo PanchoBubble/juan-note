@@ -400,7 +400,9 @@ function App() {
 
       <main
         className={`${
-          viewMode === "kanban" ? "w-full p-8" : "max-w-4xl mx-auto px-4 py-8"
+          viewMode === "kanban"
+            ? "w-full max-w-full p-8"
+            : "max-w-4xl mx-auto px-4 py-8"
         }`}
         role="main"
         aria-label="Notes management"

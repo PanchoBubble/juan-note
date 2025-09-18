@@ -362,45 +362,54 @@ export function KanbanBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEndEvent}
       >
-        <SortableContext
-          items={columnIds}
-          strategy={horizontalListSortingStrategy}
-        >
-          <div
-            className="kanban-scroll-container scrollbar-monokai flex gap-6 overflow-x-auto w-full px-6 py-4 sm:px-8 sm:py-6"
-            style={{
-              scrollbarWidth: "thin",
-              scrollbarColor: "#fd971f #272822",
-            }}
+        <div className="flex flex-col w-full">
+          <SortableContext
+            items={columnIds}
+            strategy={horizontalListSortingStrategy}
           >
-            {columns.map(column => (
-              <KanbanColumn
-                key={column.id}
-                id={column.id}
-                title={column.title}
-                notes={column.notes}
-                colorClass={column.colorClass}
-                state={column.state}
-                onEdit={onEdit}
-                onComplete={onComplete}
-                onDelete={onDelete}
-                onUpdate={onUpdate}
-                onLabelClick={onLabelClick}
-                isDragOver={activeId !== null && !isColumnDragMode}
-                isColumnDraggable={!!column.state} // Only allow dragging for actual states
-                onColumnEdit={column.state ? handleEditColumn : undefined}
-                onColumnDelete={column.state ? handleDeleteColumn : undefined}
-                onColumnDuplicate={
-                  column.state ? handleDuplicateColumn : undefined
-                }
-              />
-            ))}
+            <div
+              className="kanban-scroll-container scrollbar-monokai flex gap-6 overflow-x-auto w-full max-w-full px-6 py-4 sm:px-8 sm:py-6"
+              style={{
+                scrollbarWidth: "thin",
+                scrollbarColor: "#fd971f #272822",
+                minHeight: "calc(100vh - 200px)", // Ensure minimum height for proper scrolling
+                maxWidth: "100vw", // Prevent horizontal overflow
+              }}
+            >
+              {columns.map(column => (
+                <KanbanColumn
+                  key={column.id}
+                  id={column.id}
+                  title={column.title}
+                  notes={column.notes}
+                  colorClass={column.colorClass}
+                  state={column.state}
+                  onEdit={onEdit}
+                  onComplete={onComplete}
+                  onDelete={onDelete}
+                  onUpdate={onUpdate}
+                  onLabelClick={onLabelClick}
+                  isDragOver={activeId !== null && !isColumnDragMode}
+                  isColumnDraggable={!!column.state} // Only allow dragging for actual states
+                  onColumnEdit={column.state ? handleEditColumn : undefined}
+                  onColumnDelete={column.state ? handleDeleteColumn : undefined}
+                  onColumnDuplicate={
+                    column.state ? handleDuplicateColumn : undefined
+                  }
+                  isUnassigned={column.id === -1}
+                />
+              ))}
+            </div>
+          </SortableContext>
+
+          {/* Add Column Button - Always Visible */}
+          <div className="flex justify-start px-6 py-2 sm:px-8">
             <AddColumnButton
               onClick={() => setIsCreateModalOpen(true)}
               disabled={false}
             />
           </div>
-        </SortableContext>
+        </div>
 
         {/* Enhanced Drag Overlay */}
         <DragOverlay dropAnimation={null}>

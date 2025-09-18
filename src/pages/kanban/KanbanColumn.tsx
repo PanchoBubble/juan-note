@@ -24,6 +24,7 @@ interface KanbanColumnProps {
   onColumnEdit?: (state: State) => void;
   onColumnDelete?: (stateId: number) => Promise<boolean>;
   onColumnDuplicate?: (state: State) => void;
+  isUnassigned?: boolean;
 }
 
 export const KanbanColumn = memo(function KanbanColumn({
@@ -42,6 +43,7 @@ export const KanbanColumn = memo(function KanbanColumn({
   onColumnEdit,
   onColumnDelete,
   onColumnDuplicate,
+  isUnassigned = false,
 }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({
     id: id.toString(),
@@ -85,7 +87,7 @@ export const KanbanColumn = memo(function KanbanColumn({
       ref={combineRefs}
       style={style}
       {...(isColumnDraggable ? attributes : {})}
-      className={`flex-none w-80 sm:w-96 lg:flex-1 lg:min-w-80 lg:max-w-none ${colorClass} rounded-lg p-4 transition-all duration-200 ${
+      className={`flex-none w-80 sm:w-96 lg:flex-1 lg:min-w-80 ${isUnassigned ? "lg:max-w-80" : "lg:max-w-96"} ${colorClass} rounded-lg p-4 transition-all duration-200 ${
         isDragOver ? "ring-2 ring-[#66d9ef]/50" : ""
       } ${isDragging ? "opacity-50 z-50" : ""}`}
     >
@@ -123,7 +125,9 @@ export const KanbanColumn = memo(function KanbanColumn({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3 min-h-32">
+      <div
+        className={`flex flex-wrap gap-3 min-h-32 max-w-full overflow-hidden ${isUnassigned ? "max-h-96 overflow-y-auto" : ""}`}
+      >
         {notes.length === 0 ? (
           <div className="text-center py-8 text-monokai-comment w-full">
             <div className="w-12 h-12 bg-[#2f2f2a]/50 rounded-full flex items-center justify-center mx-auto mb-3 border border-[#75715e]/30">
