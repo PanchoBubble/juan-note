@@ -40,7 +40,7 @@ interface KanbanBoardProps {
   onDelete: (note: Note) => void;
   onUpdate?: (note: Note) => void;
   onLabelClick?: (label: string) => void;
-  onStatesChange?: () => void; // Callback to refresh states after changes
+  onStatesChange?: () => void; // Deprecated: Now using optimistic updates
 }
 
 export function KanbanBoard({
@@ -51,7 +51,7 @@ export function KanbanBoard({
   onDelete,
   onUpdate,
   onLabelClick,
-  onStatesChange,
+  onStatesChange: _onStatesChange, // Deprecated: using optimistic updates
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeDragData, setActiveDragData] = useState<any>(null);
@@ -102,13 +102,10 @@ export function KanbanBoard({
     );
   }
 
-  // Handle column creation
+  // Handle column creation with optimistic updates
   const handleCreateColumn = async (request: CreateStateRequest) => {
-    const result = await createState(request);
-    if (result && onStatesChange) {
-      onStatesChange();
-    }
-    return result;
+    // Optimistic updates are handled in useStates hook
+    return await createState(request);
   };
 
   // Handle column editing
@@ -117,35 +114,27 @@ export function KanbanBoard({
     setIsSettingsModalOpen(true);
   };
 
-  // Handle column updates
+  // Handle column updates with optimistic updates
   const handleUpdateColumn = async (request: UpdateStateRequest) => {
-    const result = await updateState(request);
-    if (result && onStatesChange) {
-      onStatesChange();
-    }
-    return result;
+    // Optimistic updates are handled in useStates hook
+    return await updateState(request);
   };
 
-  // Handle column deletion
+  // Handle column deletion with optimistic updates
   const handleDeleteColumn = async (stateId: number) => {
-    const success = await deleteState(stateId);
-    if (success && onStatesChange) {
-      onStatesChange();
-    }
-    return success;
+    // Optimistic updates are handled in useStates hook
+    return await deleteState(stateId);
   };
 
-  // Handle column duplication
+  // Handle column duplication with optimistic updates
   const handleDuplicateColumn = async (state: State) => {
     const duplicateRequest: CreateStateRequest = {
       name: `${state.name} Copy`,
       position: states.length,
       color: state.color,
     };
-    const result = await createState(duplicateRequest);
-    if (result && onStatesChange) {
-      onStatesChange();
-    }
+    // Optimistic updates are handled in useStates hook
+    await createState(duplicateRequest);
   };
 
   // Utility function to clean up orphaned notes
@@ -252,14 +241,10 @@ export function KanbanBoard({
       const newIndex = states.findIndex(state => state.id === overColumnId);
 
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        // Use the reorderStates function from the hook
-        reorderStates(activeColumnId, newIndex)
-          .then(() => {
-            if (onStatesChange) onStatesChange();
-          })
-          .catch(error => {
-            console.error("Error reordering states:", error);
-          });
+        // Use the reorderStates function with optimistic updates
+        reorderStates(activeColumnId, newIndex).catch(error => {
+          console.error("Error reordering states:", error);
+        });
       }
       return;
     }
@@ -329,7 +314,13 @@ export function KanbanBoard({
           items={columnIds}
           strategy={horizontalListSortingStrategy}
         >
-          <div className="kanban-scroll-container flex gap-6 overflow-x-auto w-full px-4 sm:px-6 lg:px-8">
+          <div
+            className="kanban-scroll-container scrollbar-monokai flex gap-6 overflow-x-auto w-full px-6 py-4 sm:px-8 sm:py-6"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "#fd971f #272822",
+            }}
+          >
             {columns.map(column => (
               <KanbanColumn
                 key={column.id}

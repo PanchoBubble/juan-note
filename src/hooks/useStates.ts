@@ -31,12 +31,36 @@ export function useStates() {
   const createState = useCallback(
     async (request: CreateStateRequest, retryCount = 0) => {
       setError(null);
+
+      // Generate optimistic state with temporary ID
+      const optimisticState: State = {
+        id: -Date.now(), // Temporary negative ID
+        name: request.name,
+        position: request.position,
+        color: request.color || "#3498db",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Optimistic update
+      setStates(prev => [...prev, optimisticState]);
+
       try {
         const response = await NoteService.createState(request);
         if (response.success && response.data) {
-          setStates(prev => [...prev, response.data!]);
+          // Replace optimistic state with real one
+          setStates(prev =>
+            prev.map(state =>
+              state.id === optimisticState.id ? response.data! : state
+            )
+          );
           return response.data;
         } else {
+          // Rollback optimistic update
+          setStates(prev =>
+            prev.filter(state => state.id !== optimisticState.id)
+          );
+
           const errorMessage = response.error || "Failed to create state";
           if (retryCount < 2) {
             await new Promise(resolve =>
@@ -48,6 +72,11 @@ export function useStates() {
           return null;
         }
       } catch (err) {
+        // Rollback optimistic update
+        setStates(prev =>
+          prev.filter(state => state.id !== optimisticState.id)
+        );
+
         const errorMessage =
           err instanceof Error ? err.message : "Unknown error";
         if (retryCount < 2) {
@@ -66,9 +95,34 @@ export function useStates() {
   const updateState = useCallback(
     async (request: UpdateStateRequest, retryCount = 0) => {
       setError(null);
+
+      // Store previous state for rollback
+      let previousState: State | undefined;
+
+      // Optimistic update
+      setStates(prev => {
+        const newStates = prev.map(state => {
+          if (state.id === request.id) {
+            previousState = state;
+            return {
+              ...state,
+              ...(request.name && { name: request.name }),
+              ...(request.position !== undefined && {
+                position: request.position,
+              }),
+              ...(request.color && { color: request.color }),
+              updated_at: new Date().toISOString(),
+            };
+          }
+          return state;
+        });
+        return newStates;
+      });
+
       try {
         const response = await NoteService.updateState(request);
         if (response.success && response.data) {
+          // Replace optimistic update with real data
           setStates(prev =>
             prev.map(state =>
               state.id === request.id ? response.data! : state
@@ -76,6 +130,15 @@ export function useStates() {
           );
           return response.data;
         } else {
+          // Rollback optimistic update
+          if (previousState) {
+            setStates(prev =>
+              prev.map(state =>
+                state.id === request.id ? previousState! : state
+              )
+            );
+          }
+
           const errorMessage = response.error || "Failed to update state";
           if (retryCount < 2) {
             await new Promise(resolve =>
@@ -87,6 +150,15 @@ export function useStates() {
           return null;
         }
       } catch (err) {
+        // Rollback optimistic update
+        if (previousState) {
+          setStates(prev =>
+            prev.map(state =>
+              state.id === request.id ? previousState! : state
+            )
+          );
+        }
+
         const errorMessage =
           err instanceof Error ? err.message : "Unknown error";
         if (retryCount < 2) {
@@ -104,15 +176,31 @@ export function useStates() {
 
   const deleteState = useCallback(async (id: number, retryCount = 0) => {
     setError(null);
+
+    // Store the state being deleted for potential rollback
+    let deletedState: State | undefined;
+
+    // Optimistic update - remove state immediately
+    setStates(prev => {
+      deletedState = prev.find(state => state.id === id);
+      return prev.filter(state => state.id !== id);
+    });
+
     try {
       const response = await NoteService.deleteState(id);
       if (response.success) {
-        setStates(prev => prev.filter(state => state.id !== id));
+        // Deletion confirmed - no need to update state again
         return true;
       } else {
+        // Rollback optimistic update
+        if (deletedState) {
+          setStates(prev =>
+            [...prev, deletedState!].sort((a, b) => a.position - b.position)
+          );
+        }
+
         const errorMessage = response.error || "Failed to delete state";
         if (retryCount < 2) {
-          // Retry up to 2 times with exponential backoff
           await new Promise(resolve =>
             setTimeout(resolve, Math.pow(2, retryCount) * 1000)
           );
@@ -122,9 +210,15 @@ export function useStates() {
         return false;
       }
     } catch (err) {
+      // Rollback optimistic update
+      if (deletedState) {
+        setStates(prev =>
+          [...prev, deletedState!].sort((a, b) => a.position - b.position)
+        );
+      }
+
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       if (retryCount < 2) {
-        // Retry up to 2 times with exponential backoff
         await new Promise(resolve =>
           setTimeout(resolve, Math.pow(2, retryCount) * 1000)
         );

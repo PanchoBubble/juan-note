@@ -109,5 +109,38 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities }) {
+      const scrollbarUtilities = {
+        '.scrollbar-monokai': {
+          'scrollbar-width': 'thin',
+          'scrollbar-color': '#fd971f #272822',
+        },
+        '.scrollbar-monokai::-webkit-scrollbar': {
+          'height': '12px',
+          'width': '12px',
+        },
+        '.scrollbar-monokai::-webkit-scrollbar-track': {
+          'background': '#272822',
+          'border-radius': '6px',
+        },
+        '.scrollbar-monokai::-webkit-scrollbar-thumb': {
+          'background': '#fd971f',
+          'border-radius': '6px',
+          'border': '2px solid #272822',
+          'transition': 'background 0.2s ease',
+        },
+        '.scrollbar-monokai::-webkit-scrollbar-thumb:hover': {
+          'background': '#e6db74',
+        },
+        '.scrollbar-monokai::-webkit-scrollbar-thumb:active': {
+          'background': '#f92672',
+        },
+        '.scrollbar-monokai::-webkit-scrollbar-corner': {
+          'background': '#272822',
+        },
+      }
+      addUtilities(scrollbarUtilities)
+    }
+  ],
 }
