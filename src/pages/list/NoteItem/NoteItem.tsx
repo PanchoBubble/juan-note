@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
+import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { Note, UpdateNoteRequest } from "../../../types/note";
 import { NoteService } from "../../../services/noteService";
@@ -24,6 +25,7 @@ interface NoteItemProps {
   isDraggable?: boolean;
   onUpdate?: (note: Note) => void;
   isDragOverlay?: boolean;
+  dragMode?: "list" | "kanban"; // New prop to determine drag behavior
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -39,17 +41,51 @@ export const NoteItem = React.memo(function NoteItem({
   isDraggable = false,
   onUpdate,
   isDragOverlay = false,
+  dragMode = "list",
 }: NoteItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
 
-  // Use sortable for list reordering
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useSortable({ id: note.id?.toString() || "" });
+  // Use sortable for list reordering and within-column kanban reordering
+  const {
+    attributes: sortableAttributes,
+    listeners: sortableListeners,
+    setNodeRef: setSortableRef,
+    transform: sortableTransform,
+    isDragging: isSortableDragging,
+  } = useSortable({
+    id: note.id?.toString() || "",
+    disabled: !isDraggable || dragMode === "kanban",
+  });
 
-  const style = transform
+  // Use draggable for cross-column kanban moves
+  const {
+    attributes: draggableAttributes,
+    listeners: draggableListeners,
+    setNodeRef: setDraggableRef,
+    transform: draggableTransform,
+    isDragging: isDraggableDragging,
+  } = useDraggable({
+    id: note.id?.toString() || "",
+    disabled: !isDraggable || dragMode === "list",
+    data: {
+      type: "note",
+      note: note,
+      sourceColumn: note.state_id,
+    },
+  });
+
+  // Determine which drag system to use based on mode
+  const isListMode = dragMode === "list";
+  const activeTransform = isListMode ? sortableTransform : draggableTransform;
+  const isDragging = isListMode ? isSortableDragging : isDraggableDragging;
+  const attributes = isListMode ? sortableAttributes : draggableAttributes;
+  const listeners = isListMode ? sortableListeners : draggableListeners;
+  const setNodeRef = isListMode ? setSortableRef : setDraggableRef;
+
+  const style = activeTransform
     ? {
-        transform: CSS.Translate.toString(transform),
+        transform: CSS.Translate.toString(activeTransform),
         transition: "none", // Disable transitions during transform
       }
     : undefined;
