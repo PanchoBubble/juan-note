@@ -74,7 +74,6 @@ export function KanbanBoard({
   >("none");
 
   const {
-    handleDrop,
     handleDragStart,
     handleDragEnd,
     getNotesByState,
@@ -381,9 +380,46 @@ export function KanbanBoard({
 
     // Handle note dragging
     const noteId = parseInt(activeIdStr);
-    const targetStateId = parseInt(overIdStr);
+    const overNoteId = parseInt(overIdStr);
 
-    if (!isNaN(noteId) && !isNaN(targetStateId)) {
+    // Check if this is a note being dragged (numeric activeId)
+    if (!isNaN(noteId)) {
+      const draggedNote = notes.find(note => note.id === noteId);
+      if (!draggedNote) {
+        console.warn("Cannot find dragged note", { noteId });
+        return;
+      }
+
+      // Check if dropped on another note (reordering within same column)
+      if (!isNaN(overNoteId) && overNoteId !== noteId) {
+        const targetNote = notes.find(note => note.id === overNoteId);
+        if (targetNote && targetNote.state_id === draggedNote.state_id) {
+          // Reordering within the same column - this would need order field implementation
+          console.log("Note reordering within column not yet implemented");
+          return;
+        }
+      }
+
+      // Parse the drop target - could be a column ID or state ID
+      let targetStateId: number;
+
+      if (overIdStr.startsWith("column-")) {
+        // Dropped on a column - extract state ID from column ID
+        targetStateId = parseInt(overIdStr.replace("column-", ""));
+      } else if (!isNaN(overNoteId)) {
+        // Dropped on another note - move to that note's state
+        const targetNote = notes.find(note => note.id === overNoteId);
+        if (targetNote) {
+          targetStateId = targetNote.state_id || -1;
+        } else {
+          return;
+        }
+      } else {
+        // Dropped directly on a state/column area - parse as state ID
+        const parsedStateId = parseInt(overIdStr);
+        targetStateId = isNaN(parsedStateId) ? -1 : parsedStateId;
+      }
+
       // Validate that the target state exists (unless it's -1 for unassigned)
       if (targetStateId !== -1) {
         const targetState = states.find(state => state.id === targetStateId);
@@ -391,13 +427,24 @@ export function KanbanBoard({
           console.warn("Cannot drop note: target state not found", {
             noteId,
             targetStateId,
+            overIdStr,
             availableStates: states.map(s => ({ id: s.id, name: s.name })),
           });
           return;
         }
       }
 
-      handleDrop(targetStateId);
+      // Only update if the state is changing
+      if (draggedNote.state_id !== targetStateId) {
+        // Update the note's state
+        if (onUpdate) {
+          const updatedNote = {
+            ...draggedNote,
+            state_id: targetStateId === -1 ? undefined : targetStateId,
+          };
+          onUpdate(updatedNote);
+        }
+      }
     }
   };
 
