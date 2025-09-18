@@ -26,6 +26,7 @@ pub fn run() {
             delete_note,
             search_notes,
             update_note_done,
+            reorder_note,
             get_all_states,
             create_state,
             update_state,

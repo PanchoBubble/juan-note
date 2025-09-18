@@ -145,6 +145,13 @@ pub struct BulkUpdateOrderRequest {
     pub orders: Vec<i32>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ReorderNoteRequest {
+    pub note_id: i64,
+    pub new_order: i32,
+    pub state_id: Option<i64>,
+}
+
 #[derive(serde::Serialize)]
 pub struct BulkOperationResponse {
     pub success: bool,

@@ -272,6 +272,38 @@ pub fn update_note_done(request: UpdateNoteDoneRequest) -> Result<NoteResponse, 
     get_note_sync(request.id, &conn)
 }
 
+#[tauri::command]
+pub fn reorder_note(request: ReorderNoteRequest) -> Result<NoteResponse, String> {
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+
+    let now = Utc::now().timestamp();
+
+    // Update the note's order and optionally its state
+    let query = if let Some(state_id) = request.state_id {
+        "UPDATE notes SET \"order\" = ?, state_id = ?, updated_at = ? WHERE id = ?"
+    } else {
+        "UPDATE notes SET \"order\" = ?, updated_at = ? WHERE id = ?"
+    };
+
+    let result = if let Some(state_id) = request.state_id {
+        conn.execute(
+            query,
+            rusqlite::params![request.new_order, state_id, now, request.note_id],
+        )
+    } else {
+        conn.execute(
+            query,
+            rusqlite::params![request.new_order, now, request.note_id],
+        )
+    };
+
+    result.map_err(|e| format!("Failed to reorder note: {}", e))?;
+
+    // Retrieve the updated note
+    get_note_sync(request.note_id, &conn)
+}
+
 fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, String> {
     let mut stmt = conn.prepare(
         "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"

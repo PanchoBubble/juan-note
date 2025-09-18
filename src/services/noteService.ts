@@ -12,6 +12,7 @@ import type {
   StateResponse,
   StatesListResponse,
   BulkOperationResponse,
+  ReorderNoteRequest,
   McpScanResponse,
   McpFunctionQueryResponse,
 } from "../types/note";
@@ -256,6 +257,18 @@ export class NoteService {
         successful_count: 0,
         failed_count: noteIds.length,
         errors: [error instanceof Error ? error.message : "Unknown error"],
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  static async reorderNote(request: ReorderNoteRequest): Promise<NoteResponse> {
+    try {
+      return await invoke("reorder_note", { request });
+    } catch (error) {
+      console.error("Failed to reorder note:", error);
+      return {
+        success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }

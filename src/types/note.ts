@@ -124,6 +124,12 @@ export interface BulkUpdateOrderRequest {
   orders: number[];
 }
 
+export interface ReorderNoteRequest {
+  note_id: number;
+  new_order: number;
+  state_id?: number;
+}
+
 export interface BulkOperationResponse {
   success: boolean;
   successful_count: number;
