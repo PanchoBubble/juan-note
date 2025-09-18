@@ -28,43 +28,81 @@ export function useStates() {
     }
   }, []);
 
-  const createState = useCallback(async (request: CreateStateRequest) => {
-    setError(null);
-    try {
-      const response = await NoteService.createState(request);
-      if (response.success && response.data) {
-        setStates(prev => [...prev, response.data!]);
-        return response.data;
-      } else {
-        setError(response.error || "Failed to create state");
+  const createState = useCallback(
+    async (request: CreateStateRequest, retryCount = 0) => {
+      setError(null);
+      try {
+        const response = await NoteService.createState(request);
+        if (response.success && response.data) {
+          setStates(prev => [...prev, response.data!]);
+          return response.data;
+        } else {
+          const errorMessage = response.error || "Failed to create state";
+          if (retryCount < 2) {
+            await new Promise(resolve =>
+              setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+            );
+            return createState(request, retryCount + 1);
+          }
+          setError(errorMessage);
+          return null;
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
+        if (retryCount < 2) {
+          await new Promise(resolve =>
+            setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+          );
+          return createState(request, retryCount + 1);
+        }
+        setError(errorMessage);
         return null;
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      return null;
-    }
-  }, []);
+    },
+    []
+  );
 
-  const updateState = useCallback(async (request: UpdateStateRequest) => {
-    setError(null);
-    try {
-      const response = await NoteService.updateState(request);
-      if (response.success && response.data) {
-        setStates(prev =>
-          prev.map(state => (state.id === request.id ? response.data! : state))
-        );
-        return response.data;
-      } else {
-        setError(response.error || "Failed to update state");
+  const updateState = useCallback(
+    async (request: UpdateStateRequest, retryCount = 0) => {
+      setError(null);
+      try {
+        const response = await NoteService.updateState(request);
+        if (response.success && response.data) {
+          setStates(prev =>
+            prev.map(state =>
+              state.id === request.id ? response.data! : state
+            )
+          );
+          return response.data;
+        } else {
+          const errorMessage = response.error || "Failed to update state";
+          if (retryCount < 2) {
+            await new Promise(resolve =>
+              setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+            );
+            return updateState(request, retryCount + 1);
+          }
+          setError(errorMessage);
+          return null;
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
+        if (retryCount < 2) {
+          await new Promise(resolve =>
+            setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+          );
+          return updateState(request, retryCount + 1);
+        }
+        setError(errorMessage);
         return null;
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      return null;
-    }
-  }, []);
+    },
+    []
+  );
 
-  const deleteState = useCallback(async (id: number) => {
+  const deleteState = useCallback(async (id: number, retryCount = 0) => {
     setError(null);
     try {
       const response = await NoteService.deleteState(id);
@@ -72,11 +110,27 @@ export function useStates() {
         setStates(prev => prev.filter(state => state.id !== id));
         return true;
       } else {
-        setError(response.error || "Failed to delete state");
+        const errorMessage = response.error || "Failed to delete state";
+        if (retryCount < 2) {
+          // Retry up to 2 times with exponential backoff
+          await new Promise(resolve =>
+            setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+          );
+          return deleteState(id, retryCount + 1);
+        }
+        setError(errorMessage);
         return false;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      if (retryCount < 2) {
+        // Retry up to 2 times with exponential backoff
+        await new Promise(resolve =>
+          setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+        );
+        return deleteState(id, retryCount + 1);
+      }
+      setError(errorMessage);
       return false;
     }
   }, []);

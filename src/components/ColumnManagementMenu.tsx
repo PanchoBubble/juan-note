@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
+import { ConfirmationModal } from "./ConfirmationModal";
 import type { State } from "../types/note";
 
 interface ColumnManagementMenuProps {
   state: State;
   onEdit: (state: State) => void;
-  onDelete: (stateId: number) => void;
+  onDelete: (stateId: number) => Promise<boolean>;
   onDuplicate?: (state: State) => void;
 }
 
@@ -15,6 +16,8 @@ export function ColumnManagementMenu({
   onDuplicate,
 }: ColumnManagementMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -56,13 +59,20 @@ export function ColumnManagementMenu({
   };
 
   const handleDelete = () => {
-    if (
-      state.id &&
-      confirm(
-        `Are you sure you want to delete the "${state.name}" column? This action cannot be undone.`
-      )
-    ) {
-      onDelete(state.id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!state.id) return;
+
+    setIsDeleting(true);
+    try {
+      const success = await onDelete(state.id);
+      if (success) {
+        setShowDeleteConfirm(false);
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -155,6 +165,19 @@ export function ColumnManagementMenu({
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Column"
+        message={`Are you sure you want to delete the "${state.name}" column? This action cannot be undone and will affect all notes in this column.`}
+        confirmText="Delete Column"
+        cancelText="Cancel"
+        confirmButtonVariant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
