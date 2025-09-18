@@ -91,27 +91,15 @@ export const KanbanColumn = memo(function KanbanColumn({
         ...style,
         ...(borderColor ? { borderColor } : {}),
       }}
-      {...(isColumnDraggable ? attributes : {})}
+      {...(isColumnDraggable ? { ...attributes, ...listeners } : {})}
       className={`flex-none w-80 ${colorClass} rounded-lg p-4 transition-all duration-200 ${
         isDragOver ? "ring-2 ring-[#66d9ef]/50" : ""
-      } ${isDragging ? "opacity-50 z-50" : ""}`}
+      } ${isDragging ? "opacity-50 z-50" : ""} ${
+        isColumnDraggable ? "cursor-grab active:cursor-grabbing" : ""
+      }`}
     >
       <div className="flex items-center justify-between mb-4">
-        <div
-          className="flex items-center space-x-2 flex-1"
-          {...(isColumnDraggable ? listeners : {})}
-        >
-          {isColumnDraggable && (
-            <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-[#2f2f2a]/30 rounded transition-colors">
-              <svg
-                className="w-4 h-4 text-monokai-comment"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
-              </svg>
-            </div>
-          )}
+        <div className="flex items-center space-x-2 flex-1">
           <h3 className="text-lg font-semibold text-monokai-fg flex items-center space-x-2">
             <span>{title}</span>
             <span className="bg-[#2f2f2a]/80 text-monokai-comment px-2 py-1 rounded-full text-sm font-normal border border-[#75715e]/30">
@@ -132,6 +120,9 @@ export const KanbanColumn = memo(function KanbanColumn({
 
       <div
         className={`flex flex-wrap gap-3 min-h-32 max-w-full overflow-hidden ${isUnassigned ? "max-h-96 overflow-y-auto" : ""}`}
+        style={{
+          pointerEvents: isColumnDraggable && isDragging ? "none" : "auto",
+        }}
       >
         {notes.length === 0 ? (
           <div className="text-center py-8 text-monokai-comment w-full">
@@ -145,7 +136,14 @@ export const KanbanColumn = memo(function KanbanColumn({
           </div>
         ) : (
           notes.map(note => (
-            <div key={note.id} className="cursor-move w-full">
+            <div
+              key={note.id}
+              className="w-full"
+              style={{
+                pointerEvents:
+                  isColumnDraggable && isDragging ? "none" : "auto",
+              }}
+            >
               <NoteItem
                 note={note}
                 onEdit={onEdit}
