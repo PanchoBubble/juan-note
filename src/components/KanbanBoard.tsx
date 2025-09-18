@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -101,6 +101,58 @@ export function KanbanBoard({
       }))
     );
   }
+
+  // Force apply scrollbar styles when component mounts
+  useEffect(() => {
+    const applyScrollbarStyles = () => {
+      const scrollContainer = document.querySelector(
+        ".kanban-scroll-container"
+      );
+      if (scrollContainer) {
+        const element = scrollContainer as HTMLElement;
+        // Force apply the styles programmatically
+        element.style.setProperty("scrollbar-width", "thin", "important");
+        element.style.setProperty(
+          "scrollbar-color",
+          "#fd971f #272822",
+          "important"
+        );
+
+        // Add custom CSS for webkit browsers
+        const style = document.createElement("style");
+        style.textContent = `
+          .kanban-scroll-container::-webkit-scrollbar {
+            height: 12px !important;
+            background: transparent !important;
+          }
+          .kanban-scroll-container::-webkit-scrollbar-track {
+            background: #272822 !important;
+            border-radius: 6px !important;
+          }
+          .kanban-scroll-container::-webkit-scrollbar-thumb {
+            background: #fd971f !important;
+            border-radius: 6px !important;
+            border: 2px solid #272822 !important;
+          }
+          .kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #e6db74 !important;
+          }
+        `;
+
+        // Only add the style if it doesn't already exist
+        if (!document.querySelector("#kanban-scrollbar-styles")) {
+          style.id = "kanban-scrollbar-styles";
+          document.head.appendChild(style);
+        }
+      }
+    };
+
+    // Apply styles immediately and after a short delay
+    applyScrollbarStyles();
+    const timer = setTimeout(applyScrollbarStyles, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Handle column creation with optimistic updates
   const handleCreateColumn = async (request: CreateStateRequest) => {

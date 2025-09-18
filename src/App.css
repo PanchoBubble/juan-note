@@ -393,8 +393,7 @@ button:focus {
   scrollbar-width: thin !important;
   scrollbar-color: #fd971f #272822 !important;
   padding-bottom: 1rem !important;
-  /* Debug: Add a border to confirm the container is being targeted */
-  border-top: 1px solid #fd971f !important;
+  scrollbar-gutter: stable !important;
 }
 
 /* Webkit scrollbar styling - Force application with high specificity */
