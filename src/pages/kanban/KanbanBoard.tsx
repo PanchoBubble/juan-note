@@ -12,8 +12,6 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { KanbanColumn } from "./KanbanColumn";
-import { AddColumnButton } from "./AddColumnButton";
-import { CreateColumnModal } from "./CreateColumnModal";
 import { ColumnSettingsModal } from "./ColumnSettingsModal";
 import { useKanbanView } from "../../hooks/useKanbanView";
 import { useStates } from "../../hooks/useStates";
@@ -41,6 +39,11 @@ interface KanbanBoardProps {
   onUpdate?: (note: Note) => void;
   onLabelClick?: (label: string) => void;
   onStatesChange?: () => void; // Deprecated: Now using optimistic updates
+  createState?: (request: CreateStateRequest) => Promise<State | null>;
+  updateState?: (request: UpdateStateRequest) => Promise<State | null>;
+  deleteState?: (id: number) => Promise<boolean>;
+  reorderStates?: (stateId: number, newPosition: number) => Promise<void>;
+  statesError?: string | null;
 }
 
 export function KanbanBoard({
@@ -52,13 +55,21 @@ export function KanbanBoard({
   onUpdate,
   onLabelClick,
   onStatesChange: _onStatesChange, // Deprecated: using optimistic updates
+  createState: propCreateState,
+  updateState: propUpdateState,
+  deleteState: propDeleteState,
+  reorderStates: propReorderStates,
+  statesError: propStatesError,
 }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeDragData, setActiveDragData] = useState<any>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingState, setEditingState] = useState<State | undefined>();
   const [isColumnDragMode, setIsColumnDragMode] = useState(false);
+  const [scrollFade, setScrollFade] = useState<
+    "none" | "left" | "right" | "both"
+  >("none");
 
   const {
     handleDrop,
@@ -68,13 +79,22 @@ export function KanbanBoard({
     getNotesWithoutState,
   } = useKanbanView(notes, states);
 
+  // Use props for state management functions, fallback to hook if not provided
   const {
     createState,
     updateState,
     deleteState,
     reorderStates,
     error: statesError,
-  } = useStates();
+  } = propCreateState && propUpdateState && propDeleteState && propReorderStates
+    ? {
+        createState: propCreateState,
+        updateState: propUpdateState,
+        deleteState: propDeleteState,
+        reorderStates: propReorderStates,
+        error: propStatesError,
+      }
+    : useStates();
 
   // Drag optimization for performance
   const {
@@ -84,6 +104,23 @@ export function KanbanBoard({
     maxItems: 200,
     enableVirtualization: notes.length > 200,
   });
+
+  // Handle scroll fade effects
+  const updateScrollFade = (element: HTMLElement) => {
+    const { scrollLeft, scrollWidth, clientWidth } = element;
+    const canScrollLeft = scrollLeft > 0;
+    const canScrollRight = scrollLeft < scrollWidth - clientWidth - 1; // -1 for rounding errors
+
+    if (canScrollLeft && canScrollRight) {
+      setScrollFade("both");
+    } else if (canScrollLeft) {
+      setScrollFade("left");
+    } else if (canScrollRight) {
+      setScrollFade("right");
+    } else {
+      setScrollFade("none");
+    }
+  };
 
   // Data integrity check - find notes that reference non-existent states
   const orphanedNotes = notes.filter(
@@ -110,6 +147,14 @@ export function KanbanBoard({
       );
       if (scrollContainer) {
         const element = scrollContainer as HTMLElement;
+
+        // Update scroll fade on mount
+        updateScrollFade(element);
+
+        // Add scroll event listener
+        const handleScroll = () => updateScrollFade(element);
+        element.addEventListener("scroll", handleScroll);
+
         // Force apply the styles programmatically
         element.style.setProperty("scrollbar-width", "thin", "important");
         element.style.setProperty(
@@ -144,21 +189,25 @@ export function KanbanBoard({
           style.id = "kanban-scrollbar-styles";
           document.head.appendChild(style);
         }
+
+        // Cleanup function
+        return () => {
+          element.removeEventListener("scroll", handleScroll);
+        };
       }
     };
 
     // Apply styles immediately and after a short delay
-    applyScrollbarStyles();
-    const timer = setTimeout(applyScrollbarStyles, 100);
+    const cleanup = applyScrollbarStyles();
+    const timer = setTimeout(() => {
+      applyScrollbarStyles();
+    }, 100);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      cleanup?.();
+    };
   }, []);
-
-  // Handle column creation with optimistic updates
-  const handleCreateColumn = async (request: CreateStateRequest) => {
-    // Optimistic updates are handled in useStates hook
-    return await createState(request);
-  };
 
   // Handle column editing
   const handleEditColumn = (state: State) => {
@@ -196,7 +245,7 @@ export function KanbanBoard({
       for (const note of orphanedNotes) {
         try {
           // Reset the state_id to undefined for orphaned notes
-          await onUpdate({ ...note, state_id: undefined });
+          onUpdate({ ...note, state_id: undefined });
         } catch (error) {
           console.error(`Failed to clean up note ${note.id}:`, error);
         }
@@ -275,28 +324,44 @@ export function KanbanBoard({
       const activeColumnId = parseInt(activeIdStr.replace("column-", ""));
       const overColumnId = parseInt(overIdStr.replace("column-", ""));
 
+      console.log("🎯 Column drag detected:", {
+        activeIdStr,
+        overIdStr,
+        activeColumnId,
+        overColumnId,
+      });
+
       // Validate that both states exist
       const activeState = states.find(state => state.id === activeColumnId);
       const overState = states.find(state => state.id === overColumnId);
 
       if (!activeState || !overState) {
-        console.warn("Cannot reorder columns: one or both states not found", {
-          activeColumnId,
-          overColumnId,
-          activeState,
-          overState,
-        });
+        console.warn(
+          "❌ Cannot reorder columns: one or both states not found",
+          {
+            activeColumnId,
+            overColumnId,
+            activeState,
+            overState,
+            availableStates: states.map(s => ({ id: s.id, name: s.name })),
+          }
+        );
         return;
       }
 
       const oldIndex = states.findIndex(state => state.id === activeColumnId);
       const newIndex = states.findIndex(state => state.id === overColumnId);
 
+      console.log("📍 Column indices:", { oldIndex, newIndex });
+
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        console.log("✅ Calling reorderStates...");
         // Use the reorderStates function with optimistic updates
         reorderStates(activeColumnId, newIndex).catch(error => {
-          console.error("Error reordering states:", error);
+          console.error("❌ Error reordering states:", error);
         });
+      } else {
+        console.log("⏭️ Skipping reorder - indices invalid or same position");
       }
       return;
     }
@@ -329,6 +394,7 @@ export function KanbanBoard({
     title: string;
     state?: State;
     colorClass: string;
+    borderColor?: string;
     notes: any[];
   }> = states
     .filter(state => state.id != null) // Filter out states without valid IDs
@@ -337,6 +403,8 @@ export function KanbanBoard({
       title: state.name,
       state: state,
       colorClass: getColumnColorClass(state.color),
+      borderColor:
+        state.color && !state.color.startsWith("--") ? state.color : undefined,
       notes: getNotesByState(state.id!),
     }));
 
@@ -348,11 +416,23 @@ export function KanbanBoard({
       title: "Unassigned",
       state: undefined,
       colorClass: "bg-[#2f2f2a] border-[#75715e]/30 border-2",
+      borderColor: undefined,
       notes: unassignedNotes,
     });
   }
 
   const columnIds = columns.map(col => `column-${col.id}`);
+
+  // Update scroll fade when columns change
+  useEffect(() => {
+    const scrollContainer = document.querySelector(
+      ".kanban-scroll-container"
+    ) as HTMLElement;
+    if (scrollContainer) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => updateScrollFade(scrollContainer), 50);
+    }
+  }, [columns]);
 
   return (
     <>
@@ -368,7 +448,15 @@ export function KanbanBoard({
             strategy={horizontalListSortingStrategy}
           >
             <div
-              className="kanban-scroll-container scrollbar-monokai flex gap-6 overflow-x-auto w-full max-w-full px-6 py-4 sm:px-8 sm:py-6"
+              className={`kanban-scroll-container pt-0 scrollbar-monokai flex gap-6 overflow-x-auto w-full max-w-full px-6 sm:px-8 sm:py-6 ${
+                scrollFade === "left"
+                  ? "kanban-scroll-fade-left"
+                  : scrollFade === "right"
+                    ? "kanban-scroll-fade-right"
+                    : scrollFade === "both"
+                      ? "kanban-scroll-fade-both"
+                      : ""
+              }`}
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#fd971f #272822",
@@ -383,6 +471,7 @@ export function KanbanBoard({
                   title={column.title}
                   notes={column.notes}
                   colorClass={column.colorClass}
+                  borderColor={column.borderColor}
                   state={column.state}
                   onEdit={onEdit}
                   onComplete={onComplete}
@@ -401,14 +490,6 @@ export function KanbanBoard({
               ))}
             </div>
           </SortableContext>
-
-          {/* Add Column Button - Always Visible */}
-          <div className="flex justify-start px-6 py-2 sm:px-8">
-            <AddColumnButton
-              onClick={() => setIsCreateModalOpen(true)}
-              disabled={false}
-            />
-          </div>
         </div>
 
         {/* Enhanced Drag Overlay */}
@@ -421,14 +502,6 @@ export function KanbanBoard({
           )}
         </DragOverlay>
       </DndContext>
-
-      {/* Create Column Modal */}
-      <CreateColumnModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreate={handleCreateColumn}
-        existingStates={states}
-      />
 
       {/* Column Settings Modal */}
       <ColumnSettingsModal

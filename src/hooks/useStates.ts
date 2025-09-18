@@ -232,34 +232,57 @@ export function useStates() {
   const reorderStates = useCallback(
     async (stateId: number, newPosition: number) => {
       setError(null);
+      console.log("🔄 Starting reorderStates:", { stateId, newPosition });
+
       try {
-        // Optimistic update and get current states for database update
-        let currentStates: State[] = [];
+        // Store the final reordered states for database update
+        let reorderedStates: State[] = [];
+
         setStates(prev => {
-          currentStates = [...prev];
+          console.log(
+            "📊 Current states before reorder:",
+            prev.map(s => ({ id: s.id, name: s.name, position: s.position }))
+          );
+
           const newStates = [...prev];
           const stateIndex = newStates.findIndex(s => s.id === stateId);
-          if (stateIndex === -1) return prev;
+          if (stateIndex === -1) {
+            console.warn("❌ State not found for reordering:", stateId);
+            return prev;
+          }
 
           const [movedState] = newStates.splice(stateIndex, 1);
-          movedState.position = newPosition;
           newStates.splice(newPosition, 0, movedState);
 
-          // Update positions for all states
+          // Update positions for all states based on their new array positions
           newStates.forEach((state, index) => {
             state.position = index;
           });
 
+          // Store the reordered states for database update
+          reorderedStates = [...newStates];
+
+          console.log(
+            "✅ States after reorder:",
+            reorderedStates.map(s => ({
+              id: s.id,
+              name: s.name,
+              position: s.position,
+            }))
+          );
           return newStates;
         });
 
-        // Update in database using the captured currentStates
-        const updatePromises = currentStates.map((state, index) =>
-          NoteService.updateState({ id: state.id!, position: index })
+        // Update in database using the NEW reordered positions
+        const updatePromises = reorderedStates.map(state =>
+          NoteService.updateState({ id: state.id!, position: state.position })
         );
 
+        console.log("💾 Updating database with new positions...");
         await Promise.all(updatePromises);
+        console.log("✅ Database update complete");
       } catch (err) {
+        console.error("❌ Error in reorderStates:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
         // Reload states to revert optimistic update
         const response = await NoteService.getAllStates();
@@ -268,7 +291,7 @@ export function useStates() {
         }
       }
     },
-    [] // No dependencies needed since we capture states inside the function
+    []
   );
 
   useEffect(() => {
