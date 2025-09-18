@@ -386,3 +386,102 @@ button:focus {
 .template-button:disabled {
   @apply border-monokai/20 bg-[#2f2f2a]/30 text-monokai-comment cursor-not-allowed;
 }
+
+/* Enhanced Horizontal Scroll Styling */
+.kanban-scroll-container {
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--monokai-comment) var(--color-bg-secondary);
+  padding-bottom: 1rem;
+}
+
+/* Webkit scrollbar styling */
+.kanban-scroll-container::-webkit-scrollbar {
+  height: 12px;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+  border-radius: 6px;
+  margin: 0 1rem;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--monokai-comment);
+  border-radius: 6px;
+  border: 2px solid var(--color-bg-secondary);
+  transition: background 0.2s ease;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--monokai-blue);
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb:active {
+  background: var(--monokai-purple);
+}
+
+/* Scroll shadows for visual feedback */
+.kanban-scroll-container::before,
+.kanban-scroll-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 1rem;
+  width: 2rem;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+.kanban-scroll-container::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-bg-primary) 0%,
+    rgba(39, 40, 34, 0.8) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+}
+
+.kanban-scroll-container::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--color-bg-primary) 0%,
+    rgba(39, 40, 34, 0.8) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+}
+
+/* Show shadows when scrollable */
+.kanban-scroll-container.has-scroll::before {
+  opacity: 1;
+}
+
+.kanban-scroll-container.has-scroll::after {
+  opacity: 1;
+}
+
+/* Hide left shadow when scrolled to start */
+.kanban-scroll-container.scroll-start::before {
+  opacity: 0;
+}
+
+/* Hide right shadow when scrolled to end */
+.kanban-scroll-container.scroll-end::after {
+  opacity: 0;
+}
+
+/* Enhanced scrollbar spacing */
+.kanban-scroll-container {
+  margin-bottom: 0.5rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Smooth scrolling behavior */
+.kanban-scroll-container {
+  scroll-behavior: smooth;
+}
