@@ -39,6 +39,15 @@
   --color-danger: var(--monokai-pink);
   --color-danger-light: #500724;
 
+  /* Additional colors for kanban columns */
+  --monokai-red: #f92672;
+  --color-column-red: var(--monokai-red);
+  --color-column-blue: var(--monokai-blue);
+  --color-column-green: var(--monokai-green);
+  --color-column-yellow: var(--monokai-yellow);
+  --color-column-purple: var(--monokai-purple);
+  --color-column-orange: var(--monokai-orange);
+
   /* Typography optimized for Monokai theme */
   font-family:
     "Inter",
@@ -275,4 +284,93 @@ button:focus {
 
 #greet-input {
   margin-right: 5px;
+}
+
+/* Kanban Column Management Styles */
+.column-drag-handle {
+  @apply cursor-grab active:cursor-grabbing transition-colors;
+}
+
+.column-drag-handle:hover {
+  @apply bg-[#2f2f2a]/30;
+}
+
+.column-management-menu {
+  @apply relative;
+}
+
+.column-menu-dropdown {
+  @apply absolute right-0 top-8 w-48 bg-[#272822] border border-[#75715e]/30 rounded-lg shadow-lg z-50 py-1;
+}
+
+.column-menu-item {
+  @apply w-full text-left px-3 py-2 text-sm hover:bg-[#2f2f2a]/50 flex items-center space-x-2 transition-colors;
+}
+
+.add-column-button {
+  @apply border-2 border-dashed border-[#66d9ef]/40 text-monokai-blue hover:border-[#66d9ef]/60 hover:bg-monokai-blue/5 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50;
+}
+
+.add-column-button:disabled {
+  @apply border-[#75715e]/20 text-monokai-comment cursor-not-allowed;
+}
+
+.column-color-picker {
+  @apply grid grid-cols-4 gap-3;
+}
+
+.color-picker-button {
+  @apply w-full h-10 rounded-lg border-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 border-[#75715e]/30 hover:border-[#75715e]/50;
+}
+
+.color-picker-button.selected {
+  @apply border-[#66d9ef]/70 ring-2 ring-[#66d9ef]/30;
+}
+
+/* Column drag preview styles */
+.column-drag-overlay {
+  @apply opacity-50 z-50 rotate-1 scale-105;
+}
+
+/* Smooth transitions for column operations */
+.kanban-column {
+  @apply transition-all duration-200;
+}
+
+.kanban-column.dragging {
+  @apply opacity-50 z-50;
+}
+
+.kanban-column:hover {
+  @apply shadow-lg border-[#75715e]/50;
+}
+
+/* Animation for new column creation */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.new-column-animation {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Error message styling */
+.error-toast {
+  @apply fixed bottom-4 right-4 bg-monokai-red/10 border border-[#f92672]/30 rounded-lg p-3 max-w-md;
+}
+
+/* Column template buttons */
+.template-button {
+  @apply p-2 text-left rounded-lg border transition-colors border-[#75715e]/30 hover:border-[#75715e]/50 hover:bg-[#2f2f2a]/30;
+}
+
+.template-button:disabled {
+  @apply border-monokai/20 bg-[#2f2f2a]/30 text-monokai-comment cursor-not-allowed;
 }

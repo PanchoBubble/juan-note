@@ -202,7 +202,7 @@ export function KanbanBoard({
       id: -1,
       title: "Unassigned",
       state: undefined,
-      colorClass: "bg-surface-secondary border-monokai border-opacity-20",
+      colorClass: "bg-[#2f2f2a] border-[#75715e]/20",
       notes: unassignedNotes,
     });
   }
@@ -273,7 +273,7 @@ export function KanbanBoard({
 
       {/* Error Display */}
       {statesError && (
-        <div className="fixed bottom-4 right-4 bg-monokai-red bg-opacity-10 border border-monokai-red border-opacity-30 rounded-lg p-3 max-w-md">
+        <div className="fixed bottom-4 right-4 bg-monokai-red/10 border border-[#f92672]/30 rounded-lg p-3 max-w-md">
           <p className="text-monokai-red text-sm">{statesError}</p>
         </div>
       )}

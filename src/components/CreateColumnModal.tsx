@@ -113,7 +113,7 @@ export function CreateColumnModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Create New Column">
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="bg-monokai-red bg-opacity-10 border border-monokai-red border-opacity-30 rounded-lg p-3">
+          <div className="bg-monokai-red/10 border border-[#f92672]/30 rounded-lg p-3">
             <p className="text-monokai-red text-sm">{error}</p>
           </div>
         )}
@@ -140,8 +140,8 @@ export function CreateColumnModal({
                   disabled={templateExists || isLoading}
                   className={`p-2 text-left rounded-lg border transition-colors ${
                     templateExists
-                      ? "border-monokai border-opacity-20 bg-surface-secondary bg-opacity-30 text-monokai-comment cursor-not-allowed"
-                      : "border-monokai border-opacity-30 hover:border-opacity-50 hover:bg-surface-secondary hover:bg-opacity-30 text-monokai-fg"
+                      ? "border-[#75715e]/20 bg-[#2f2f2a]/30 text-monokai-comment cursor-not-allowed"
+                      : "border-[#75715e]/30 hover:border-[#75715e]/50 hover:bg-[#2f2f2a]/30 text-monokai-fg"
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -162,7 +162,7 @@ export function CreateColumnModal({
           </div>
         </div>
 
-        <div className="border-t border-monokai border-opacity-20 pt-6">
+        <div className="border-t border-[#75715e]/20 pt-6">
           <p className="text-sm text-monokai-comment mb-4">
             Or create a custom column:
           </p>
@@ -182,10 +182,8 @@ export function CreateColumnModal({
               onChange={e => setName(e.target.value)}
               placeholder="Enter column name..."
               maxLength={50}
-              className={`w-full px-3 py-2 bg-surface-secondary border rounded-lg text-monokai-fg placeholder-monokai-comment focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-50 focus:border-transparent ${
-                nameExists
-                  ? "border-monokai-red border-opacity-50"
-                  : "border-monokai border-opacity-30"
+              className={`w-full px-3 py-2 bg-[#2f2f2a] border rounded-lg text-monokai-fg placeholder-monokai-comment focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 focus:border-transparent ${
+                nameExists ? "border-[#f92672]/50" : "border-[#75715e]/30"
               }`}
               disabled={isLoading}
               required
@@ -217,10 +215,10 @@ export function CreateColumnModal({
                   key={color}
                   type="button"
                   onClick={() => handleColorSelect(color)}
-                  className={`w-full h-10 rounded-lg border-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-50 ${
+                  className={`w-full h-10 rounded-lg border-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 ${
                     selectedColor === color
-                      ? "border-monokai-blue border-opacity-70 ring-2 ring-monokai-blue ring-opacity-30"
-                      : "border-monokai border-opacity-30 hover:border-opacity-50"
+                      ? "border-[#66d9ef]/70 ring-2 ring-[#66d9ef]/30"
+                      : "border-[#75715e]/30 hover:border-[#75715e]/50"
                   }`}
                   style={{ backgroundColor: color }}
                   aria-label={`Select ${colorName} color`}
@@ -254,7 +252,7 @@ export function CreateColumnModal({
               </label>
               <div className="flex items-center space-x-2">
                 <div
-                  className="w-8 h-8 rounded border border-monokai border-opacity-30"
+                  className="w-8 h-8 rounded border border-[#75715e]/30"
                   style={{
                     backgroundColor: isValidHexColor(customColor)
                       ? customColor
@@ -267,7 +265,7 @@ export function CreateColumnModal({
                   value={customColor}
                   onChange={e => handleCustomColorChange(e.target.value)}
                   placeholder="#3498db"
-                  className="flex-1 px-3 py-2 bg-surface-secondary border border-monokai border-opacity-30 rounded-lg text-monokai-fg placeholder-monokai-comment focus:outline-none focus:ring-2 focus:ring-monokai-blue focus:ring-opacity-50 focus:border-transparent"
+                  className="flex-1 px-3 py-2 bg-[#2f2f2a] border border-[#75715e]/30 rounded-lg text-monokai-fg placeholder-monokai-comment focus:outline-none focus:ring-2 focus:ring-[#66d9ef]/50 focus:border-transparent"
                   disabled={isLoading}
                 />
               </div>
@@ -281,12 +279,12 @@ export function CreateColumnModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3 pt-6 border-t border-monokai border-opacity-20">
+        <div className="flex justify-end space-x-3 pt-6 border-t border-[#75715e]/20">
           <button
             type="button"
             onClick={handleClose}
             disabled={isLoading}
-            className="px-4 py-2 text-monokai-comment hover:text-monokai-fg border border-monokai border-opacity-30 hover:border-opacity-50 rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-monokai-comment hover:text-monokai-fg border border-[#75715e]/30 hover:border-[#75715e]/50 rounded-lg transition-colors disabled:opacity-50"
           >
             Cancel
           </button>

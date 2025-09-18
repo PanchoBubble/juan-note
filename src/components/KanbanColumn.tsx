@@ -85,7 +85,7 @@ export function KanbanColumn({
       style={style}
       {...(isColumnDraggable ? attributes : {})}
       className={`flex-1 min-w-80 max-w-96 ${colorClass} rounded-lg p-4 transition-all duration-200 ${
-        isDragOver ? "ring-2 ring-monokai-blue ring-opacity-50 scale-105" : ""
+        isDragOver ? "ring-2 ring-[#66d9ef]/50 scale-105" : ""
       } ${isDragging ? "opacity-50 z-50" : ""}`}
     >
       <div className="flex items-center justify-between mb-4">
@@ -94,7 +94,7 @@ export function KanbanColumn({
           {...(isColumnDraggable ? listeners : {})}
         >
           {isColumnDraggable && (
-            <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-surface-secondary hover:bg-opacity-30 rounded transition-colors">
+            <div className="cursor-grab active:cursor-grabbing p-1 hover:bg-[#2f2f2a]/30 rounded transition-colors">
               <svg
                 className="w-4 h-4 text-monokai-comment"
                 fill="currentColor"
@@ -106,7 +106,7 @@ export function KanbanColumn({
           )}
           <h3 className="text-lg font-semibold text-monokai-fg flex items-center space-x-2">
             <span>{title}</span>
-            <span className="bg-surface-secondary bg-opacity-80 text-monokai-comment px-2 py-1 rounded-full text-sm font-normal border border-monokai-comment border-opacity-30">
+            <span className="bg-[#2f2f2a]/80 text-monokai-comment px-2 py-1 rounded-full text-sm font-normal border border-[#75715e]/30">
               {notes.length}
             </span>
           </h3>
@@ -125,7 +125,7 @@ export function KanbanColumn({
       <div className="flex flex-wrap gap-3 min-h-32">
         {notes.length === 0 ? (
           <div className="text-center py-8 text-monokai-comment w-full">
-            <div className="w-12 h-12 bg-surface-secondary bg-opacity-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-monokai-comment border-opacity-30">
+            <div className="w-12 h-12 bg-[#2f2f2a]/50 rounded-full flex items-center justify-center mx-auto mb-3 border border-[#75715e]/30">
               <span className="text-2xl">📝</span>
             </div>
             <p className="text-sm">No {title.toLowerCase()} notes</p>

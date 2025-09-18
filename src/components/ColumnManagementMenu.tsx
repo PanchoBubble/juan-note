@@ -73,7 +73,7 @@ export function ColumnManagementMenu({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
-        className="p-1 hover:bg-surface-secondary hover:bg-opacity-50 rounded transition-colors interactive-element"
+        className="p-1 hover:bg-[#2f2f2a]/50 rounded transition-colors interactive-element"
         aria-label={`Column options for ${state.name}`}
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -89,14 +89,14 @@ export function ColumnManagementMenu({
 
       {isOpen && (
         <div
-          className="absolute right-0 top-8 w-48 bg-surface-primary border border-monokai border-opacity-30 rounded-lg shadow-lg z-50 py-1"
+          className="absolute right-0 top-8 w-48 bg-[#272822] border border-[#75715e]/30 rounded-lg shadow-lg z-50 py-1"
           role="menu"
           aria-orientation="vertical"
         >
           <button
             type="button"
             onClick={() => handleMenuItemClick(() => onEdit(state))}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-surface-secondary hover:bg-opacity-50 flex items-center space-x-2 transition-colors"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-[#2f2f2a]/50 flex items-center space-x-2 transition-colors"
             role="menuitem"
           >
             <svg
@@ -113,7 +113,7 @@ export function ColumnManagementMenu({
             <button
               type="button"
               onClick={() => handleMenuItemClick(() => onDuplicate(state))}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-surface-secondary hover:bg-opacity-50 flex items-center space-x-2 transition-colors"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-[#2f2f2a]/50 flex items-center space-x-2 transition-colors"
               role="menuitem"
             >
               <svg
@@ -132,12 +132,12 @@ export function ColumnManagementMenu({
             </button>
           )}
 
-          <hr className="my-1 border-monokai border-opacity-20" />
+          <hr className="my-1 border-[#75715e]/20" />
 
           <button
             type="button"
             onClick={() => handleMenuItemClick(handleDelete)}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-monokai-red hover:bg-opacity-10 flex items-center space-x-2 transition-colors"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-monokai-red/10 flex items-center space-x-2 transition-colors"
             role="menuitem"
           >
             <svg
