@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { Note, State } from "../types/note";
+import type { Note, State } from "../../types/note";
 
 interface DragPreviewProps {
   item: Note | State | null;

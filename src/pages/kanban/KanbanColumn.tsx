@@ -1,12 +1,12 @@
 import { memo } from "react";
-import { NoteItem } from "./NoteItem/";
+import { NoteItem } from "../list/NoteItem/";
 import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ColumnManagementMenu } from "./ColumnManagementMenu";
-import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
-import type { KanbanNote } from "../hooks/useKanbanView";
-import type { Note, State } from "../types/note";
+import { useKeyboardNavigation } from "../../hooks/useKeyboardNavigation";
+import type { KanbanNote } from "../../hooks/useKanbanView";
+import type { Note, State } from "../../types/note";
 
 interface KanbanColumnProps {
   id: number;

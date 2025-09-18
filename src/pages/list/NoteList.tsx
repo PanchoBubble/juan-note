@@ -1,12 +1,12 @@
 import React, { useMemo, useCallback } from "react";
 import { NoteItem } from "./NoteItem/";
-import { LabelFilter } from "./LabelFilter";
-import { PriorityFilter } from "./PriorityFilter";
+import { LabelFilter } from "../../components/LabelFilter";
+import { PriorityFilter } from "../../components/PriorityFilter";
 import { SortControls } from "./SortControls";
-import { InlineCreate } from "./InlineCreate";
+import { InlineCreate } from "../../components/InlineCreate";
 
-import { useMultiselect } from "../hooks/useMultiselect";
-import type { Note, CreateNoteRequest } from "../types/note";
+import { useMultiselect } from "../../hooks/useMultiselect";
+import type { Note, CreateNoteRequest } from "../../types/note";
 import {
   DndContext,
   rectIntersection,

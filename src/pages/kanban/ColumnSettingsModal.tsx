@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Modal } from "./Modal";
-import type { State, UpdateStateRequest } from "../types/note";
-import { getColorPalette, isValidHexColor } from "../utils/colorUtils";
+import { Modal } from "../../components/Modal";
+import type { State, UpdateStateRequest } from "../../types/note";
+import { getColorPalette, isValidHexColor } from "../../utils/colorUtils";
 
 interface ColumnSettingsModalProps {
   isOpen: boolean;

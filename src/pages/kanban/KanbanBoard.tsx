@@ -15,22 +15,22 @@ import { KanbanColumn } from "./KanbanColumn";
 import { AddColumnButton } from "./AddColumnButton";
 import { CreateColumnModal } from "./CreateColumnModal";
 import { ColumnSettingsModal } from "./ColumnSettingsModal";
-import { useKanbanView } from "../hooks/useKanbanView";
-import { useStates } from "../hooks/useStates";
-import { useDragOptimization } from "../hooks/useDragOptimization";
+import { useKanbanView } from "../../hooks/useKanbanView";
+import { useStates } from "../../hooks/useStates";
+import { useDragOptimization } from "../../hooks/useDragOptimization";
 import { DragPreview } from "./DragPreview";
 import {
   createDragData,
   extractDragData,
   announceDragAction,
-} from "../utils/dragUtils";
-import { getColumnColorClass } from "../utils/colorUtils";
+} from "../../utils/dragUtils";
+import { getColumnColorClass } from "../../utils/colorUtils";
 import type {
   Note,
   State,
   CreateStateRequest,
   UpdateStateRequest,
-} from "../types/note";
+} from "../../types/note";
 
 interface KanbanBoardProps {
   notes: Note[];

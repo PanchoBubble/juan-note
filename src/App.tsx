@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { NoteList } from "./components/NoteList";
-import { KanbanBoard } from "./components/KanbanBoard";
+import { NoteList } from "./pages/list";
+import { KanbanBoard } from "./pages/kanban";
 import { NoteEditor } from "./components/NoteEditor";
 import { SearchBar } from "./components/SearchBar";
 import { Modal } from "./components/Modal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { CompleteConfirmModal } from "./components/CompleteConfirmModal";
 import { QuickCreateModal } from "./components/QuickCreateModal";
-import { SelectionMenu } from "./components/SelectionMenu";
+import { SelectionMenu } from "./pages/list";
 import { McpIntegrationModal } from "./components/McpIntegrationModal";
 import { McpFunctionBrowserModal } from "./components/McpFunctionBrowserModal";
 import { SettingsModal } from "./components/SettingsModal";
@@ -400,7 +400,7 @@ function App() {
 
       <main
         className={`${
-          viewMode === "kanban" ? "w-full py-8" : "max-w-4xl mx-auto px-4 py-8"
+          viewMode === "kanban" ? "w-full p-8" : "max-w-4xl mx-auto px-4 py-8"
         }`}
         role="main"
         aria-label="Notes management"

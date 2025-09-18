@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { ConfirmationModal } from "./ConfirmationModal";
-import type { State } from "../types/note";
+import { ConfirmationModal } from "../../components/ConfirmationModal";
+import type { State } from "../../types/note";
 
 interface ColumnManagementMenuProps {
   state: State;

@@ -1,8 +1,8 @@
 import React, { useCallback, useState, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Note, UpdateNoteRequest } from "../../types/note";
-import { NoteService } from "../../services/noteService";
+import type { Note, UpdateNoteRequest } from "../../../types/note";
+import { NoteService } from "../../../services/noteService";
 import {
   NoteItemActions,
   NoteItemTitle,
