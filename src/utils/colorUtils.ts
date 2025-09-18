@@ -52,16 +52,16 @@ export function getPriorityColor(priority: number): PriorityColor {
 // Get column color class for a state
 export function getColumnColorClass(color?: string): string {
   if (!color) {
-    return "bg-[#2f2f2a] border-[#75715e]/20";
+    return "bg-[#2f2f2a] border-[#75715e]/30";
   }
 
   // If it's a CSS custom property, use it directly
   if (color.startsWith("--")) {
-    return `bg-[var(${color})] border-[var(${color})] border-opacity-30`;
+    return `bg-[var(${color})]/10 border-[var(${color})] border-2`;
   }
 
-  // If it's a hex color, apply it
-  return `bg-[${color}]/10 border-[${color}]/30`;
+  // If it's a hex color, apply it with more visible border
+  return `bg-[${color}]/10 border-[${color}] border-2`;
 }
 
 // Validate hex color format

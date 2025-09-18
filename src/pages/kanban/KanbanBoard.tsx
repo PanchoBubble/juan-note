@@ -347,7 +347,7 @@ export function KanbanBoard({
       id: -1,
       title: "Unassigned",
       state: undefined,
-      colorClass: "bg-[#2f2f2a] border-[#75715e]/20",
+      colorClass: "bg-[#2f2f2a] border-[#75715e]/30 border-2",
       notes: unassignedNotes,
     });
   }
