@@ -1,4 +1,4 @@
-import { memo } from "react";
+import React, { memo } from "react";
 import { NoteItem } from "../list/NoteItem/";
 import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
@@ -84,6 +84,18 @@ export const KanbanColumn = memo(function KanbanColumn({
     }
   };
 
+  // Debug logging for column setup
+  React.useEffect(() => {
+    console.log("🏗️ KanbanColumn setup:", {
+      id,
+      title,
+      isColumnDraggable,
+      sortableId: `column-${id}`,
+      hasListeners: !!listeners,
+      hasAttributes: !!attributes,
+    });
+  }, [id, title, isColumnDraggable, listeners, attributes]);
+
   return (
     <div
       ref={combineRefs}
@@ -97,6 +109,11 @@ export const KanbanColumn = memo(function KanbanColumn({
       } ${isDragging ? "opacity-50 z-50" : ""} ${
         isColumnDraggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
+      onMouseDown={() => {
+        if (isColumnDraggable) {
+          console.log("🖱️ Column mouse down:", { id, title });
+        }
+      }}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2 flex-1">
