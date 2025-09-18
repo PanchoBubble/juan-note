@@ -6,6 +6,8 @@ import {
   DragStartEvent,
   DragOverlay,
   closestCenter,
+  rectIntersection,
+  CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -138,6 +140,40 @@ export function KanbanBoard({
       }))
     );
   }
+
+  // Custom collision detection that prioritizes columns when dragging columns
+  const customCollisionDetection: CollisionDetection = args => {
+    const { active, droppableContainers } = args;
+    const activeId = active.id as string;
+
+    // If dragging a column, only consider column drop targets
+    if (activeId.startsWith("column-")) {
+      const columnContainers = Array.from(droppableContainers.values()).filter(
+        container => String(container.id).startsWith("column-")
+      );
+
+      if (columnContainers.length > 0) {
+        // Create args with only column containers
+        const columnArgs = {
+          ...args,
+          droppableContainers: columnContainers,
+        };
+
+        const intersections = rectIntersection(columnArgs);
+
+        console.log("🎯 Column collision detection:", {
+          activeId,
+          columnContainers: columnContainers.map(c => c.id),
+          intersections: intersections.map(i => i.id),
+        });
+
+        return intersections;
+      }
+    }
+
+    // For notes or when no column intersections, use default collision detection
+    return closestCenter(args);
+  };
 
   // Force apply scrollbar styles when component mounts
   useEffect(() => {
@@ -432,6 +468,12 @@ export function KanbanBoard({
 
   const columnIds = columns.map(col => `column-${col.id}`);
 
+  console.log("📋 Column setup:", {
+    columns: columns.map(c => ({ id: c.id, title: c.title })),
+    columnIds,
+    statesLength: states.length,
+  });
+
   // Update scroll fade when columns change
   useEffect(() => {
     const scrollContainer = document.querySelector(
@@ -446,7 +488,7 @@ export function KanbanBoard({
   return (
     <>
       <DndContext
-        collisionDetection={closestCenter}
+        collisionDetection={customCollisionDetection}
         onDragStart={handleDragStartEvent}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEndEvent}
