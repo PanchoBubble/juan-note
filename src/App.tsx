@@ -398,15 +398,8 @@ function App() {
         )}
       </div>
 
-      <main
-        className={`${
-          viewMode === "kanban"
-            ? "w-full max-w-full p-8"
-            : "max-w-4xl mx-auto px-4 py-8"
-        }`}
-        role="main"
-        aria-label="Notes management"
-      >
+      {/* Consistent Search Bar - Always same size regardless of view mode */}
+      <div className="max-w-4xl mx-auto px-4 py-6">
         {error && (
           <div className="mb-4 p-4 bg-danger-light border border-monokai-pink border-opacity-30 rounded-lg">
             <div className="flex items-center justify-between">
@@ -435,7 +428,17 @@ function App() {
             handleSaveNote(request);
           }}
         />
+      </div>
 
+      <main
+        className={`${
+          viewMode === "kanban"
+            ? "w-full max-w-full p-8 pt-0"
+            : "max-w-4xl mx-auto px-4 py-8 pt-0"
+        }`}
+        role="main"
+        aria-label="Notes management"
+      >
         {viewMode === "list" ? (
           <NoteList
             notes={notes}
