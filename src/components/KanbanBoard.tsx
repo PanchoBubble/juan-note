@@ -85,6 +85,23 @@ export function KanbanBoard({
     enableVirtualization: notes.length > 200,
   });
 
+  // Data integrity check - find notes that reference non-existent states
+  const orphanedNotes = notes.filter(
+    note => note.state_id && !states.find(state => state.id === note.state_id)
+  );
+
+  // Log orphaned notes for debugging
+  if (orphanedNotes.length > 0) {
+    console.warn(
+      `Found ${orphanedNotes.length} notes with invalid state references:`,
+      orphanedNotes.map(note => ({
+        id: note.id,
+        title: note.title,
+        invalidStateId: note.state_id,
+      }))
+    );
+  }
+
   // Handle column creation
   const handleCreateColumn = async (request: CreateStateRequest) => {
     const result = await createState(request);
@@ -131,6 +148,21 @@ export function KanbanBoard({
     }
   };
 
+  // Utility function to clean up orphaned notes
+  const cleanupOrphanedNotes = async () => {
+    if (orphanedNotes.length > 0 && onUpdate) {
+      console.log(`Cleaning up ${orphanedNotes.length} orphaned notes...`);
+      for (const note of orphanedNotes) {
+        try {
+          // Reset the state_id to undefined for orphaned notes
+          await onUpdate({ ...note, state_id: undefined });
+        } catch (error) {
+          console.error(`Failed to clean up note ${note.id}:`, error);
+        }
+      }
+    }
+  };
+
   const handleDragStartEvent = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
     const activeIdStr = event.active.id as string;
@@ -139,12 +171,18 @@ export function KanbanBoard({
     if (activeIdStr.startsWith("column-")) {
       const columnId = parseInt(activeIdStr.replace("column-", ""));
       const state = states.find(s => s.id === columnId);
-      if (state) {
+      if (state && state.id != null) {
         const dragData = createDragData(state, "column", activeIdStr);
         setActiveDragData(dragData);
         setIsColumnDragMode(true);
         optimizedDragStart(activeIdStr, "column");
         announceDragAction("start", "column", state.name);
+      } else {
+        console.warn("Cannot drag column: state not found", {
+          columnId,
+          activeIdStr,
+          availableStates: states.map(s => ({ id: s.id, name: s.name })),
+        });
       }
       return;
     }
@@ -196,14 +234,32 @@ export function KanbanBoard({
       const activeColumnId = parseInt(activeIdStr.replace("column-", ""));
       const overColumnId = parseInt(overIdStr.replace("column-", ""));
 
+      // Validate that both states exist
+      const activeState = states.find(state => state.id === activeColumnId);
+      const overState = states.find(state => state.id === overColumnId);
+
+      if (!activeState || !overState) {
+        console.warn("Cannot reorder columns: one or both states not found", {
+          activeColumnId,
+          overColumnId,
+          activeState,
+          overState,
+        });
+        return;
+      }
+
       const oldIndex = states.findIndex(state => state.id === activeColumnId);
       const newIndex = states.findIndex(state => state.id === overColumnId);
 
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         // Use the reorderStates function from the hook
-        reorderStates(activeColumnId, newIndex).then(() => {
-          if (onStatesChange) onStatesChange();
-        });
+        reorderStates(activeColumnId, newIndex)
+          .then(() => {
+            if (onStatesChange) onStatesChange();
+          })
+          .catch(error => {
+            console.error("Error reordering states:", error);
+          });
       }
       return;
     }
@@ -213,24 +269,39 @@ export function KanbanBoard({
     const targetStateId = parseInt(overIdStr);
 
     if (!isNaN(noteId) && !isNaN(targetStateId)) {
+      // Validate that the target state exists (unless it's -1 for unassigned)
+      if (targetStateId !== -1) {
+        const targetState = states.find(state => state.id === targetStateId);
+        if (!targetState) {
+          console.warn("Cannot drop note: target state not found", {
+            noteId,
+            targetStateId,
+            availableStates: states.map(s => ({ id: s.id, name: s.name })),
+          });
+          return;
+        }
+      }
+
       handleDrop(targetStateId);
     }
   };
 
-  // Create columns from states with proper color handling
+  // Create columns from states with proper color handling and validation
   const columns: Array<{
     id: number;
     title: string;
     state?: State;
     colorClass: string;
     notes: any[];
-  }> = states.map(state => ({
-    id: state.id!,
-    title: state.name,
-    state: state,
-    colorClass: getColumnColorClass(state.color),
-    notes: getNotesByState(state.id!),
-  }));
+  }> = states
+    .filter(state => state.id != null) // Filter out states without valid IDs
+    .map(state => ({
+      id: state.id!,
+      title: state.name,
+      state: state,
+      colorClass: getColumnColorClass(state.color),
+      notes: getNotesByState(state.id!),
+    }));
 
   // Add a column for notes without states
   const unassignedNotes = getNotesWithoutState();
@@ -322,6 +393,21 @@ export function KanbanBoard({
       {statesError && (
         <div className="fixed bottom-4 right-4 bg-monokai-red/10 border border-[#f92672]/30 rounded-lg p-3 max-w-md">
           <p className="text-monokai-red text-sm">{statesError}</p>
+        </div>
+      )}
+
+      {/* Orphaned Notes Warning */}
+      {orphanedNotes.length > 0 && (
+        <div className="fixed bottom-4 left-4 bg-monokai-orange/10 border border-[#fd971f]/30 rounded-lg p-3 max-w-md">
+          <p className="text-monokai-orange text-sm mb-2">
+            Found {orphanedNotes.length} notes with invalid column references.
+          </p>
+          <button
+            onClick={cleanupOrphanedNotes}
+            className="text-xs bg-monokai-orange text-white px-2 py-1 rounded hover:bg-opacity-80 transition-colors"
+          >
+            Move to Unassigned
+          </button>
         </div>
       )}
     </>

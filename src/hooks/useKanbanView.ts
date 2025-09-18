@@ -14,6 +14,17 @@ export function useKanbanView(notes: Note[], states: State[] = []) {
   useEffect(() => {
     const converted = notes.map(note => {
       const state = states.find(s => s.id === note.state_id);
+
+      // If note has a state_id but the state doesn't exist, log a warning
+      if (note.state_id && !state) {
+        console.warn("Note references non-existent state", {
+          noteId: note.id,
+          noteTitle: note.title,
+          stateId: note.state_id,
+          availableStates: states.map(s => ({ id: s.id, name: s.name })),
+        });
+      }
+
       return {
         ...note,
         stateId: note.state_id,
