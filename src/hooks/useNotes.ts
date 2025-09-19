@@ -16,10 +16,16 @@ export interface UseNotesReturn {
   clearError: () => void;
 }
 
-export function useNotes(): UseNotesReturn {
-  const [notes, setNotes] = useState<Note[]>([]);
+export function useNotes(activeSection?: string): UseNotesReturn {
+  const [allNotes, setAllNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter notes by active section
+  const notes =
+    activeSection && activeSection !== "unset"
+      ? allNotes.filter(note => note.section === activeSection)
+      : allNotes;
 
   const clearError = useCallback(() => {
     setError(null);
@@ -31,7 +37,7 @@ export function useNotes(): UseNotesReturn {
     try {
       const response = await NoteService.getAllNotes();
       if (response.success) {
-        setNotes(response.data);
+        setAllNotes(response.data);
       } else {
         setError(response.error || "Failed to load notes");
       }
@@ -48,7 +54,7 @@ export function useNotes(): UseNotesReturn {
     try {
       const response = await NoteService.createNote(request);
       if (response.success && response.data) {
-        setNotes(prev => [response.data!, ...prev]);
+        setAllNotes(prev => [response.data!, ...prev]);
       } else {
         setError(response.error || "Failed to create note");
       }
@@ -65,7 +71,7 @@ export function useNotes(): UseNotesReturn {
     try {
       const response = await NoteService.updateNote(request);
       if (response.success && response.data) {
-        setNotes(prev =>
+        setAllNotes(prev =>
           prev.map(note => (note.id === request.id ? response.data! : note))
         );
       } else {
@@ -84,7 +90,7 @@ export function useNotes(): UseNotesReturn {
     try {
       const response = await NoteService.updateNoteDone({ id, done: true });
       if (response.success && response.data) {
-        setNotes(prev =>
+        setAllNotes(prev =>
           prev.map(note => (note.id === id ? response.data! : note))
         );
       } else {
@@ -103,7 +109,7 @@ export function useNotes(): UseNotesReturn {
     try {
       const response = await NoteService.deleteNote({ id });
       if (response.success) {
-        setNotes(prev => prev.filter(note => note.id !== id));
+        setAllNotes(prev => prev.filter(note => note.id !== id));
       } else {
         setError(response.error || "Failed to delete note");
       }
@@ -123,7 +129,7 @@ export function useNotes(): UseNotesReturn {
         try {
           const response = await NoteService.getAllNotes();
           if (response.success) {
-            setNotes(response.data);
+            setAllNotes(response.data);
           } else {
             setError(response.error || "Failed to load notes");
           }
@@ -140,7 +146,7 @@ export function useNotes(): UseNotesReturn {
       try {
         const response = await NoteService.searchNotes({ query, limit: 50 });
         if (response.success) {
-          setNotes(response.data);
+          setAllNotes(response.data);
         } else {
           setError(response.error || "Failed to search notes");
         }
@@ -174,7 +180,7 @@ export function useNotes(): UseNotesReturn {
         );
         if (response.success) {
           // Only update state after successful API call
-          setNotes(reorderedNotes);
+          setAllNotes(reorderedNotes);
         } else {
           setError(response.error || "Failed to reorder notes");
         }
@@ -196,7 +202,7 @@ export function useNotes(): UseNotesReturn {
         await NoteService.initializeDatabase();
         const response = await NoteService.getAllNotes();
         if (response.success) {
-          setNotes(response.data);
+          setAllNotes(response.data);
         } else {
           setError(response.error || "Failed to load notes");
         }

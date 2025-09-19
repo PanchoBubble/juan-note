@@ -22,6 +22,18 @@ import type { Note, CreateNoteRequest, UpdateNoteRequest } from "./types/note";
 import "./App.css";
 
 function App() {
+  const { sections, activeSection, setActiveSection, addSection } =
+    useSections();
+
+  const {
+    states,
+    createState,
+    updateState,
+    deleteState,
+    reorderStates,
+    error: statesError,
+  } = useStates();
+
   const {
     notes,
     loading,
@@ -33,18 +45,7 @@ function App() {
     searchNotes,
     reorderNotes,
     clearError,
-  } = useNotes();
-  const {
-    states,
-    createState,
-    updateState,
-    deleteState,
-    reorderStates,
-    error: statesError,
-  } = useStates();
-
-  const { sections, activeSection, setActiveSection, addSection } =
-    useSections();
+  } = useNotes(activeSection);
 
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -88,7 +89,10 @@ function App() {
         if ("id" in request) {
           await updateNote(request);
         } else {
-          await createNote(request);
+          // Add section to new notes
+          const createRequest = request as CreateNoteRequest;
+          createRequest.section = activeSection;
+          await createNote(createRequest);
         }
         setShowEditor(false);
         setEditingNote(null);
@@ -96,7 +100,7 @@ function App() {
         console.error("Failed to save note:", err);
       }
     },
-    [updateNote, createNote]
+    [updateNote, createNote, activeSection]
   );
 
   const handleUpdateNote = useCallback(
