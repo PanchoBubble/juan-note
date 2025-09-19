@@ -418,16 +418,39 @@ export function KanbanBoard({
       if (!isNaN(overNoteId) && overNoteId !== noteId) {
         const targetNote = notes.find(note => note.id === overNoteId);
         if (targetNote && targetNote.state_id === draggedNote.state_id) {
-          // Within-column reordering - calculate new order based on target note
-          const newOrder = targetNote.order;
+          // Within-column reordering - calculate new order based on target position
+          const sameColumnNotes = notes
+            .filter(
+              note =>
+                note.state_id === draggedNote.state_id && note.id !== noteId
+            )
+            .sort((a, b) => a.order - b.order);
 
-          if (draggedNote.order !== newOrder) {
-            // Update note order within the same column
-            const updateRequest = {
-              ...draggedNote,
-              order: newOrder,
-            };
-            onUpdate?.(updateRequest);
+          const targetIndex = sameColumnNotes.findIndex(
+            note => note.id === overNoteId
+          );
+
+          if (targetIndex !== -1) {
+            // Calculate new order - place before the target note
+            let newOrder: number;
+
+            if (targetIndex === 0) {
+              // Dropping at the beginning
+              newOrder = targetNote.order - 1;
+            } else {
+              // Dropping between notes - calculate midpoint
+              const prevNote = sameColumnNotes[targetIndex - 1];
+              newOrder = (prevNote.order + targetNote.order) / 2;
+            }
+
+            if (draggedNote.order !== newOrder) {
+              // Update note order within the same column
+              const updateRequest = {
+                ...draggedNote,
+                order: newOrder,
+              };
+              onUpdate?.(updateRequest);
+            }
           }
           return;
         }
