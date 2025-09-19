@@ -20,6 +20,7 @@ export interface Note {
   done: boolean;
   state_id?: number;
   order: number;
+  section: string;
 }
 
 export interface CreateNoteRequest {
@@ -32,6 +33,7 @@ export interface CreateNoteRequest {
   done?: boolean;
   state_id?: number;
   order?: number;
+  section?: string;
 }
 
 export interface UpdateNoteRequest {
@@ -45,6 +47,7 @@ export interface UpdateNoteRequest {
   done?: boolean;
   state_id?: number;
   order?: number;
+  section?: string;
 }
 
 export interface NoteResponse {
