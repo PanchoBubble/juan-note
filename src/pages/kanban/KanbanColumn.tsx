@@ -135,7 +135,7 @@ export const KanbanColumn = memo(function KanbanColumn({
         }}
       >
         {notes.length === 0 ? (
-          <div className="text-center py-8 text-monokai-comment w-full">
+          <div className="text-center py-8 text-monokai-comment w-full min-h-[200px] flex flex-col items-center justify-center">
             <div className="w-12 h-12 bg-[#2f2f2a]/50 rounded-full flex items-center justify-center mx-auto mb-3 border border-[#75715e]/30">
               <span className="text-2xl">📝</span>
             </div>

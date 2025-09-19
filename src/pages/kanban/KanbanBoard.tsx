@@ -184,7 +184,15 @@ export function KanbanBoard({
       }
 
       // Fall back to droppable collisions (cross-column moves)
-      return pointerWithin(args);
+      // For empty columns, we need to consider all droppable containers
+      const pointerCollisions = pointerWithin(args);
+
+      // If no pointer collisions, try closest center for empty columns
+      if (pointerCollisions.length === 0) {
+        return closestCenter(args);
+      }
+
+      return pointerCollisions;
     }
 
     // Default fallback
@@ -345,8 +353,14 @@ export function KanbanBoard({
     }
   };
 
-  const handleDragOver = (_event: DragOverEvent) => {
-    // Handle drag over logic if needed
+  const handleDragOver = (event: DragOverEvent) => {
+    // Debug logging for drag over events
+    if (event.over) {
+      console.log("Drag over:", {
+        overId: event.over.id,
+        activeId: event.active.id,
+      });
+    }
   };
 
   const handleDragEndEvent = (event: DragEndEvent) => {
@@ -371,6 +385,13 @@ export function KanbanBoard({
 
     const activeIdStr = active.id as string;
     const overIdStr = over.id as string;
+
+    // Debug logging for empty column drops
+    console.log("Drag end event:", {
+      activeId: activeIdStr,
+      overId: overIdStr,
+      overData: over.data?.current,
+    });
 
     // Handle column reordering
     if (activeIdStr.startsWith("column-") && overIdStr.startsWith("column-")) {
@@ -431,17 +452,30 @@ export function KanbanBoard({
           );
 
           if (targetIndex !== -1) {
-            // Calculate new order - place before the target note
+            // Calculate new order - place before the target note using integer values
             let newOrder: number;
 
             if (targetIndex === 0) {
-              // Dropping at the beginning
-              newOrder = targetNote.order - 1;
+              // Dropping at the beginning - place before the first note
+              // Since i32 supports negative numbers, we can always place before
+              newOrder = targetNote.order - 10;
             } else {
-              // Dropping between notes - calculate midpoint
+              // Dropping between notes - use integer spacing
               const prevNote = sameColumnNotes[targetIndex - 1];
-              newOrder = (prevNote.order + targetNote.order) / 2;
+              const gap = targetNote.order - prevNote.order;
+
+              if (gap > 1) {
+                // There's space between the notes
+                newOrder = prevNote.order + Math.floor(gap / 2);
+              } else {
+                // No space - need to reorganize orders
+                // For now, place after the previous note
+                newOrder = prevNote.order + 1;
+              }
             }
+
+            // Ensure the new order is an integer
+            newOrder = Math.round(newOrder);
 
             if (draggedNote.order !== newOrder) {
               // Update note order within the same column
@@ -462,14 +496,17 @@ export function KanbanBoard({
       if (overIdStr.startsWith("column-")) {
         // Dropped on a column - extract state ID from column ID
         targetStateId = parseInt(overIdStr.replace("column-", ""));
+      } else if (!isNaN(parseInt(overIdStr)) && isNaN(overNoteId)) {
+        // Dropped directly on a column area (droppable ID is just the state ID)
+        targetStateId = parseInt(overIdStr);
       } else if (!isNaN(overNoteId)) {
         // Dropped on a note in different column - use that note's state
         const targetNote = notes.find(note => note.id === overNoteId);
         if (targetNote && targetNote.state_id !== draggedNote.state_id) {
           targetStateId = targetNote.state_id || -1;
 
-          // Position before the target note
-          const newOrder = targetNote.order;
+          // Position before the target note with integer order
+          const newOrder = targetNote.order - 10;
           const updatedNote = {
             ...draggedNote,
             state_id: targetStateId === -1 ? undefined : targetStateId,
@@ -481,9 +518,12 @@ export function KanbanBoard({
           return; // Same column, already handled above
         }
       } else {
-        // Dropped directly on a column area - parse as state ID
-        const parsedStateId = parseInt(overIdStr);
-        targetStateId = isNaN(parsedStateId) ? -1 : parsedStateId;
+        // Fallback - couldn't determine target state
+        console.warn("Could not determine target state for drop", {
+          overIdStr,
+          overNoteId,
+        });
+        return;
       }
 
       // Validate that the target state exists (unless it's -1 for unassigned)
@@ -595,7 +635,6 @@ export function KanbanBoard({
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#fd971f #272822",
-                minHeight: "calc(100vh - 200px)", // Ensure minimum height for proper scrolling
                 maxWidth: "100vw", // Prevent horizontal overflow
               }}
             >
