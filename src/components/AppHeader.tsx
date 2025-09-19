@@ -1,4 +1,5 @@
 import React from "react";
+import { SectionTabs } from "./SectionTabs";
 
 interface AppHeaderProps {
   viewMode: "list" | "kanban";
@@ -6,6 +7,10 @@ interface AppHeaderProps {
   onCreateNote: () => void;
   onOpenSettings: () => void;
   loading: boolean;
+  sections: string[];
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+  onCreateSection: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -14,6 +19,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onCreateNote,
   onOpenSettings,
   loading,
+  sections,
+  activeSection,
+  onSectionChange,
+  onCreateSection,
 }) => {
   return (
     <header
@@ -35,6 +44,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Section Tabs */}
+          <SectionTabs
+            sections={sections}
+            activeSection={activeSection}
+            onSectionChange={onSectionChange}
+            onCreateSection={onCreateSection}
+          />
           <div className="flex items-center space-x-2">
             <button
               onClick={() =>
