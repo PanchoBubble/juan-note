@@ -36,8 +36,8 @@ pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
     let now = Utc::now().timestamp();
 
     conn.execute(
-        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\")
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO notes (title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\", section)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         rusqlite::params![
             request.title,
             request.content,
@@ -49,7 +49,8 @@ pub fn create_note(request: CreateNoteRequest) -> Result<NoteResponse, String> {
             request.reminder_minutes.unwrap_or(0),
             request.done.unwrap_or(false) as i32,
             request.state_id,
-            request.order.unwrap_or(0)
+            request.order.unwrap_or(0),
+            request.section.unwrap_or_else(|| "unset".to_string())
         ],
     ).map_err(|e| format!("Failed to create note: {}", e))?;
 
@@ -72,7 +73,7 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
     let conn = conn.lock().unwrap();
 
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\", section
          FROM notes ORDER BY \"order\" ASC, created_at DESC"
     ).map_err(|e| format!("Failed to prepare statement: {}", e))?;
 
@@ -96,6 +97,7 @@ pub fn get_all_notes() -> Result<NotesListResponse, String> {
             done: row.get::<_, i32>(9)? != 0,
             state_id: row.get(10)?,
             order: row.get(11)?,
+            section: row.get(12)?,
         })
     }).map_err(|e| format!("Failed to query notes: {}", e))?;
 
@@ -160,6 +162,10 @@ pub fn update_note(request: UpdateNoteRequest) -> Result<NoteResponse, String> {
         set_parts.push("\"order\" = ?".to_string());
         params.push(Box::new(order));
     }
+    if let Some(section) = &request.section {
+        set_parts.push("section = ?".to_string());
+        params.push(Box::new(section.clone()));
+    }
 
     set_parts.push("updated_at = ?".to_string());
     params.push(Box::new(now));
@@ -206,7 +212,7 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
     let (query, params) = if request.query.is_empty() {
         // Simple query without search
         let sql = format!(
-            "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"
+            "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\", section
              FROM notes ORDER BY \"order\" ASC, created_at DESC LIMIT {} OFFSET {}",
             limit, offset
         );
@@ -241,6 +247,7 @@ pub fn search_notes(request: SearchRequest) -> Result<NotesListResponse, String>
             done: row.get::<_, i32>(9)? != 0,
             state_id: row.get(10)?,
             order: row.get(11)?,
+            section: row.get(12)?,
         })
     }).map_err(|e| format!("Failed to execute search: {}", e))?;
 
@@ -306,7 +313,7 @@ pub fn reorder_note(request: ReorderNoteRequest) -> Result<NoteResponse, String>
 
 fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, String> {
     let mut stmt = conn.prepare(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\", section
          FROM notes WHERE id = ?"
     ).map_err(|e| format!("Failed to prepare statement: {}", e))?;
 
@@ -330,6 +337,7 @@ fn get_note_sync(id: i64, conn: &rusqlite::Connection) -> Result<NoteResponse, S
             done: row.get::<_, i32>(9)? != 0,
             state_id: row.get(10)?,
             order: row.get(11)?,
+            section: row.get(12)?,
         })
     }).map_err(|e| format!("Failed to query note: {}", e))?;
 
@@ -360,7 +368,7 @@ fn perform_fts_search(
 
     // Use FTS5 virtual table for full-text search
     let sql = format!(
-        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes, n.done, n.state_id, n.\"order\"
+        "SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority, n.labels, n.deadline, n.reminder_minutes, n.done, n.state_id, n.\"order\", n.section
          FROM notes n
          JOIN notes_fts fts ON n.id = fts.rowid
          WHERE fts.notes_fts MATCH ?
@@ -381,7 +389,7 @@ fn perform_like_search(
     let like_pattern = format!("%{}%", query);
 
     let sql = format!(
-        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\"
+        "SELECT id, title, content, created_at, updated_at, priority, labels, deadline, reminder_minutes, done, state_id, \"order\", section
          FROM notes
          WHERE title LIKE ? OR content LIKE ?
          ORDER BY \"order\" ASC, created_at DESC
