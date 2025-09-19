@@ -146,6 +146,7 @@ export function KanbanBoard({
   const customCollisionDetection: CollisionDetection = args => {
     const { active, droppableContainers } = args;
     const activeId = active.id as string;
+    const isDevelopment = import.meta.env.DEV;
 
     // If dragging a column, only consider column drop targets
     if (activeId.startsWith("column-")) {
@@ -169,12 +170,7 @@ export function KanbanBoard({
       // First try sortable collisions (within-column reordering)
       const sortableCollisions = closestCorners(args);
 
-      // Filter out column containers for sortable detection
-      const noteContainers = Array.from(droppableContainers.values()).filter(
-        container => !String(container.id).startsWith("column-")
-      );
-
-      if (sortableCollisions.length > 0 && noteContainers.length > 0) {
+      if (sortableCollisions.length > 0) {
         // Check if the collision is with another note (within-column)
         const collision = sortableCollisions[0];
         const collisionId = String(collision.id);
@@ -184,19 +180,55 @@ export function KanbanBoard({
       }
 
       // Fall back to droppable collisions (cross-column moves)
-      // For empty columns, we need to consider all droppable containers
+      // Use pointer-based detection first for precise targeting
       const pointerCollisions = pointerWithin(args);
 
-      // If no pointer collisions, try closest center for empty columns
-      if (pointerCollisions.length === 0) {
-        return closestCenter(args);
+      if (pointerCollisions.length > 0) {
+        // Filter to only column containers (state IDs) for cross-column moves
+        const columnDropCollisions = pointerCollisions.filter(collision => {
+          const id = String(collision.id);
+          // Accept both direct state IDs and column- prefixed IDs
+          return !isNaN(parseInt(id)) || id.startsWith("column-");
+        });
+
+        if (columnDropCollisions.length > 0) {
+          return columnDropCollisions;
+        }
       }
 
-      return pointerCollisions;
+      // For empty columns or when pointer detection fails, use closest center
+      // This ensures empty columns are always considered as drop targets
+      const centerCollisions = closestCenter(args);
+
+      if (centerCollisions.length > 0) {
+        // Prioritize column containers over note containers for cross-column moves
+        const columnCenterCollisions = centerCollisions.filter(collision => {
+          const id = String(collision.id);
+          return !isNaN(parseInt(id)) || id.startsWith("column-");
+        });
+
+        if (columnCenterCollisions.length > 0) {
+          return columnCenterCollisions;
+        }
+      }
+
+      return centerCollisions;
     }
 
     // Default fallback
-    return closestCenter(args);
+    const fallbackCollisions = closestCenter(args);
+
+    if (isDevelopment && fallbackCollisions.length > 0) {
+      console.log("🎯 Collision Detection Fallback:", {
+        activeId,
+        collisions: fallbackCollisions.map(c => ({
+          id: c.id,
+          type: String(c.id).startsWith("column-") ? "column" : "note",
+        })),
+      });
+    }
+
+    return fallbackCollisions;
   };
 
   // Force apply scrollbar styles when component mounts
@@ -354,17 +386,55 @@ export function KanbanBoard({
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    // Debug logging for drag over events
-    if (event.over) {
-      console.log("Drag over:", {
-        overId: event.over.id,
-        activeId: event.active.id,
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const activeIdStr = active.id as string;
+    const overIdStr = over.id as string;
+
+    // Prevent column reordering from interfering with note drops
+    if (isColumnDragMode && !activeIdStr.startsWith("column-")) {
+      // If we're in column drag mode but dragging a note, ignore
+      return;
+    }
+
+    if (!isColumnDragMode && activeIdStr.startsWith("column-")) {
+      // If we're not in column drag mode but dragging a column, ignore
+      return;
+    }
+
+    // Comprehensive drag over logging
+    const isDevelopment = import.meta.env.DEV;
+    if (isDevelopment) {
+      console.group(
+        `🔄 Drag Over - ${isColumnDragMode ? "Column Mode" : "Note Mode"}`
+      );
+      console.log("Active:", {
+        id: activeIdStr,
+        type: activeIdStr.startsWith("column-") ? "column" : "note",
       });
+      console.log("Over:", {
+        id: overIdStr,
+        type: overIdStr.startsWith("column-") ? "column" : "note",
+        data: over.data?.current,
+      });
+      console.log("Mode:", {
+        isColumnDragMode,
+        shouldIgnore:
+          (isColumnDragMode && !activeIdStr.startsWith("column-")) ||
+          (!isColumnDragMode && activeIdStr.startsWith("column-")),
+      });
+      console.groupEnd();
     }
   };
 
   const handleDragEndEvent = (event: DragEndEvent) => {
     const dragData = extractDragData(activeDragData);
+    const wasColumnDragMode = isColumnDragMode;
+    const isDevelopment = import.meta.env.DEV;
+
+    // Clean up drag state
     setActiveId(null);
     setActiveDragData(null);
     setIsColumnDragMode(false);
@@ -386,12 +456,43 @@ export function KanbanBoard({
     const activeIdStr = active.id as string;
     const overIdStr = over.id as string;
 
-    // Debug logging for empty column drops
-    console.log("Drag end event:", {
-      activeId: activeIdStr,
-      overId: overIdStr,
-      overData: over.data?.current,
-    });
+    // Enforce drag context separation
+    if (wasColumnDragMode && !activeIdStr.startsWith("column-")) {
+      console.warn("Ignoring note drag end event during column drag mode");
+      return;
+    }
+
+    if (!wasColumnDragMode && activeIdStr.startsWith("column-")) {
+      console.warn("Ignoring column drag end event outside column drag mode");
+      return;
+    }
+
+    // Comprehensive drag end logging
+    if (isDevelopment) {
+      console.group(
+        `🎯 Drag End - ${wasColumnDragMode ? "Column Mode" : "Note Mode"}`
+      );
+      console.log("Operation:", {
+        activeId: activeIdStr,
+        overId: overIdStr,
+        wasColumnDragMode,
+        dragData: dragData
+          ? {
+              type: dragData.type,
+              itemName:
+                dragData.type === "note"
+                  ? (dragData.item as any).title
+                  : (dragData.item as any).name,
+            }
+          : null,
+      });
+      console.log("Drop Target:", {
+        id: overIdStr,
+        type: overIdStr.startsWith("column-") ? "column" : "note",
+        data: over.data?.current,
+      });
+      console.groupEnd();
+    }
 
     // Handle column reordering
     if (activeIdStr.startsWith("column-") && overIdStr.startsWith("column-")) {
@@ -492,25 +593,56 @@ export function KanbanBoard({
 
       // Handle cross-column moves
       let targetStateId: number;
+      let insertPosition: "end" | "before" = "end";
+      let targetOrder: number | undefined;
 
       if (overIdStr.startsWith("column-")) {
         // Dropped on a column - extract state ID from column ID
         targetStateId = parseInt(overIdStr.replace("column-", ""));
+        insertPosition = "end";
       } else if (!isNaN(parseInt(overIdStr)) && isNaN(overNoteId)) {
         // Dropped directly on a column area (droppable ID is just the state ID)
         targetStateId = parseInt(overIdStr);
+        insertPosition = "end";
       } else if (!isNaN(overNoteId)) {
         // Dropped on a note in different column - use that note's state
         const targetNote = notes.find(note => note.id === overNoteId);
         if (targetNote && targetNote.state_id !== draggedNote.state_id) {
           targetStateId = targetNote.state_id || -1;
+          insertPosition = "before";
 
-          // Position before the target note with integer order
-          const newOrder = targetNote.order - 10;
+          // Calculate smart positioning before the target note
+          const targetColumnNotes = notes
+            .filter(
+              note =>
+                note.state_id === targetStateId && note.id !== draggedNote.id
+            )
+            .sort((a, b) => a.order - b.order);
+
+          const targetIndex = targetColumnNotes.findIndex(
+            note => note.id === overNoteId
+          );
+
+          if (targetIndex === 0) {
+            // Inserting at the beginning
+            targetOrder = targetNote.order - 10;
+          } else if (targetIndex > 0) {
+            // Inserting between notes
+            const prevNote = targetColumnNotes[targetIndex - 1];
+            const gap = targetNote.order - prevNote.order;
+            targetOrder =
+              gap > 1
+                ? prevNote.order + Math.floor(gap / 2)
+                : prevNote.order + 1;
+          } else {
+            // Fallback to before target
+            targetOrder = targetNote.order - 10;
+          }
+
           const updatedNote = {
             ...draggedNote,
             state_id: targetStateId === -1 ? undefined : targetStateId,
-            order: newOrder,
+            order: Math.round(targetOrder),
           };
           onUpdate?.(updatedNote);
           return;
@@ -522,6 +654,7 @@ export function KanbanBoard({
         console.warn("Could not determine target state for drop", {
           overIdStr,
           overNoteId,
+          overData: over.data?.current,
         });
         return;
       }
@@ -542,20 +675,29 @@ export function KanbanBoard({
 
       // Only update if the state is changing
       if (draggedNote.state_id !== targetStateId) {
-        // Cross-column move - place at end of target column
-        const targetColumnNotes = notes.filter(
-          note =>
-            note.state_id === (targetStateId === -1 ? undefined : targetStateId)
-        );
-        const maxOrder =
-          targetColumnNotes.length > 0
-            ? Math.max(...targetColumnNotes.map(note => note.order))
-            : 0;
+        let finalOrder: number;
+
+        if (insertPosition === "end" || targetOrder === undefined) {
+          // Cross-column move - place at end of target column
+          const targetColumnNotes = notes.filter(
+            note =>
+              note.state_id ===
+              (targetStateId === -1 ? undefined : targetStateId)
+          );
+          const maxOrder =
+            targetColumnNotes.length > 0
+              ? Math.max(...targetColumnNotes.map(note => note.order))
+              : 0;
+          finalOrder = maxOrder + 1;
+        } else {
+          // Use the calculated position
+          finalOrder = targetOrder;
+        }
 
         const updatedNote = {
           ...draggedNote,
           state_id: targetStateId === -1 ? undefined : targetStateId,
-          order: maxOrder + 1,
+          order: finalOrder,
         };
         onUpdate?.(updatedNote);
       }
@@ -652,7 +794,11 @@ export function KanbanBoard({
                   onDelete={onDelete}
                   onUpdate={onUpdate}
                   onLabelClick={onLabelClick}
-                  isDragOver={activeId !== null && !isColumnDragMode}
+                  isDragOver={
+                    activeId !== null &&
+                    !isColumnDragMode &&
+                    !activeId?.toString().startsWith("column-")
+                  }
                   isColumnDraggable={!!column.state} // Only allow dragging for actual states
                   onColumnEdit={column.state ? handleEditColumn : undefined}
                   onColumnDelete={column.state ? handleDeleteColumn : undefined}

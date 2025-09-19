@@ -51,8 +51,13 @@ export const KanbanColumn = memo(function KanbanColumn({
   onColumnDuplicate,
   isUnassigned = false,
 }: KanbanColumnProps) {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: id.toString(),
+    data: {
+      type: "column",
+      columnId: id,
+      isEmpty: notes.length === 0,
+    },
   });
 
   // Column drag and drop setup
@@ -97,7 +102,7 @@ export const KanbanColumn = memo(function KanbanColumn({
       }}
       {...(isColumnDraggable ? { ...attributes, ...listeners } : {})}
       className={`flex-none w-80 ${colorClass} rounded-lg p-4 transition-all duration-200 ${
-        isDragOver ? "ring-2 ring-[#66d9ef]/50" : ""
+        isDragOver || isOver ? "ring-2 ring-[#66d9ef]/50" : ""
       } ${isDragging ? "opacity-50 z-50" : ""} ${
         isColumnDraggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
@@ -135,7 +140,13 @@ export const KanbanColumn = memo(function KanbanColumn({
         }}
       >
         {notes.length === 0 ? (
-          <div className="text-center py-8 text-monokai-comment w-full min-h-[200px] flex flex-col items-center justify-center">
+          <div
+            className={`text-center py-8 text-monokai-comment w-full min-h-[200px] flex flex-col items-center justify-center transition-all duration-200 ${
+              isOver
+                ? "bg-[#66d9ef]/10 border-2 border-[#66d9ef]/30 border-dashed rounded-lg"
+                : "border-2 border-transparent"
+            }`}
+          >
             <div className="w-12 h-12 bg-[#2f2f2a]/50 rounded-full flex items-center justify-center mx-auto mb-3 border border-[#75715e]/30">
               <span className="text-2xl">📝</span>
             </div>
@@ -145,30 +156,36 @@ export const KanbanColumn = memo(function KanbanColumn({
             </p>
           </div>
         ) : (
-          <SortableContext
-            items={notes.map(note => note.id?.toString() || "")}
-            strategy={verticalListSortingStrategy}
+          <div
+            className={`transition-all duration-200 ${
+              isOver && isDragOver ? "bg-[#66d9ef]/5 rounded-lg p-2" : ""
+            }`}
           >
-            {notes.map(note => (
-              <div
-                key={note.id}
-                className="w-full"
-                style={{
-                  pointerEvents:
-                    isColumnDraggable && isDragging ? "none" : "auto",
-                }}
-              >
-                <KanbanDraggableNoteItem
-                  note={note}
-                  onEdit={onEdit}
-                  onComplete={onComplete}
-                  onDelete={onDelete}
-                  onUpdate={onUpdate}
-                  onLabelClick={onLabelClick}
-                />
-              </div>
-            ))}
-          </SortableContext>
+            <SortableContext
+              items={notes.map(note => note.id?.toString() || "")}
+              strategy={verticalListSortingStrategy}
+            >
+              {notes.map(note => (
+                <div
+                  key={note.id}
+                  className="w-full"
+                  style={{
+                    pointerEvents:
+                      isColumnDraggable && isDragging ? "none" : "auto",
+                  }}
+                >
+                  <KanbanDraggableNoteItem
+                    note={note}
+                    onEdit={onEdit}
+                    onComplete={onComplete}
+                    onDelete={onDelete}
+                    onUpdate={onUpdate}
+                    onLabelClick={onLabelClick}
+                  />
+                </div>
+              ))}
+            </SortableContext>
+          </div>
         )}
       </div>
     </div>

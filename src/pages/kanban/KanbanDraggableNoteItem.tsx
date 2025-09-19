@@ -42,6 +42,8 @@ export const KanbanDraggableNoteItem = React.memo(
       setNodeRef: setDraggableRef,
       transform: draggableTransform,
       isDragging: isDraggableDragging,
+      listeners: draggableListeners,
+      attributes: draggableAttributes,
     } = useDraggable({
       id: note.id?.toString() || "",
       disabled: isDragOverlay,
@@ -80,6 +82,15 @@ export const KanbanDraggableNoteItem = React.memo(
           ? "cursor-grab active:cursor-grabbing"
           : "";
 
+    // Combine attributes and listeners from both sortable and draggable
+    const combinedAttributes = !isDragOverlay
+      ? { ...sortableAttributes, ...draggableAttributes }
+      : {};
+
+    const combinedListeners = !isDragOverlay
+      ? { ...sortableListeners, ...draggableListeners }
+      : {};
+
     return (
       <NoteItem
         note={note}
@@ -91,8 +102,8 @@ export const KanbanDraggableNoteItem = React.memo(
         isDragOverlay={isDragOverlay}
         className={dragClassName}
         style={style}
-        dragAttributes={!isDragOverlay ? sortableAttributes : {}}
-        dragListeners={!isDragOverlay ? sortableListeners : {}}
+        dragAttributes={combinedAttributes}
+        dragListeners={combinedListeners}
         forwardedRef={combineRefs}
       />
     );

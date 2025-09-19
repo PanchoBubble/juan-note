@@ -81,8 +81,23 @@ export function ColumnManagementMenu({
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={handleKeyDown}
+        onClick={e => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        onMouseDown={e => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onPointerDown={e => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onKeyDown={e => {
+          e.stopPropagation();
+          handleKeyDown(e);
+        }}
         className="p-1 hover:bg-[#2f2f2a]/50 rounded transition-colors interactive-element"
         aria-label={`Column options for ${state.name}`}
         aria-expanded={isOpen}
