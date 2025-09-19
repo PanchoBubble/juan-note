@@ -54,6 +54,7 @@ pub struct Note {
     pub done: bool,
     pub state_id: Option<i64>,
     pub order: i32,
+    pub section: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -67,6 +68,7 @@ pub struct CreateNoteRequest {
     pub done: Option<bool>,
     pub state_id: Option<i64>,
     pub order: Option<i32>,
+    pub section: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -81,6 +83,7 @@ pub struct UpdateNoteRequest {
     pub done: Option<bool>,
     pub state_id: Option<i64>,
     pub order: Option<i32>,
+    pub section: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -176,6 +179,7 @@ impl Note {
             done: false,
             state_id: None,
             order: 0,
+            section: "unset".to_string(),
         }
     }
 
@@ -201,6 +205,11 @@ impl Note {
 
     pub fn with_done(mut self, done: bool) -> Self {
         self.done = done;
+        self
+    }
+
+    pub fn with_section(mut self, section: String) -> Self {
+        self.section = section;
         self
     }
 }
