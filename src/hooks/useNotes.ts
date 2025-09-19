@@ -157,7 +157,15 @@ export function useNotes(): UseNotesReturn {
     async (reorderedNotes: Note[]) => {
       // Prepare data for bulk update
       const noteIds = reorderedNotes.map(note => note.id!).filter(Boolean);
-      const orders = reorderedNotes.map(note => note.order);
+      const orders = reorderedNotes.map(note => note.order ?? 0);
+
+      // Safety check: ensure we have valid data
+      if (noteIds.length === 0 || noteIds.length !== orders.length) {
+        setError("Invalid data for reordering notes");
+        return;
+      }
+
+      console.log("Reordering notes:", { noteIds, orders }); // Debug log
 
       try {
         const response = await NoteService.bulkUpdateNotesOrder(

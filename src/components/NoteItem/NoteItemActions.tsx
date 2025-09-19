@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { Note } from "../../../types/note";
+import type { Note } from "../../types/note";
 
 interface NoteItemActionsProps {
   note: Note;

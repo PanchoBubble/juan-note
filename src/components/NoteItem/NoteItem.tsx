@@ -1,16 +1,11 @@
 import React, { useCallback, useState, useRef } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
-import type { Note, UpdateNoteRequest } from "../../../types/note";
-import { NoteService } from "../../../services/noteService";
-import {
-  NoteItemActions,
-  NoteItemTitle,
-  NoteItemContent,
-  NoteItemMetadata,
-  InlineNoteEditor,
-} from "./";
+import type { Note, UpdateNoteRequest } from "../../types/note";
+import { NoteService } from "../../services/noteService";
+import { NoteItemActions } from "./NoteItemActions";
+import { NoteItemTitle } from "./NoteItemTitle";
+import { NoteItemContent } from "./NoteItemContent";
+import { NoteItemMetadata } from "./NoteItemMetadata";
+import { InlineNoteEditor } from "./InlineNoteEditor";
 
 interface NoteItemProps {
   note: Note;
@@ -22,10 +17,13 @@ interface NoteItemProps {
   onItemClick?: (id: number, index: number, event: React.MouseEvent) => void;
   showSelection?: boolean;
   itemIndex?: number;
-  isDraggable?: boolean;
   onUpdate?: (note: Note) => void;
   isDragOverlay?: boolean;
-  dragMode?: "list" | "kanban"; // New prop to determine drag behavior
+  className?: string;
+  style?: React.CSSProperties;
+  dragAttributes?: Record<string, any>;
+  dragListeners?: Record<string, any>;
+  forwardedRef?: (element: HTMLElement | null) => void;
 }
 
 export const NoteItem = React.memo(function NoteItem({
@@ -38,68 +36,16 @@ export const NoteItem = React.memo(function NoteItem({
   onItemClick,
   showSelection = false,
   itemIndex = 0,
-  isDraggable = false,
   onUpdate,
   isDragOverlay = false,
-  dragMode = "list",
+  className = "",
+  style,
+  dragAttributes = {},
+  dragListeners = {},
+  forwardedRef,
 }: NoteItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
-
-  // Use sortable for list reordering and within-column kanban reordering
-  const {
-    attributes: sortableAttributes,
-    listeners: sortableListeners,
-    setNodeRef: setSortableRef,
-    transform: sortableTransform,
-    isDragging: isSortableDragging,
-  } = useSortable({
-    id: note.id?.toString() || "",
-    disabled: !isDraggable, // Always enable sortable when draggable is enabled
-  });
-
-  // Use draggable for cross-column kanban moves
-  const {
-    setNodeRef: setDraggableRef,
-    transform: draggableTransform,
-    isDragging: isDraggableDragging,
-  } = useDraggable({
-    id: note.id?.toString() || "",
-    disabled: !isDraggable || dragMode === "list", // Only enable draggable in kanban mode
-    data: {
-      type: "note",
-      note: note,
-      sourceColumn: note.state_id,
-    },
-  });
-
-  // In kanban mode, we use sortable primarily but need both systems active
-  // The collision detection will determine which operation to perform
-  const isDragging = isSortableDragging || isDraggableDragging;
-
-  // For kanban mode, combine both ref setters
-  const combineRefs = useCallback(
-    (element: HTMLElement | null) => {
-      setSortableRef(element);
-      if (dragMode === "kanban") {
-        setDraggableRef(element);
-      }
-    },
-    [setSortableRef, setDraggableRef, dragMode]
-  );
-
-  // Use sortable attributes and listeners for both modes (sortable handles the primary interaction)
-  const attributes = sortableAttributes;
-  const listeners = sortableListeners;
-  const activeTransform = sortableTransform || draggableTransform;
-  const setNodeRef = combineRefs;
-
-  const style = activeTransform
-    ? {
-        transform: CSS.Translate.toString(activeTransform),
-        transition: "none", // Disable transitions during transform
-      }
-    : undefined;
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -145,14 +91,8 @@ export const NoteItem = React.memo(function NoteItem({
           onItemClick(note.id, itemIndex, mockEvent);
         }
       }
-
-      // Handle drag activation with keyboard
-      if (isDraggable && e.key === "Enter" && e.ctrlKey) {
-        e.preventDefault();
-        // Focus management for keyboard users - drag is now available from anywhere
-      }
     },
-    [showSelection, note.id, onItemClick, itemIndex, isDraggable, isEditing]
+    [showSelection, note.id, onItemClick, itemIndex, isEditing]
   );
 
   const handleNoteSave = useCallback(
@@ -180,15 +120,15 @@ export const NoteItem = React.memo(function NoteItem({
   return (
     <article
       ref={el => {
-        setNodeRef(el);
+        if (forwardedRef) forwardedRef(el);
         (cardRef as any).current = el;
       }}
       style={style}
-      {...(isDraggable ? attributes : {})}
-      {...(isDraggable ? listeners : {})}
-      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange group flex-1 overflow-visible ${isDraggable && !isDragOverlay ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} select-none ${
-        isDragging && !isDragOverlay ? "opacity-50 shadow-2xl z-50" : ""
-      } ${isDragOverlay ? "shadow-2xl z-50 rotate-3" : ""} ${isSelected ? "ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue" : ""}`}
+      {...dragAttributes}
+      {...dragListeners}
+      className={`relative bg-surface-secondary rounded-xl shadow-sm border border-monokai border-opacity-30 p-4 hover:shadow-lg hover:border-monokai-orange group flex-1 overflow-visible select-none ${className} ${
+        isDragOverlay ? "shadow-2xl z-50 rotate-3" : ""
+      } ${isSelected ? "ring-2 ring-monokai-blue ring-opacity-70 bg-monokai-blue bg-opacity-10 border-monokai-blue" : ""}`}
       role={showSelection ? "button" : "article"}
       aria-labelledby={`note-title-${note.id}`}
       aria-describedby={`note-content-${note.id}`}
@@ -216,11 +156,6 @@ export const NoteItem = React.memo(function NoteItem({
             </svg>
           </div>
         </div>
-      )}
-
-      {/* Drag Indicator */}
-      {isDragging && (
-        <div className="absolute inset-0 bg-monokai-blue bg-opacity-10 border-2 border-monokai-blue border-dashed rounded-xl pointer-events-none z-40"></div>
       )}
 
       <NoteItemActions

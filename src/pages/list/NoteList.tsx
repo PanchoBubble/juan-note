@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from "react";
-import { NoteItem } from "./NoteItem/";
+import { DraggableNoteItem } from "./DraggableNoteItem";
+import { NoteItem } from "../../components/NoteItem";
 import { LabelFilter } from "../../components/LabelFilter";
 import { PriorityFilter } from "../../components/PriorityFilter";
 import { SortControls } from "./SortControls";
@@ -9,14 +10,16 @@ import { useMultiselect } from "../../hooks/useMultiselect";
 import type { Note, CreateNoteRequest } from "../../types/note";
 import {
   DndContext,
-  rectIntersection,
+  closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
   useSensor,
   useSensors,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  defaultDropAnimationSideEffects,
+  DropAnimation,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -77,6 +80,16 @@ export const NoteList = React.memo(function NoteList({
   onReorderNotes,
 }: NoteListProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
+
+  const dropAnimation: DropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: {
+        active: {
+          opacity: "0.4",
+        },
+      },
+    }),
+  };
   const { isSelected, clearAll, toggleAll, handleItemClick } = useMultiselect(
     undefined, // Remove onSelectionChange callback
     () => filteredAndSortedNotes.length + doneNotes.length,
@@ -84,15 +97,9 @@ export const NoteList = React.memo(function NoteList({
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        delay: 150, // Allow time for double-click detection
-        distance: 3,
-      },
-      // Don't activate drag if cmd/ctrl is pressed
-      shouldActivate: ({ event }: { event: Event }) => {
-        const e = event as PointerEvent;
-        return !(e.metaKey || e.ctrlKey);
+        distance: 10,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -162,6 +169,7 @@ export const NoteList = React.memo(function NoteList({
 
   // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    console.log("Drag started:", event.active.id);
     setActiveId(event.active.id as string);
   }, []);
 
@@ -169,6 +177,7 @@ export const NoteList = React.memo(function NoteList({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
+      console.log("Drag ended:", { active: active.id, over: over?.id });
       setActiveId(null);
 
       if (over && active.id !== over.id) {
@@ -336,7 +345,7 @@ export const NoteList = React.memo(function NoteList({
           )}
           <DndContext
             sensors={sensors}
-            collisionDetection={rectIntersection}
+            collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
@@ -347,7 +356,7 @@ export const NoteList = React.memo(function NoteList({
               strategy={verticalListSortingStrategy}
             >
               {filteredAndSortedNotes.map((note, index) => (
-                <NoteItem
+                <DraggableNoteItem
                   key={note.id}
                   note={note}
                   onEdit={onEdit}
@@ -365,27 +374,28 @@ export const NoteList = React.memo(function NoteList({
                   }
                   showSelection={true}
                   itemIndex={index}
-                  isDraggable={true}
                 />
               ))}
             </SortableContext>
           </DndContext>
-          <DragOverlay>
-            {activeId ? (
-              <NoteItem
-                note={
-                  filteredAndSortedNotes.find(
+          <DragOverlay dropAnimation={dropAnimation}>
+            {activeId
+              ? (() => {
+                  const draggedNote = filteredAndSortedNotes.find(
                     note => note.id?.toString() === activeId
-                  )!
-                }
-                onEdit={() => {}}
-                onComplete={() => {}}
-                onDelete={() => {}}
-                showSelection={false}
-                isDraggable={false}
-                isDragOverlay={true}
-              />
-            ) : null}
+                  );
+                  return draggedNote ? (
+                    <NoteItem
+                      note={draggedNote}
+                      onEdit={() => {}}
+                      onComplete={() => {}}
+                      onDelete={() => {}}
+                      showSelection={false}
+                      isDragOverlay={true}
+                    />
+                  ) : null;
+                })()
+              : null}
           </DragOverlay>
         </div>
       )}

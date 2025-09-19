@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { NoteItem } from "../list/NoteItem/";
+import { KanbanDraggableNoteItem } from "./KanbanDraggableNoteItem";
 import { useDroppable } from "@dnd-kit/core";
 import {
   useSortable,
@@ -158,15 +158,13 @@ export const KanbanColumn = memo(function KanbanColumn({
                     isColumnDraggable && isDragging ? "none" : "auto",
                 }}
               >
-                <NoteItem
+                <KanbanDraggableNoteItem
                   note={note}
                   onEdit={onEdit}
                   onComplete={onComplete}
                   onDelete={onDelete}
                   onUpdate={onUpdate}
                   onLabelClick={onLabelClick}
-                  isDraggable={true}
-                  dragMode="kanban"
                 />
               </div>
             ))}

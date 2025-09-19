@@ -1,5 +1,5 @@
 import React from "react";
-import type { Note } from "../../../types/note";
+import type { Note } from "../../types/note";
 
 interface NoteItemMetadataProps {
   note: Note;
