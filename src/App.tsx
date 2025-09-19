@@ -8,6 +8,7 @@ import { Modal } from "./components/Modal";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { CompleteConfirmModal } from "./components/CompleteConfirmModal";
 import { QuickCreateModal } from "./components/QuickCreateModal";
+import { CreateSectionModal } from "./components/CreateSectionModal";
 import { SelectionMenu } from "./pages/list";
 import { McpIntegrationModal } from "./components/McpIntegrationModal";
 import { McpFunctionBrowserModal } from "./components/McpFunctionBrowserModal";
@@ -15,6 +16,7 @@ import { SettingsModal } from "./components/SettingsModal";
 import { AppHeader } from "./components/AppHeader";
 import { useNotes } from "./hooks/useNotes";
 import { useStates } from "./hooks/useStates";
+import { useSections } from "./hooks/useSections";
 
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from "./types/note";
 import "./App.css";
@@ -41,6 +43,9 @@ function App() {
     error: statesError,
   } = useStates();
 
+  const { sections, activeSection, setActiveSection, addSection } =
+    useSections();
+
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [deleteNoteData, setDeleteNoteData] = useState<Note | null>(null);
@@ -49,6 +54,7 @@ function App() {
   const [showMcpIntegration, setShowMcpIntegration] = useState(false);
   const [showMcpFunctionBrowser, setShowMcpFunctionBrowser] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCreateSection, setShowCreateSection] = useState(false);
   const [showCreateColumnModal, setShowCreateColumnModal] = useState(false);
 
   // Filter and sort state
@@ -161,6 +167,21 @@ function App() {
       if ((e.metaKey || e.ctrlKey) && e.key === "n" && !e.shiftKey) {
         e.preventDefault();
         handleQuickCreate();
+      }
+
+      // Cmd/Ctrl + T for create section
+      if ((e.metaKey || e.ctrlKey) && e.key === "t") {
+        const activeElement = document.activeElement;
+        const isInputFocused =
+          activeElement &&
+          (activeElement.tagName === "INPUT" ||
+            activeElement.tagName === "TEXTAREA" ||
+            (activeElement as HTMLElement).contentEditable === "true");
+
+        if (!isInputFocused) {
+          e.preventDefault();
+          setShowCreateSection(true);
+        }
       }
 
       // Cmd/Ctrl + A for select all (when not in input field)
@@ -403,6 +424,10 @@ function App() {
             onCreateNote={handleCreateNote}
             onOpenSettings={() => setShowSettings(true)}
             loading={loading}
+            sections={sections}
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
+            onCreateSection={() => setShowCreateSection(true)}
           />
         )}
       </div>
@@ -581,6 +606,15 @@ function App() {
             return result;
           }}
           existingStates={states}
+        />
+
+        <CreateSectionModal
+          isOpen={showCreateSection}
+          onClose={() => setShowCreateSection(false)}
+          onCreateSection={name => {
+            addSection(name);
+            setActiveSection(name);
+          }}
         />
       </main>
     </div>
