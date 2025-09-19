@@ -596,10 +596,26 @@ export function KanbanBoard({
       let insertPosition: "end" | "before" = "end";
       let targetOrder: number | undefined;
 
+      // Check if we have column data from the drop target
+      const overData = over.data?.current;
+      const isColumnDrop = overData?.type === "column";
+
       if (overIdStr.startsWith("column-")) {
         // Dropped on a column - extract state ID from column ID
         targetStateId = parseInt(overIdStr.replace("column-", ""));
         insertPosition = "end";
+      } else if (isColumnDrop && overData?.columnId !== undefined) {
+        // Dropped on a column area with metadata - use the columnId from data
+        targetStateId = overData.columnId;
+        insertPosition = "end";
+
+        if (isDevelopment) {
+          console.log("🎯 Column Drop Detected:", {
+            overIdStr,
+            targetStateId,
+            isEmpty: overData.isEmpty,
+          });
+        }
       } else if (!isNaN(parseInt(overIdStr)) && isNaN(overNoteId)) {
         // Dropped directly on a column area (droppable ID is just the state ID)
         targetStateId = parseInt(overIdStr);
@@ -655,6 +671,7 @@ export function KanbanBoard({
           overIdStr,
           overNoteId,
           overData: over.data?.current,
+          isColumnDrop,
         });
         return;
       }
@@ -667,6 +684,8 @@ export function KanbanBoard({
             noteId,
             targetStateId,
             overIdStr,
+            overData,
+            isColumnDrop,
             availableStates: states.map(s => ({ id: s.id, name: s.name })),
           });
           return;

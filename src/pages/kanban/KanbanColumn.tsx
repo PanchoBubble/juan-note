@@ -107,7 +107,7 @@ export const KanbanColumn = memo(function KanbanColumn({
         isColumnDraggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 w-full">
         <div className="flex items-center space-x-2 flex-1">
           <h3 className="text-lg font-semibold text-monokai-fg flex items-center space-x-2">
             <span>{title}</span>
@@ -157,7 +157,7 @@ export const KanbanColumn = memo(function KanbanColumn({
           </div>
         ) : (
           <div
-            className={`transition-all duration-200 ${
+            className={`transition-all duration-200 w-full ${
               isOver && isDragOver ? "bg-[#66d9ef]/5 rounded-lg p-2" : ""
             }`}
           >
@@ -168,7 +168,7 @@ export const KanbanColumn = memo(function KanbanColumn({
               {notes.map(note => (
                 <div
                   key={note.id}
-                  className="w-full"
+                  className="w-full mb-3"
                   style={{
                     pointerEvents:
                       isColumnDraggable && isDragging ? "none" : "auto",
