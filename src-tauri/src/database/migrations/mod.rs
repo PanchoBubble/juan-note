@@ -4,3 +4,4 @@ pub mod migration_003;
 pub mod migration_004;
 pub mod migration_005;
 pub mod migration_006;
+pub mod migration_007;
